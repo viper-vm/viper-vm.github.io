@@ -1,0 +1,8 @@
+{
+  "latency_reduction_pct": 85,
+  "throughput_x": 7,
+  "availability_pct": 99.9,
+  "har_metric": "Strong F1/Acc",
+  "protein_accuracy_pct": 87.24,
+  "deployments": 20
+}

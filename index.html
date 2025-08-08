@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang='en'>
 <head>
-  <title>Vivek Modi — ML Engineer</title>
+  <title>Vivek Modi — Machine Learning Engineer</title>
   <meta charset='utf-8'/>
   <meta name='viewport' content='width=device-width, initial-scale=1'/>
   <meta name='description' content='Vivek Modi (viper-vm) — Machine Learning Engineer | LLMs, RAG, MLOps.'/>
@@ -11,47 +11,132 @@
   <link rel='stylesheet' href='/assets/css/style.css'/>
   <script defer src='/assets/js/components.js'></script>
   <script defer src='/assets/js/site.js'></script>
+  <script type='module' defer src='/assets/js/anim.js'></script>
   <script type='application/ld+json'>{"@context":"https://schema.org","@type":"Person","name":"Vivek Modi","alternateName":"viper-vm","email":"mailto:vivekvm8400@gmail.com","url":"https://viper-vm.github.io/","sameAs":["https://github.com/viper-vm","https://www.linkedin.com/in/vivek-modi1"]}</script>
 </head>
 <body>
   <div id='site-header'></div>
-  <main class='container hero'>
+
+  <main class='container hero-xl'>
     <div>
-      <span class='pill'>Machine Learning Engineer @ Optimoz</span>
-      <h1>Hi, I’m <span style='background:linear-gradient(90deg,var(--brand),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent'>Vivek Modi</span>.</h1>
-      <p>I build reliable ML systems — from data to deployment. My focus areas: LLMs, RAG (LangGraph), fine‑tuning (LoRA/PEFT), MLOps (Docker, CI/CD), and production APIs (Flask/Kafka). Previously at Rutgers ML & Bioinformatics Lab.</p>
-      <div style='display:flex;gap:10px;flex-wrap:wrap'>
-        <a class='btn primary' href='/projects/'>View Projects</a>
+      <div class='ribbon'>⚡ Machine Learning Engineer @ Optimoz • ex-Rutgers ML/Bioinformatics</div>
+      <h1 style='margin:12px 0 8px'>I build <span class='h1-gradient'>production-grade ML systems</span> that actually ship.</h1>
+      <p class='subtle'>LLMs • RAG (LangGraph) • LoRA/PEFT • Prompt/Tool orchestration • OCR citations • Flask/Kafka microservices • Docker • CI/CD • AWS.</p>
+      <div class='badges'>
+        <span class='badge'>Latency ↓ <b>85%</b></span>
+        <span class='badge'>Throughput <b>7×</b></span>
+        <span class='badge'>Uptime <b>99.9%</b></span>
+        <span class='badge'>Protein Loc. <b>87.24%</b></span>
+      </div>
+      <div style='display:flex;gap:10px;flex-wrap:wrap;margin-top:14px'>
+        <a class='btn primary' href='/projects/'>See Projects</a>
+        <a class='btn' href='/case-studies/'>Case Studies</a>
         <a class='btn' href='/resume/'>Resume</a>
         <a class='btn' href='https://github.com/viper-vm' target='_blank' rel='noreferrer'>GitHub</a>
         <a class='btn' href='/contact/'>Contact</a>
       </div>
     </div>
-    <div class='avatar card' aria-label='Avatar'>
-      <img src='/assets/img/avatar.svg' alt='Avatar' width='160' height='160'/>
+    <div class='card' style='padding:0;overflow:hidden'>
+      <div style='padding:18px'>
+        <div class='pill'>What I do</div>
+        <h3 style='margin:8px 0 0'><span id='rotator' class='h1-gradient'></span></h3>
+        <p class='subtle'>From research ideas → reliable services. I enjoy hardening prototypes, optimizing inference, and instrumenting everything.</p>
+        <img src='/assets/img/avatar.svg' alt='Vivek avatar' style='width:100%;max-width:320px;border-radius:16px;border:1px solid var(--border)' />
+      </div>
     </div>
   </main>
+
   <section>
     <div class='container'>
-      <div class='section-title'><div class='bar'></div><h2>Core Capabilities</h2></div>
-      <div class='card'><div class='tags'>
-        <span class='tag'>LLMs</span><span class='tag'>RAG</span><span class='tag'>LangChain/LangGraph</span><span class='tag'>LoRA / PEFT</span>
-        <span class='tag'>PyTorch</span><span class='tag'>TensorFlow</span><span class='tag'>Python</span><span class='tag'>NLP</span>
-        <span class='tag'>Flask</span><span class='tag'>Kafka</span><span class='tag'>Docker</span><span class='tag'>CI/CD</span><span class='tag'>AWS</span>
-      </div></div>
-    </div>
-  </section>
-  <section>
-    <div class='container'>
-      <div class='section-title'><div class='bar'></div><h2>Highlights</h2></div>
-      <div class='grid cols-3'>
-        <div class='card'><b>85% latency cut</b><br/><span class='muted'>Optimized chat service & model pipelines at Optimoz.</span></div>
-        <div class='card'><b>LLM citations</b><br/><span class='muted'>OCR + LLM to extract and render citations for explainable outputs.</span></div>
-        <div class='card'><b>Research</b><br/><span class='muted'>HAR & Bioinformatics pipelines at Rutgers ML & Bioinformatics Lab.</span></div>
+      <div class='section-title'><div class='bar'></div><h2>Impact by numbers</h2></div>
+      <div class='metrics'>
+        <div class='metric'><b id='m-latency'>0</b><span class='subtle'>Latency reduction (%)</span></div>
+        <div class='metric'><b id='m-throughput'>0</b><span class='subtle'>Throughput increase (×)</span></div>
+        <div class='metric'><b id='m-uptime'>0</b><span class='subtle'>Service availability (%)</span></div>
+        <div class='metric'><b id='m-protein'>0</b><span class='subtle'>Protein loc. accuracy (%)</span></div>
+        <div class='metric'><b id='m-har'>0</b><span class='subtle'>HAR results (score)</span></div>
+        <div class='metric'><b id='m-deploys'>0</b><span class='subtle'>Prod deployments</span></div>
       </div>
     </div>
   </section>
+
+  <section>
+    <div class='container'>
+      <div class='section-title'><div class='bar'></div><h2>Signature builds</h2></div>
+      <div class='case-grid'>
+        <div class='card case'>
+          <div class='k'>Optimoz · LLM platform</div>
+          <h3>Chat latency slashed by 85%</h3>
+          <p class='subtle'>Refactored async backend, tuned token windows, added caching & streaming; instrumented tracing and autoscaling.</p>
+          <a class='btn' href='/case-studies/'>Read more</a>
+        </div>
+        <div class='card case'>
+          <div class='k'>Explainability</div>
+          <h3>OCR-backed citations for LLM outputs</h3>
+          <p class='subtle'>Pipeline that extracts, chunks, and cites sources; improves trust with verifiable spans and page anchors.</p>
+          <a class='btn' href='/projects/'>See repo list</a>
+        </div>
+        <div class='card case'>
+          <div class='k'>Bioinformatics</div>
+          <h3>Protein subcellular localization</h3>
+          <p class='subtle'>Classical + deep ensemble; achieved 87.24% accuracy on Gram-positive dataset with careful feature engineering.</p>
+          <a class='btn' href='/projects/'>See projects</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class='container'>
+      <div class='section-title'><div class='bar'></div><h2>ML Systems Toolkit</h2></div>
+      <div class='tool-grid'>
+        <div class='tool'><b>Modeling</b><br/>PyTorch, TensorFlow, PEFT/LoRA, HF Transformers</div>
+        <div class='tool'><b>Retrieval</b><br/>LangChain/LangGraph, FAISS, vector stores</div>
+        <div class='tool'><b>Serving</b><br/>Flask/FastAPI, gRPC, Kafka, Streaming</div>
+        <div class='tool'><b>Infra</b><br/>Docker, GitHub Actions, AWS</div>
+        <div class='tool'><b>Observability</b><br/>Tracing, Metrics, A/B evals</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class='container'>
+      <div class='section-title'><div class='bar'></div><h2>What teammates say</h2></div>
+      <div class='grid cols-3'>
+        <div class='card'><i>“Vivek takes vague ML ideas and ships them as reliable services.”</i><br/><span class='subtle'>— Colleague</span></div>
+        <div class='card'><i>“Obsessed with performance and readability.”</i><br/><span class='subtle'>— Teammate</span></div>
+        <div class='card'><i>“Works across data, modeling, and platform.”</i><br/><span class='subtle'>— Manager</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class='container'>
+      <div class='callout card'>
+        <div><b>Let’s build something users love.</b><br/><span class='subtle'>Open to collaborating on RAG/LLM products, platform work, and applied research.</span></div>
+        <div style='display:flex;gap:10px;flex-wrap:wrap'><a class='btn primary' href='/contact/'>Get in touch</a><a class='btn' href='/resume/'>Resume</a></div>
+      </div>
+    </div>
+  </section>
+
   <footer id='site-footer'></footer>
-  <script>renderHeader('home');renderFooter();</script>
+
+  <script>
+    renderHeader('home');renderFooter();
+    (async ()=>{
+      const r = await fetch('/assets/data/metrics.json').then(r=>r.json()).catch(()=>({}));
+      const $ = (id)=>document.getElementById(id);
+      if(r.latency_reduction_pct) { const el = $('m-latency'); if(el){ let v=0; const a=setInterval(()=>{ v+=5; el.textContent=v; if(v>=r.latency_reduction_pct){ el.textContent=r.latency_reduction_pct; clearInterval(a);} }, 20); } }
+      if(r.throughput_x) { const el=$('m-throughput'); if(el){ let v=0; const a=setInterval(()=>{ v+=1; el.textContent=v; if(v>=r.throughput_x){ el.textContent=r.throughput_x; clearInterval(a);} }, 60);} }
+      if(r.availability_pct) { const el=$('m-uptime'); if(el){ let v=0; const a=setInterval(()=>{ v+=5; el.textContent=v; if(v>=r.availability_pct){ el.textContent=r.availability_pct; clearInterval(a);} }, 16);} }
+      if(r.protein_accuracy_pct) { const el=$('m-protein'); if(el){ let v=0; const a=setInterval(()=>{ v+=3; el.textContent=v; if(v>=r.protein_accuracy_pct){ el.textContent=r.protein_accuracy_pct; clearInterval(a);} }, 25);} }
+      if(r.har_metric) { const el=$('m-har'); if(el){ el.textContent = r.har_metric; } }
+      if(r.deployments) { const el=$('m-deploys'); if(el){ let v=0; const a=setInterval(()=>{ v+=1; el.textContent=v; if(v>=r.deployments){ el.textContent=r.deployments; clearInterval(a);} }, 50);} }
+      // Rotating words
+      const rot = document.getElementById('rotator');
+      const words = ['LLM orchestration','Retrieval-Augmented Generation','LoRA/PEFT fine-tuning','Observability & evaluation','Scalable inference','Productizing research'];
+      if(rot){ let i=0; rot.textContent=words[0]; setInterval(()=>{ i=(i+1)%words.length; rot.style.opacity=0; setTimeout(()=>{ rot.textContent=words[i]; rot.style.opacity=1; }, 200); }, 1800); }
+    })();
+  </script>
 </body>
 </html>
