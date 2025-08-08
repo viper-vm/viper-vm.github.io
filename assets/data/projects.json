@@ -1,0 +1,34 @@
+[
+  {
+    "name": "Optalk.ai LLM Pipelines",
+    "description": "Domain-specific LLM fine-tuning, RAG (LangGraph), OCR citation extraction; reduced chat latency by 85% via backend refactors.",
+    "url": "https://github.com/viper-vm",
+    "stars": 0,
+    "lang": "Python",
+    "updated": "2025-08-01T00:00:00Z"
+  },
+  {
+    "name": "Protein Subcellular Localization (ML)",
+    "description": "ML pipeline to predict protein subcellular localization in Gram-positive bacteria (87.24% accuracy).",
+    "url": "https://github.com/viper-vm",
+    "stars": 0,
+    "lang": "Python",
+    "updated": "2024-01-15T00:00:00Z"
+  },
+  {
+    "name": "Human Activity Recognition",
+    "description": "CNN/LSTM/Transformers on mPOSE-21 and UCI HAR with strong F1/accuracy metrics.",
+    "url": "https://github.com/viper-vm",
+    "stars": 0,
+    "lang": "Python",
+    "updated": "2023-05-10T00:00:00Z"
+  },
+  {
+    "name": "ComicBot (Research)",
+    "description": "Chatbot that generates jokes + GIFs using knowBERT, sarcasm detection, EmotionGIF dataset.",
+    "url": "https://github.com/viper-vm",
+    "stars": 0,
+    "lang": "Python",
+    "updated": "2021-01-01T00:00:00Z"
+  }
+]
