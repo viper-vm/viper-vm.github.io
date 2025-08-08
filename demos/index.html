@@ -1,45 +1,79 @@
-<!doctype html><html lang='en'><head>
+<!doctype html>
+<html lang="en">
+<head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Live Demos — Vivek Modi</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script defer src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="/assets/css/style.css">
-  <style>/* minimal fallback if style.css not loaded */ body{background:#0b0e14;color:#e5e7eb;font-family:Inter,system-ui} .container{width:min(1100px,92vw);margin:0 auto} .btn{display:inline-flex;gap:8px;border:1px solid #1f2937;background:#0f172a;color:#e5e7eb;padding:10px 14px;border-radius:12px;text-decoration:none} header{position:sticky;top:0;background:rgba(11,14,20,.6);backdrop-filter:saturate(1.2) blur(10px);border-bottom:1px solid #1f2937} nav a{color:#9ca3af;padding:10px 12px;border-radius:10px;text-decoration:none} nav a:hover,nav a.active{background:#0f172a;color:#e5e7eb} .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0} .brand .logo{width:36px;height:36px;display:grid;place-items:center;border-radius:12px;background:radial-gradient(circle at 30% 30%,#60a5fa,#a78bfa)} .grid{display:grid;gap:16px} .card{border:1px solid #1f2937;border-radius:16px;padding:18px;background:#0b1220}</style>
-</head><body><header>
-  <div class="container nav">
-    <a class="brand" href="/#home"><div class="logo"><i data-lucide="bolt"></i></div><span>viper-vm</span></a>
-    <nav>
-      <ul style="list-style:none;display:flex;gap:18px;margin:0;padding:0">
-        <li><a href="/#home" >Home</a></li>
-        <li><a href="/#about">About</a></li>
-        <li><a href="/#skills">Capabilities</a></li>
-        <li><a href="/#achievements">Achievements</a></li>
-        <li><a href="/#projects">Projects</a></li>
-        <li><a href="/#resume">Resume</a></li>
-        <li><a href="/#contact">Contact</a></li>
-        <li><a href="/demos/" class="active">Live Demos</a></li>
-      </ul>
-    </nav>
-    <a class="btn" href="/#home"><i data-lucide="home"></i> Home</a>
+  <style>
+    :root{--bg:#0b0e14;--surface:#0f141f;--card:#111827;--text:#e5e7eb;--muted:#9ca3af;--brand:#60a5fa;--brand-2:#a78bfa;--accent:#34d399;--ring:rgba(96,165,250,.45);--border:#1f2937}
+    :root[data-theme="light"]{--bg:#f7fafc;--surface:#fff;--card:#fff;--text:#0b1220;--muted:#5b6b84;--brand:#3b82f6;--brand-2:#8b5cf6;--accent:#10b981;--ring:rgba(59,130,246,.35);--border:#e5e7eb}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui;background:linear-gradient(120deg,var(--bg),var(--bg));color:var(--text)}
+    .container{width:min(1100px,92vw);margin:0 auto}
+    header{position:sticky;top:0;backdrop-filter:saturate(1.2) blur(10px);background:color-mix(in oklab,var(--bg) 60%, transparent);border-bottom:1px solid var(--border);z-index:50}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px;text-decoration:none;color:var(--text)}
+    .brand .logo{width:36px;height:36px;display:grid;place-items:center;border-radius:12px;background:radial-gradient(circle at 30% 30%,var(--brand),var(--brand-2))}
+    nav a{color:var(--muted);text-decoration:none;font-weight:600;padding:10px 12px;border-radius:10px}
+    nav a:hover,nav a.active{color:var(--text);background:color-mix(in oklab,var(--bg) 70%, #000)}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:color-mix(in oklab,var(--bg) 75%, #000);color:var(--text);padding:10px 14px;border-radius:12px;text-decoration:none;font-weight:700}
+    .card{background:linear-gradient(180deg,color-mix(in oklab,var(--card) 90%, transparent),color-mix(in oklab,var(--card) 70%, transparent));border:1px solid var(--border);border-radius:16px;padding:18px}
+    .grid{display:grid;gap:16px}
+    .grid.cols-2{grid-template-columns:repeat(2,1fr)}
+    .viewer{width:100%;height:720px;border:1px solid var(--border);border-radius:14px;background:color-mix(in oklab,var(--bg) 85%, #000)}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a class="brand" href="/#home"><div class="logo"><i data-lucide="bolt"></i></div><span>Vivek Modi</span></a>
+      <nav>
+        <a href="/#home">Home</a>
+        <a href="/demos/" class="active">Live Demos</a>
+      </nav>
+      <a class="btn" id="themeBtn"><i id="tIcon" data-lucide="moon"></i> Theme</a>
+    </div>
+  </header>
+  <main class="container" style="padding:56px 0">
+  <h2 style="margin:0 0 12px">Live Demos</h2>
+  <div class="card" style="margin-bottom:14px">
+    <i data-lucide="info" style="width:16px;height:16px;vertical-align:-2px"></i>
+    Add or edit demos in <span class="btn" style="padding:4px 8px">assets/data/demos.json</span>. Each entry opens an embedded viewer with a new‑tab button.
   </div>
-</header><main class="container" style="padding:56px 0">
-         <h2>Live Demos</h2>
-         <p class="card">These embed external URLs (GitHub Pages, Vercel, Netlify, etc.). Edit <span class='kbd'>assets/data/demos.json</span> to add new ones.</p>
-         <div class="grid" id="demos-grid"></div>
-         <script>
-           fetch('/assets/data/demos.json').then(r=>r.json()).then(demos=>{
-             const grid=document.getElementById('demos-grid');
-             demos.forEach(d=>{
-               const href=`/demos/viewer.html?id=${encodeURIComponent(d.id)}`;
-               grid.insertAdjacentHTML('beforeend', `<div class='card'><div class='tag'>${d.category||'Demo'}</div><h3 style='margin:8px 0'>${d.title}</h3><p style='color:#9ca3af;margin:0 0 8px'>${d.summary||''}</p><div style='display:flex;gap:8px;flex-wrap:wrap'><a class='btn' href='${href}'>Open</a>${d.repo?`<a class='btn' target='_blank' href='${d.repo}'>Repo</a>`:''}</div></div>`);
-             });
-           });
-         </script>
-       </main><footer style="border-top:1px solid #1f2937;padding:26px 0 40px;color:#9ca3af">
-  <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-    <div>© <span id="year"></span> <b>Vivek Modi</b>.</div>
-    <a class="btn" href="/#home"><i data-lucide="arrow-left"></i> Home</a>
-  </div>
-  <script>document.getElementById('year').textContent=new Date().getFullYear(); lucide?.createIcons?.();</script>
-</footer></body></html>
+  <div class="grid" id="demos-grid"></div>
+</main>
+<script>
+  fetch('/assets/data/demos.json').then(r=>r.json()).then(demos=>{
+    const grid=document.getElementById('demos-grid');
+    demos.forEach(d=>{
+      const href=`/demos/viewer.html?id=${encodeURIComponent(d.id)}`;
+      grid.insertAdjacentHTML('beforeend', `<div class='card' style='margin-bottom:10px'>
+        <div class='btn' style='pointer-events:none;padding:4px 8px;margin-bottom:6px'>${d.category||'Demo'}</div>
+        <h3 style='margin:6px 0'>${d.title}</h3>
+        <p style='color:var(--muted);margin:0 0 8px'>${d.summary||''}</p>
+        <div style='display:flex;gap:8px;flex-wrap:wrap'>
+          <a class='btn' href='${href}'><i data-lucide="play"></i> Open</a>
+          ${d.repo?`<a class='btn' href='${d.repo}' target='_blank'><i data-lucide="github"></i> Repo</a>`:''}
+        </div>
+      </div>`);
+    });
+    lucide?.createIcons();
+  });
+</script>
+
+  <footer style="border-top:1px solid var(--border);padding:26px 0 40px;color:var(--muted)">
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div>© <span id="year"></span> <b>Vivek Modi</b>.</div>
+      <a class="btn" href="/#home"><i data-lucide="home"></i> Home</a>
+    </div>
+  </footer>
+  <script>
+    const pref = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+    document.documentElement.setAttribute('data-theme', pref);
+    document.getElementById('tIcon').setAttribute('data-lucide', pref==='light'?'sun':'moon'); lucide?.createIcons();
+    document.getElementById('themeBtn').addEventListener('click', ()=>{ const cur=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light'; document.documentElement.setAttribute('data-theme',cur); localStorage.setItem('theme',cur); document.getElementById('tIcon').setAttribute('data-lucide',cur==='light'?'sun':'moon'); lucide?.createIcons(); });
+    document.getElementById('year').textContent=new Date().getFullYear();
+  </script>
+</body>
+</html>
