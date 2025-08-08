@@ -1,61 +1,360 @@
 <!doctype html>
-<html lang='en'>
+<html lang="en">
 <head>
-  <title>Vivek Modi — ML Engineer</title>
-  <meta charset='utf-8'/>
-  <meta name='viewport' content='width=device-width, initial-scale=1'/>
-  <meta name='description' content='Vivek Modi (viper-vm) — Machine Learning Engineer | LLMs, RAG, MLOps.'/>
-  <link rel='preconnect' href='https://fonts.googleapis.com'>
-  <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
-  <link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap' rel='stylesheet'>
-  <link rel='stylesheet' href='/assets/css/style.css'/>
-  <script defer src='/assets/js/components.js'></script>
-  <script defer src='/assets/js/site.js'></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vivek Modi — Portfolio</title>
+  <meta name="description" content="Personal website of Vivek Modi (viper-vm): capabilities, resume, achievements, projects, live demos, and contact." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script defer src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg: #0b0e14;
+      --surface: #0f141f;
+      --card: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --brand: #60a5fa;
+      --brand-2: #a78bfa;
+      --accent: #34d399;
+      --ring: rgba(96,165,250,0.45);
+      --border: #1f2937;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: linear-gradient(120deg, var(--bg), #0c1220 40%, #0b0e14);
+      color: var(--text);
+    }
+    .container { width: min(1100px, 92vw); margin: 0 auto; }
+    header {
+      position: sticky; top: 0;
+      backdrop-filter: saturate(1.2) blur(10px);
+      background: rgba(11,14,20,0.6);
+      border-bottom: 1px solid var(--border);
+      z-index: 50;
+    }
+    .nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: 0.4px; }
+    .brand .logo {
+      width: 36px; height: 36px;
+      display: grid; place-items: center;
+      border-radius: 12px;
+      background: radial-gradient(circle at 30% 30%, var(--brand), var(--brand-2));
+      box-shadow: 0 10px 30px rgba(96,165,250,0.25);
+    }
+    nav ul { list-style: none; display: flex; gap: 18px; margin: 0; padding: 0; }
+    nav a { color: var(--muted); text-decoration: none; font-weight: 500; padding: 10px 12px; border-radius: 10px; }
+    nav a:hover, nav a.active { color: var(--text); background: #0f172a; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: #0f172a; color: var(--text); padding: 10px 14px; border-radius: 12px; cursor: pointer; text-decoration: none; font-weight: 600; }
+    .btn:hover { transform: translateY(-1px); }
+    .btn.primary { border-color: transparent; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #0b0e14; box-shadow: 0 10px 30px rgba(96,165,250,0.25); }
+
+    .hero { padding: 72px 0 48px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 32px; align-items: center; }
+    .hero h1 { font-size: clamp(32px, 5vw, 52px); margin: 0 0 12px; line-height: 1.05; }
+    .hero p { margin: 10px 0 22px; color: var(--muted); font-size: 1.05rem; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-size: 12px; }
+    .avatar { width: 200px; height: 200px; border-radius: 24px; background: radial-gradient(circle at 30% 30%, #172554, #0b0e14); border: 1px solid var(--border); display: grid; place-items: center; margin: 0 auto; }
+
+    section { padding: 56px 0; }
+    .section-title { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .section-title h2 { font-size: 26px; margin: 0; }
+    .section-title .bar { width: 36px; height: 3px; background: linear-gradient(90deg, var(--brand), var(--accent)); border-radius: 999px; }
+
+    .card { background: linear-gradient(180deg, rgba(17,24,39,0.85), rgba(17,24,39,0.7)); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+    .grid { display: grid; gap: 16px; }
+    .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } .grid.cols-2 { grid-template-columns: 1fr; } .grid.cols-3 { grid-template-columns: 1fr; } }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag { padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-size: 13px; }
+
+    .project { display: flex; flex-direction: column; gap: 8px; }
+    .project h3 { margin: 0; font-size: 18px; }
+    .project .meta { display: flex; flex-wrap: wrap; gap: 10px; color: var(--muted); font-size: 12px; }
+
+    .resume-embed { width: 100%; height: 640px; border: 1px solid var(--border); border-radius: 14px; }
+
+    .contact-form { display: grid; gap: 12px; }
+    .input { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border); background: #0b1220; color: var(--text); }
+    .input:focus { outline: 2px solid var(--ring); border-color: transparent; }
+
+    footer { border-top: 1px solid var(--border); color: var(--muted); padding: 26px 0 40px; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background: #0f172a; border: 1px solid var(--border); padding: 0 6px; border-radius: 6px; }
+  </style>
 </head>
 <body>
-  <div id='site-header'></div>
-  <main class='container hero'>
+  <header>
+    <div class="container nav">
+      <a class="brand" href="/#home" title="Go home">
+        <div class="logo"><i data-lucide="bolt"></i></div>
+        <span>viper-vm</span>
+      </a>
+      <nav>
+        <ul>
+          <li><a href="/#home" class="active">Home</a></li>
+          <li><a href="/#about">About</a></li>
+          <li><a href="/#skills">Capabilities</a></li>
+          <li><a href="/#achievements">Achievements</a></li>
+          <li><a href="/#projects">Projects</a></li>
+          <li><a href="/#resume">Resume</a></li>
+          <li><a href="/#contact">Contact</a></li>
+          <li><a href="/demos/">Live Demos</a></li>
+        </ul>
+      </nav>
+      <button id="themeToggle" class="btn" aria-label="Toggle theme"><i data-lucide="moon"></i></button>
+    </div>
+  </header>
+
+  <main id="home" class="container hero">
     <div>
-      <div class='badge'>Machine Learning Engineer @ Optimoz • ex‑Rutgers ML/Bioinformatics</div>
-      <h1 class='h1'>I ship <b>production‑grade ML</b> — end‑to‑end.</h1>
-      <p class='subtitle'>LLMs · RAG (LangGraph) · LoRA/PEFT · OCR citations · Flask/Kafka · Docker · CI/CD · AWS.</p>
-      <div style='display:flex;gap:10px;flex-wrap:wrap;margin-top:10px'>
-        <a class='btn primary' href='/projects/'>See Projects</a>
-        <a class='btn' href='/demos/'>Live Demos</a>
-        <a class='btn' href='/resume/'>Resume</a>
-        <a class='btn' href='https://github.com/viper-vm' target='_blank'>GitHub</a>
+      <span class="pill"><i data-lucide="sparkles" style="width:16px;height:16px"></i> Machine Learning Engineer @ Optimoz</span>
+      <h1>Hi, I’m <span style="background:linear-gradient(90deg,var(--brand),var(--brand-2));-webkit-background-clip:text;background-clip:text;color:transparent">Vivek Modi</span>.</h1>
+      <p>I build production-grade ML systems: LLMs, RAG (LangGraph), PEFT/LoRA, OCR-citations, Flask/Kafka microservices, Docker, CI/CD, AWS.</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap">
+        <a class="btn primary" href="#projects"><i data-lucide="code"></i> View Projects</a>
+        <a class="btn" href="/demos/"><i data-lucide="play"></i> Live Demos</a>
+        <a class="btn" href="#contact"><i data-lucide="send"></i> Contact</a>
+        <a class="btn" href="https://github.com/viper-vm" target="_blank" rel="noreferrer"><i data-lucide="github"></i> GitHub</a>
+        <a class="btn" id="resumeBtn" href="/assets/resume/Resume_ML.pdf" target="_blank" rel="noreferrer"><i data-lucide="file-text"></i> Resume</a>
       </div>
     </div>
-    <div class='panel'>
-      <div class='badge'>Impact</div>
-      <div class='grid cols-3' style='margin-top:10px'>
-        <div class='stat'><div class='n'>85%</div><div class='subtitle'>Latency ↓</div></div>
-        <div class='stat'><div class='n'>7×</div><div class='subtitle'>Throughput</div></div>
-        <div class='stat'><div class='n'>99.9%</div><div class='subtitle'>Uptime</div></div>
-      </div>
+    <div class="avatar card" aria-label="Avatar">
+      <i data-lucide="user" style="width:64px;height:64px;opacity:.7"></i>
     </div>
   </main>
 
-  <section>
-    <div class='container'>
-      <div class='section-title'><div class='bar'></div><h2>Pinned work</h2></div>
-      <div class='grid cols-3' id='pinned-grid'></div>
-      <div style='margin-top:12px'><a class='btn' href='https://github.com/viper-vm?tab=repositories' target='_blank'>More on GitHub</a> <a class='btn' href='/projects/'>All Projects</a></div>
-    </div>
-  </section>
-
-  <section>
-    <div class='container'>
-      <div class='section-title'><div class='bar'></div><h2>Why teams work with me</h2></div>
-      <div class='grid cols-3'>
-        <div class='card'><b>Ship the thing</b><br/><span class='subtitle'>From research prototype to stable service, with metrics and docs.</span></div>
-        <div class='card'><b>Performance‑minded</b><br/><span class='subtitle'>I hunt latency and bottlenecks, then prove wins with data.</span></div>
-        <div class='card'><b>End‑to‑end</b><br/><span class='subtitle'>Modeling, retrieval, serving, and MLOps — I cover the seams.</span></div>
+  <section id="about">
+    <div class="container">
+      <div class="section-title"><div class="bar"></div><h2>About</h2></div>
+      <div class="grid cols-2">
+        <div class="card">
+          <p>I’m a Machine Learning Engineer building LLM/RAG systems and the services around them: fast APIs, clean data flows, and instrumentation. Previously Rutgers ML & Bioinformatics (HAR, Protein Subcellular Localization).</p>
+        </div>
+        <div class="card">
+          <ul>
+            <li>Email: <a href="mailto:vivekvm8400@gmail.com">vivekvm8400@gmail.com</a></li>
+            <li>GitHub: <a href="https://github.com/viper-vm" target="_blank" rel="noreferrer">@viper-vm</a></li>
+            <li>LinkedIn: <a href="https://www.linkedin.com/in/vivek-modi1" target="_blank" rel="noreferrer">/in/vivek-modi1</a></li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
 
-  <footer id='site-footer'></footer>
-  <script>renderHeader('home');renderFooter();loadPinned();</script>
+  <section id="skills">
+    <div class="container">
+      <div class="section-title"><div class="bar"></div><h2>Capabilities</h2></div>
+      <div class="card">
+        <div class="tags" id="skillsTags"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="achievements">
+    <div class="container">
+      <div class="section-title"><div class="bar"></div><h2>Achievements</h2></div>
+      <div class="grid cols-2" id="achievementsGrid"></div>
+    </div>
+  </section>
+
+  <section id="projects">
+    <div class="container">
+      <div class="section-title"><div class="bar"></div><h2>Projects</h2></div>
+
+      <div class="card">
+        <h3 style="margin:0 0 10px">College Team Projects (pinned)</h3>
+        <div class="grid cols-3">
+          <div class="project card">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <h3><a href="https://github.com/CrazyDragonX007/MacroHard" target="_blank" rel="noreferrer">MacroHard</a></h3>
+              <span class="tag">Web</span>
+            </div>
+            <p style="color:var(--muted);margin:0">Parody productivity suite with polished UI; multi-person college project.</p>
+          </div>
+          <div class="project card">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <h3><a href="https://github.com/kshru9/Web-Crawler" target="_blank" rel="noreferrer">Web Crawler</a></h3>
+              <span class="tag">Python</span>
+            </div>
+            <p style="color:var(--muted);margin:0">Crawler indexing pages and extracting structured info with rate limits.</p>
+          </div>
+          <div class="project card">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <h3><a href="https://github.com/viper-vm/mini-tweet" target="_blank" rel="noreferrer">mini-tweet</a></h3>
+              <span class="tag">Full‑stack</span>
+            </div>
+            <p style="color:var(--muted);margin:0">Twitter‑like microblog: auth, posting, timeline feed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:14px"></div>
+
+      <div class="grid cols-3" id="projectsGrid"></div>
+      <div style="margin-top:12px">
+        <a class="btn" href="https://github.com/viper-vm?tab=repositories" target="_blank" rel="noreferrer"><i data-lucide="external-link"></i> See more on GitHub</a>
+        <a class="btn" href="/demos/"><i data-lucide="play-circle"></i> Live Demos</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="resume">
+    <div class="container">
+      <div class="section-title"><div class="bar"></div><h2>Resume</h2></div>
+      <div class="card">
+        <p>Primary resume lives at <span class="kbd">/assets/resume/Resume_ML.pdf</span>. The button above opens it in a new tab.</p>
+        <iframe class="resume-embed" src="/assets/resume/Resume_ML.pdf" title="Resume PDF" loading="lazy"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="container">
+      <div class="section-title"><div class="bar"></div><h2>Contact</h2></div>
+      <div class="grid cols-2">
+        <form class="card contact-form" id="contactForm">
+          <input class="input" type="text" id="name" name="name" placeholder="Your name" required />
+          <input class="input" type="email" id="email" name="email" placeholder="Your email" required />
+          <textarea class="input" id="message" name="message" placeholder="Your message" rows="6" required></textarea>
+          <button class="btn primary" type="submit"><i data-lucide="send"></i> Send</button>
+          <small style="color:var(--muted)">This uses your email client via <span class="kbd">mailto:</span> (no backend required).</small>
+        </form>
+        <div class="card">
+          <h3 style="margin-top:0">Elsewhere</h3>
+          <div class="tags">
+            <a class="tag" href="mailto:vivekvm8400@gmail.com">Email</a>
+            <a class="tag" href="https://github.com/viper-vm" target="_blank" rel="noreferrer">GitHub</a>
+            <a class="tag" href="https://www.linkedin.com/in/vivek-modi1" target="_blank" rel="noreferrer">LinkedIn</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div>© <span id="year"></span> <b>Vivek Modi</b>. Built with ❤️ and hosted on GitHub Pages.</div>
+      <a class="btn" href="/#home"><i data-lucide="arrow-left"></i> Home</a>
+    </div>
+  </footer>
+
+  <script>
+    // Icons
+    window.addEventListener('DOMContentLoaded', () => { lucide?.createIcons(); });
+
+    // Year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Theme toggle
+    const themeBtn = document.getElementById('themeToggle');
+    const current = localStorage.getItem('theme') || 'dark';
+    if (current === 'dark') document.documentElement.classList.add('dark');
+    themeBtn.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+
+    // Nav active link on scroll (anchors only on this page)
+    const sections = ['home','about','skills','achievements','projects','resume','contact'].map(id => document.getElementById(id));
+    const links = Array.from(document.querySelectorAll('nav a')).filter(a => a.getAttribute('href').startsWith('/#') || a.getAttribute('href').startsWith('#'));
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          links.forEach(a => a.classList.remove('active'));
+          const active = links.find(a => a.getAttribute('href').endsWith('#' + e.target.id));
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-40% 0px -50% 0px', threshold: 0.1 });
+    sections.forEach(s => s && io.observe(s));
+
+    // Contact form -> mailto
+    const form = document.getElementById('contactForm');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const message = document.getElementById('message').value.trim();
+      const subject = encodeURIComponent(`Portfolio contact from ${name}`);
+      const body = encodeURIComponent(`From: ${name} <${email}>\n\n${message}`);
+      window.location.href = `mailto:vivekvm8400@gmail.com?subject=${subject}&body=${body}`;
+      form.reset();
+    });
+
+    // Skills + Achievements
+    const skills = ['Python','PyTorch','TensorFlow','LangChain/LangGraph','LLMs','RAG','LoRA/PEFT','NLP','Flask','Kafka','Docker','CI/CD','GitHub Actions','AWS','System Design'];
+    const skillsWrap = document.getElementById('skillsTags');
+    skills.forEach(s => { const el = document.createElement('span'); el.className='tag'; el.textContent=s; skillsWrap.appendChild(el); });
+
+    const achievements = [
+      { title: 'Latency ↓ 85%', detail: 'Refactored chat service + pipelines; added caching/streaming; tracing + autoscaling.' },
+      { title: 'Protein Loc. 87.24%', detail: 'Gram-positive dataset with ensemble of classical + deep models.' },
+      { title: 'GSO VP @ Rutgers', detail: 'Graduate Student Organization, leadership & events.' },
+      { title: 'JEE Advanced AIR 701', detail: 'Top rank nationally.' }
+    ];
+    const achGrid = document.getElementById('achievementsGrid');
+    achievements.forEach(a => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<h3 style="margin:0 0 6px">${a.title}</h3><p style="color:var(--muted);margin:0">${a.detail}</p>`;
+      achGrid.appendChild(card);
+    });
+
+    // Projects: fetch from GitHub API (fallback to manual list)
+    const projectsGrid = document.getElementById('projectsGrid');
+    const fallbackProjects = [
+      { name: 'Optalk.ai LLM Pipelines', description: 'Domain-specific LLM fine-tuning, RAG (LangGraph), OCR citations.', url: 'https://github.com/viper-vm', stars: 0, lang: 'Python', updated: new Date().toISOString() },
+      { name: 'HAR Research', description: 'CNN/LSTM/Transformer experiments on mPOSE-21 & UCI HAR.', url: 'https://github.com/viper-vm', stars: 0, lang: 'Python', updated: new Date().toISOString() }
+    ];
+
+    function cardTemplate(p){
+      return `<div class="card project">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <h3><a href="${p.html_url || p.url}" target="_blank" rel="noreferrer">${p.name}</a></h3>
+          <span class="tag">${p.language || p.lang || '—'}</span>
+        </div>
+        <p style="color:var(--muted);margin:0">${p.description || '—'}</p>
+        <div class="meta">
+          <span><i data-lucide="star" style="width:14px;height:14px;vertical-align:-2px"></i> ${p.stargazers_count ?? p.stars ?? 0}</span>
+          <span><i data-lucide="clock" style="width:14px;height:14px;vertical-align:-2px"></i> Updated ${new Date(p.updated_at || p.updated).toLocaleDateString()}</span>
+        </div>
+      </div>`;
+    }
+
+    fetch('https://api.github.com/users/viper-vm/repos?sort=updated&per_page=6')
+      .then(r => r.ok ? r.json() : Promise.reject(r))
+      .then(repos => {
+        projectsGrid.innerHTML = '';
+        repos.slice(0,6).forEach(repo => {
+          projectsGrid.insertAdjacentHTML('beforeend', cardTemplate(repo));
+        });
+        lucide?.createIcons();
+      })
+      .catch(() => {
+        projectsGrid.innerHTML = '';
+        fallbackProjects.forEach(p => projectsGrid.insertAdjacentHTML('beforeend', cardTemplate(p)));
+        lucide?.createIcons();
+      });
+  </script>
+
+  <!-- Structured data for SEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Vivek Modi",
+    "alternateName": "viper-vm",
+    "email": "mailto:vivekvm8400@gmail.com",
+    "url": "https://viper-vm.github.io/",
+    "sameAs": ["https://github.com/viper-vm","https://www.linkedin.com/in/vivek-modi1"]
+  }
+  </script>
 </body>
 </html>

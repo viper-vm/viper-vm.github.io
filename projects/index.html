@@ -1,26 +1,43 @@
-<!doctype html>
-<html lang='en'>
-<head>
+<!doctype html><html lang='en'><head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Projects — Vivek Modi</title>
-  <meta charset='utf-8'/>
-  <meta name='viewport' content='width=device-width, initial-scale=1'/>
-  <meta name='description' content='Vivek Modi (viper-vm) — Machine Learning Engineer | LLMs, RAG, MLOps.'/>
-  <link rel='preconnect' href='https://fonts.googleapis.com'>
-  <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
-  <link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap' rel='stylesheet'>
-  <link rel='stylesheet' href='/assets/css/style.css'/>
-  <script defer src='/assets/js/components.js'></script>
-  <script defer src='/assets/js/site.js'></script>
-</head>
-<body>
-  <div id='site-header'></div>
-  <main class='container' style='padding:56px 0'>
-    <div class='section-title'><div class='bar'></div><h2>Projects</h2></div>
-    <p class='subtitle'>Curated highlights first, then recent repos from GitHub. Add more in <span class='kbd'>assets/data/pinned.json</span>.</p>
-    <div class='grid cols-3' id='projects-grid'></div>
-    <div style='margin-top:12px'><a class='btn' href='https://github.com/viper-vm?tab=repositories' target='_blank'>View all on GitHub</a></div>
-  </main>
-  <footer id='site-footer'></footer>
-  <script>renderHeader('projects');renderFooter();loadProjects();</script>
-</body>
-</html>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script defer src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/assets/css/style.css">
+  <style>/* minimal fallback if style.css not loaded */ body{background:#0b0e14;color:#e5e7eb;font-family:Inter,system-ui} .container{width:min(1100px,92vw);margin:0 auto} .btn{display:inline-flex;gap:8px;border:1px solid #1f2937;background:#0f172a;color:#e5e7eb;padding:10px 14px;border-radius:12px;text-decoration:none} header{position:sticky;top:0;background:rgba(11,14,20,.6);backdrop-filter:saturate(1.2) blur(10px);border-bottom:1px solid #1f2937} nav a{color:#9ca3af;padding:10px 12px;border-radius:10px;text-decoration:none} nav a:hover,nav a.active{background:#0f172a;color:#e5e7eb} .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0} .brand .logo{width:36px;height:36px;display:grid;place-items:center;border-radius:12px;background:radial-gradient(circle at 30% 30%,#60a5fa,#a78bfa)} .grid{display:grid;gap:16px} .card{border:1px solid #1f2937;border-radius:16px;padding:18px;background:#0b1220}</style>
+</head><body><header>
+  <div class="container nav">
+    <a class="brand" href="/#home"><div class="logo"><i data-lucide="bolt"></i></div><span>viper-vm</span></a>
+    <nav>
+      <ul style="list-style:none;display:flex;gap:18px;margin:0;padding:0">
+        <li><a href="/#home" >Home</a></li>
+        <li><a href="/#about">About</a></li>
+        <li><a href="/#skills">Capabilities</a></li>
+        <li><a href="/#achievements">Achievements</a></li>
+        <li><a href="/#projects">Projects</a></li>
+        <li><a href="/#resume">Resume</a></li>
+        <li><a href="/#contact">Contact</a></li>
+        <li><a href="/demos/" >Live Demos</a></li>
+      </ul>
+    </nav>
+    <a class="btn" href="/#home"><i data-lucide="home"></i> Home</a>
+  </div>
+</header><main class="container" style="padding:56px 0">
+         <h2>Projects</h2>
+         <p class="card">For highlights, see the pinned section on the <a href="/#projects">home page</a>. Below is the live feed from GitHub:</p>
+         <div class="grid" id="projects-grid"></div>
+         <div style="margin-top:12px"><a class="btn" target="_blank" href="https://github.com/viper-vm?tab=repositories">View all on GitHub</a></div>
+         <script>
+           function tile(p){return `<div class='card'><h3 style='margin:0'><a href='${p.html_url}' target='_blank'>${p.name}</a></h3><p style='color:#9ca3af;margin:6px 0 8px'>${p.description||''}</p><div style='font-size:12px;color:#9ca3af'>⭐ ${p.stargazers_count||0}</div></div>`}
+           fetch('https://api.github.com/users/viper-vm/repos?sort=updated&per_page=20').then(r=>r.json()).then(repos=>{
+             const grid=document.getElementById('projects-grid'); repos.filter(r=>!r.fork).forEach(r=> grid.insertAdjacentHTML('beforeend', tile(r)));
+           });
+         </script>
+       </main><footer style="border-top:1px solid #1f2937;padding:26px 0 40px;color:#9ca3af">
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div>© <span id="year"></span> <b>Vivek Modi</b>.</div>
+    <a class="btn" href="/#home"><i data-lucide="arrow-left"></i> Home</a>
+  </div>
+  <script>document.getElementById('year').textContent=new Date().getFullYear(); lucide?.createIcons?.();</script>
+</footer></body></html>
