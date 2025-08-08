@@ -1,0 +1,21 @@
+[
+  {
+    "name": "MacroHard",
+    "description": "Multi-person project from college \u2014 parody productivity suite with web components and UI polish.",
+    "url": "https://github.com/CrazyDragonX007/MacroHard",
+    "tag": "Web",
+    "year": "College"
+  },
+  {
+    "name": "Web Crawler",
+    "description": "Crawler that indexes pages and extracts structured info efficiently with politeness & rate limits.",
+    "url": "https://github.com/kshru9/Web-Crawler",
+    "tag": "Python"
+  },
+  {
+    "name": "mini-tweet",
+    "description": "A Twitter\u2011like microblog built by your team in college \u2014 auth, posting, timeline feed.",
+    "url": "https://github.com/viper-vm/mini-tweet",
+    "tag": "Full\u2011stack"
+  }
+]

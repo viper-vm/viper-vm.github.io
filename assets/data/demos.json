@@ -1,0 +1,25 @@
+[
+  {
+    "id": "macrohard",
+    "title": "MacroHard Live",
+    "summary": "Run the MacroHard demo in-browser.",
+    "repo": "https://github.com/CrazyDragonX007/MacroHard",
+    "category": "Frontend",
+    "demo_url": "https://your-demo-url-here"
+  },
+  {
+    "id": "mini-tweet",
+    "title": "mini\u2011tweet Live",
+    "summary": "A live version of your college microblog. (Needs a backend host.)",
+    "repo": "https://github.com/viper-vm/mini-tweet",
+    "category": "Full\u2011stack",
+    "demo_url": "https://your-mini-tweet-url"
+  },
+  {
+    "id": "playground",
+    "title": "ChatGPT\u2011generated micro\u2011app",
+    "summary": "Slot for any experimental app \u2014 plug in a URL and it works.",
+    "category": "Experimental",
+    "demo_url": "https://your-experimental-url"
+  }
+]

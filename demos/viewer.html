@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang='en'>
+<head>
+  <title>Demo Viewer — Vivek Modi</title>
+  <meta charset='utf-8'/>
+  <meta name='viewport' content='width=device-width, initial-scale=1'/>
+  <meta name='description' content='Vivek Modi (viper-vm) — Machine Learning Engineer | LLMs, RAG, MLOps.'/>
+  <link rel='preconnect' href='https://fonts.googleapis.com'>
+  <link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>
+  <link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap' rel='stylesheet'>
+  <link rel='stylesheet' href='/assets/css/style.css'/>
+  <script defer src='/assets/js/components.js'></script>
+  <script defer src='/assets/js/site.js'></script>
+</head>
+<body>
+  <div id='site-header'></div>
+  <main class='container' style='padding:56px 0'>
+    <div class='section-title'><div class='bar'></div><h2 id='title'>Demo</h2></div>
+    <div class='card'>
+      <iframe id='frame' class='viewer' src='about:blank' title='Live demo'></iframe>
+      <div style='display:flex;gap:10px;flex-wrap:wrap;margin-top:10px'>
+        <a id='open' class='btn primary' target='_blank'>Open in new tab</a>
+        <a id='repo' class='btn' target='_blank'>Repo</a>
+      </div>
+    </div>
+  </main>
+  <footer id='site-footer'></footer>
+  <script>
+    renderHeader('demos');renderFooter();
+    (async ()=>{
+      const params=new URLSearchParams(location.search); const id=params.get('id');
+      const demos=await fetch('/assets/data/demos.json').then(r=>r.json()).catch(()=>[]);
+      const d=demos.find(x=>x.id===id) || demos[0];
+      if(!d){ document.getElementById('title').textContent='Demo not found'; return; }
+      document.getElementById('title').textContent=d.title;
+      const f=document.getElementById('frame');
+      f.src=d.demo_url || 'about:blank';
+      const open=document.getElementById('open'); open.href=d.demo_url || '#';
+      const repo=document.getElementById('repo'); if(d.repo){repo.href=d.repo;} else {repo.style.display='none';}
+    })();
+  </script>
+</body>
+</html>

@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang='en'>
 <head>
-  <title>Projects — Vivek Modi</title>
+  <title>Live Demos — Vivek Modi</title>
   <meta charset='utf-8'/>
   <meta name='viewport' content='width=device-width, initial-scale=1'/>
   <meta name='description' content='Vivek Modi (viper-vm) — Machine Learning Engineer | LLMs, RAG, MLOps.'/>
@@ -15,12 +15,11 @@
 <body>
   <div id='site-header'></div>
   <main class='container' style='padding:56px 0'>
-    <div class='section-title'><div class='bar'></div><h2>Projects</h2></div>
-    <p class='subtitle'>Curated highlights first, then recent repos from GitHub. Add more in <span class='kbd'>assets/data/pinned.json</span>.</p>
-    <div class='grid cols-3' id='projects-grid'></div>
-    <div style='margin-top:12px'><a class='btn' href='https://github.com/viper-vm?tab=repositories' target='_blank'>View all on GitHub</a></div>
+    <div class='section-title'><div class='bar'></div><h2>Live Demos</h2></div>
+    <p class='subtitle'>Add demo URLs in <span class='kbd'>assets/data/demos.json</span>. Each card opens an embedded viewer. You can host demos on GitHub Pages, Vercel, Netlify, or Render.</p>
+    <div class='grid cols-3' id='demos-grid'></div>
   </main>
   <footer id='site-footer'></footer>
-  <script>renderHeader('projects');renderFooter();loadProjects();</script>
+  <script>renderHeader('demos');renderFooter();loadDemos();</script>
 </body>
 </html>
