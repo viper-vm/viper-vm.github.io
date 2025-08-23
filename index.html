@@ -117,6 +117,15 @@
       border-color: var(--brand);
     }
     
+    :root.light .mobile-action {
+      background: rgba(241,245,249,0.9) !important;
+    }
+    
+    :root.light .mobile-action:hover {
+      background: var(--brand) !important;
+      color: #ffffff !important;
+    }
+    
     :root.light .input {
       background: rgba(248,250,252,1);
       border: 1px solid var(--border);
@@ -173,6 +182,21 @@
     }
     
     .mobile-nav.active { display: flex; flex-direction: column; }
+    .mobile-nav-content {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      height: 100%;
+      overflow-y: auto;
+    }
+    .mobile-nav-section h3 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--brand);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
     .mobile-nav ul {
       list-style: none;
       margin: 0;
@@ -182,20 +206,32 @@
       gap: 8px;
     }
     .mobile-nav a {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 12px;
       padding: 16px 20px;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 600;
       color: var(--muted);
       text-decoration: none;
       border-radius: 12px;
       border: 1px solid var(--border);
       background: rgba(15,23,42,0.5);
+      transition: all 0.2s ease;
     }
     .mobile-nav a:hover, .mobile-nav a.active {
       color: var(--text);
       background: rgba(15,23,42,0.8);
       border-color: var(--brand);
+      transform: translateX(4px);
+    }
+    .mobile-action {
+      background: rgba(15,23,42,0.7) !important;
+    }
+    .mobile-action:hover {
+      background: var(--brand) !important;
+      color: #0b0e14 !important;
+      transform: translateX(4px) scale(1.02);
     }
     
     .mobile-close {
@@ -265,13 +301,13 @@
       width: 200px; 
       height: 200px; 
       border-radius: 24px; 
-      background: radial-gradient(circle at 30% 30%, #172554, #0b0e14); 
-      border: 1px solid var(--border); 
+      background: transparent; 
+      border: none; 
       display: grid; 
       place-items: center; 
       margin: 0 auto;
       overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.25);
     }
 
     section { padding: 56px 0; }
@@ -305,39 +341,47 @@
       .desktop-nav { display: none; }
       .mobile-menu-btn { display: inline-flex; }
       .container { width: min(1100px, 95vw); }
-      .hero { padding: 48px 0 32px; gap: 24px; text-align: center; }
-      .hero h1 { font-size: clamp(28px, 8vw, 42px); }
-      .hero p { font-size: 1rem; }
+      .hero { 
+        padding: 32px 0 24px; 
+        gap: 20px; 
+        text-align: center; 
+        grid-template-columns: 1fr;
+      }
+      .hero h1 { 
+        font-size: clamp(28px, 8vw, 42px); 
+        margin-bottom: 8px;
+      }
+      .hero p { 
+        font-size: 1rem; 
+        line-height: 1.5;
+        margin: 8px 0 20px;
+      }
       .hero-actions { 
-        justify-content: center; 
-        gap: 8px; 
-        margin-top: 20px;
+        display: none; /* Hide action buttons on mobile */
       }
-      .hero-actions .btn { 
-        padding: 8px 12px; 
-        font-size: 14px;
+      .avatar { 
+        width: 140px; 
+        height: 140px; 
+        margin: 0 auto;
+        order: -1; /* Show avatar first on mobile */
       }
-      .avatar { width: 160px; height: 160px; margin: 0 auto; }
-      section { padding: 40px 0; }
+      .pill { 
+        font-size: 12px; 
+        padding: 5px 10px;
+        margin-bottom: 16px;
+      }
+      section { padding: 32px 0; }
       .section-title h2 { font-size: 22px; }
       .nav { padding: 12px 0; }
       .grid { gap: 12px; }
       .card { padding: 16px; }
       .resume-embed { height: 500px; }
-      .pill { font-size: 12px; padding: 5px 10px; }
     }
     
     @media (max-width: 480px) {
       .container { width: min(1100px, 92vw); }
       .hero-actions { 
-        flex-direction: column; 
-        align-items: center;
-        gap: 10px;
-      }
-      .hero-actions .btn { 
-        width: 100%; 
-        max-width: 200px;
-        justify-content: center;
+        display: none; /* Also hide on smaller mobile screens */
       }
       .section-title h2 { font-size: 20px; }
       .section-title .bar { width: 28px; height: 2px; }
@@ -408,16 +452,30 @@
     <button class="mobile-close" id="mobileClose" aria-label="Close menu">
       <i data-lucide="x"></i>
     </button>
-    <ul>
-      <li><a href="/#home" class="mobile-nav-link">Home</a></li>
-      <li><a href="/#about" class="mobile-nav-link">About</a></li>
-      <li><a href="/#skills" class="mobile-nav-link">Capabilities</a></li>
-      <li><a href="/#achievements" class="mobile-nav-link">Achievements</a></li>
-      <li><a href="/#projects" class="mobile-nav-link">Projects</a></li>
-      <li><a href="/#resume" class="mobile-nav-link">Resume</a></li>
-      <li><a href="/#contact" class="mobile-nav-link">Contact</a></li>
-      <li><a href="/demos/" class="mobile-nav-link">Live Demos</a></li>
-    </ul>
+    <div class="mobile-nav-content">
+      <div class="mobile-nav-section">
+        <h3>Navigation</h3>
+        <ul>
+          <li><a href="/#home" class="mobile-nav-link">Home</a></li>
+          <li><a href="/#about" class="mobile-nav-link">About</a></li>
+          <li><a href="/#skills" class="mobile-nav-link">Capabilities</a></li>
+          <li><a href="/#achievements" class="mobile-nav-link">Achievements</a></li>
+          <li><a href="/#projects" class="mobile-nav-link">Projects</a></li>
+          <li><a href="/#resume" class="mobile-nav-link">Resume</a></li>
+          <li><a href="/#contact" class="mobile-nav-link">Contact</a></li>
+        </ul>
+      </div>
+      <div class="mobile-nav-section">
+        <h3>Quick Actions</h3>
+        <ul class="mobile-actions">
+          <li><a href="#projects" class="mobile-nav-link mobile-action"><i data-lucide="code"></i> View Projects</a></li>
+          <li><a href="/demos/" class="mobile-nav-link mobile-action"><i data-lucide="play"></i> Live Demos</a></li>
+          <li><a href="#contact" class="mobile-nav-link mobile-action"><i data-lucide="send"></i> Contact</a></li>
+          <li><a href="https://github.com/viper-vm" target="_blank" rel="noreferrer" class="mobile-nav-link mobile-action"><i data-lucide="github"></i> GitHub</a></li>
+          <li><a href="/assets/resume/Resume_ML.pdf" target="_blank" rel="noreferrer" class="mobile-nav-link mobile-action"><i data-lucide="file-text"></i> Resume</a></li>
+        </ul>
+      </div>
+    </div>
   </nav>
 
   <main id="home" class="container hero">
@@ -434,7 +492,7 @@
       </div>
     </div>
     <div class="avatar card" aria-label="Avatar">
-      <img src="/assets/img/vivek.jpg" alt="Vivek Modi" style="width:100%;height:100%;object-fit:cover;border-radius:20px;object-position:center top;" />
+      <img src="/assets/img/vivek.jpg" alt="Vivek Modi" style="width:100%;height:100%;object-fit:cover;border-radius:24px;object-position:center top;border:none;" />
     </div>
   </main>
 
