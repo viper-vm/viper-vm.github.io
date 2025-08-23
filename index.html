@@ -50,33 +50,218 @@
     nav ul { list-style: none; display: flex; gap: 18px; margin: 0; padding: 0; }
     nav a { color: var(--muted); text-decoration: none; font-weight: 500; padding: 10px 12px; border-radius: 10px; }
     nav a:hover, nav a.active { color: var(--text); background: #0f172a; }
-    .btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); background: #0f172a; color: var(--text); padding: 10px 14px; border-radius: 12px; cursor: pointer; text-decoration: none; font-weight: 600; }
-    .btn:hover { transform: translateY(-1px); }
-    .btn.primary { border-color: transparent; background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #0b0e14; box-shadow: 0 10px 30px rgba(96,165,250,0.25); }
+    
+    .nav-controls { display: flex; align-items: center; gap: 8px; }
+    .mobile-menu-btn { display: none; }
+    
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: rgba(11,14,20,0.95);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      padding: 80px 24px 24px;
+    }
+    
+    .mobile-nav.active { display: flex; flex-direction: column; }
+    .mobile-nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mobile-nav a {
+      display: block;
+      padding: 16px 20px;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--muted);
+      text-decoration: none;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(15,23,42,0.5);
+    }
+    .mobile-nav a:hover, .mobile-nav a.active {
+      color: var(--text);
+      background: rgba(15,23,42,0.8);
+      border-color: var(--brand);
+    }
+    
+    .mobile-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 8px;
+    }
+    .btn { 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 8px; 
+      border: 1px solid var(--border); 
+      background: #0f172a; 
+      color: var(--text); 
+      padding: 10px 14px; 
+      border-radius: 12px; 
+      cursor: pointer; 
+      text-decoration: none; 
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .btn:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border-color: var(--brand);
+    }
+    .btn.primary { 
+      border-color: transparent; 
+      background: linear-gradient(135deg, var(--brand), var(--brand-2)); 
+      color: #0b0e14; 
+      box-shadow: 0 10px 30px rgba(96,165,250,0.25); 
+    }
+    .btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 35px rgba(96,165,250,0.4);
+    }
 
     .hero { padding: 72px 0 48px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 32px; align-items: center; }
     .hero h1 { font-size: clamp(32px, 5vw, 52px); margin: 0 0 12px; line-height: 1.05; }
-    .hero p { margin: 10px 0 22px; color: var(--muted); font-size: 1.05rem; }
-    .pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-size: 12px; }
-    .avatar { width: 200px; height: 200px; border-radius: 24px; background: radial-gradient(circle at 30% 30%, #172554, #0b0e14); border: 1px solid var(--border); display: grid; place-items: center; margin: 0 auto; }
+    .hero p { margin: 10px 0 22px; color: var(--muted); font-size: 1.05rem; line-height: 1.6; }
+    .hero-actions { 
+      display: flex; 
+      gap: 10px; 
+      flex-wrap: wrap; 
+      margin-top: 24px;
+    }
+    .pill { 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 8px; 
+      padding: 6px 12px; 
+      border: 1px solid var(--border); 
+      border-radius: 999px; 
+      color: var(--muted); 
+      font-size: 13px;
+      background: rgba(17,24,39,0.5);
+      backdrop-filter: blur(10px);
+    }
+    .avatar { 
+      width: 200px; 
+      height: 200px; 
+      border-radius: 24px; 
+      background: radial-gradient(circle at 30% 30%, #172554, #0b0e14); 
+      border: 1px solid var(--border); 
+      display: grid; 
+      place-items: center; 
+      margin: 0 auto;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
 
     section { padding: 56px 0; }
     .section-title { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
     .section-title h2 { font-size: 26px; margin: 0; }
     .section-title .bar { width: 36px; height: 3px; background: linear-gradient(90deg, var(--brand), var(--accent)); border-radius: 999px; }
 
-    .card { background: linear-gradient(180deg, rgba(17,24,39,0.85), rgba(17,24,39,0.7)); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+    .card { 
+      background: linear-gradient(180deg, rgba(17,24,39,0.85), rgba(17,24,39,0.7)); 
+      border: 1px solid var(--border); 
+      border-radius: 16px; 
+      padding: 18px;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(96,165,250,0.3);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
     .grid { display: grid; gap: 16px; }
     .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
     .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
-    @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } .grid.cols-2 { grid-template-columns: 1fr; } .grid.cols-3 { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) { 
+      .hero { grid-template-columns: 1fr; } 
+      .grid.cols-2 { grid-template-columns: 1fr; } 
+      .grid.cols-3 { grid-template-columns: 1fr; } 
+    }
+    
+    @media (max-width: 768px) {
+      .desktop-nav { display: none; }
+      .mobile-menu-btn { display: inline-flex; }
+      .container { width: min(1100px, 95vw); }
+      .hero { padding: 48px 0 32px; gap: 24px; text-align: center; }
+      .hero h1 { font-size: clamp(28px, 8vw, 42px); }
+      .hero p { font-size: 1rem; }
+      .hero-actions { 
+        justify-content: center; 
+        gap: 8px; 
+        margin-top: 20px;
+      }
+      .hero-actions .btn { 
+        padding: 8px 12px; 
+        font-size: 14px;
+      }
+      .avatar { width: 160px; height: 160px; margin: 0 auto; }
+      section { padding: 40px 0; }
+      .section-title h2 { font-size: 22px; }
+      .nav { padding: 12px 0; }
+      .grid { gap: 12px; }
+      .card { padding: 16px; }
+      .resume-embed { height: 500px; }
+      .pill { font-size: 12px; padding: 5px 10px; }
+    }
+    
+    @media (max-width: 480px) {
+      .container { width: min(1100px, 92vw); }
+      .hero-actions { 
+        flex-direction: column; 
+        align-items: center;
+        gap: 10px;
+      }
+      .hero-actions .btn { 
+        width: 100%; 
+        max-width: 200px;
+        justify-content: center;
+      }
+      .section-title h2 { font-size: 20px; }
+      .section-title .bar { width: 28px; height: 2px; }
+    }
 
     .tags { display: flex; flex-wrap: wrap; gap: 8px; }
     .tag { padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-size: 13px; }
 
-    .project { display: flex; flex-direction: column; gap: 8px; }
+    .project { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 8px; 
+      height: 100%;
+    }
     .project h3 { margin: 0; font-size: 18px; }
-    .project .meta { display: flex; flex-wrap: wrap; gap: 10px; color: var(--muted); font-size: 12px; }
+    .project h3 a { 
+      color: var(--text); 
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+    .project h3 a:hover { color: var(--brand); }
+    .project .meta { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 10px; 
+      color: var(--muted); 
+      font-size: 12px;
+      margin-top: auto;
+    }
 
     .resume-embed { width: 100%; height: 640px; border: 1px solid var(--border); border-radius: 14px; }
 
@@ -95,7 +280,7 @@
         <div class="logo"><i data-lucide="bolt"></i></div>
         <span>Vivek Modi</span>
       </a>
-      <nav>
+      <nav class="desktop-nav">
         <ul>
           <li><a href="/#home" class="active">Home</a></li>
           <li><a href="/#about">About</a></li>
@@ -107,16 +292,35 @@
           <li><a href="/demos/">Live Demos</a></li>
         </ul>
       </nav>
-      <button id="themeToggle" class="btn" aria-label="Toggle theme"><i data-lucide="moon"></i></button>
+      <div class="nav-controls">
+        <button id="themeToggle" class="btn" aria-label="Toggle theme"><i data-lucide="moon"></i></button>
+        <button id="mobileMenuToggle" class="btn mobile-menu-btn" aria-label="Toggle menu"><i data-lucide="menu"></i></button>
+      </div>
     </div>
   </header>
+  
+  <nav class="mobile-nav" id="mobileNav">
+    <button class="mobile-close" id="mobileClose" aria-label="Close menu">
+      <i data-lucide="x"></i>
+    </button>
+    <ul>
+      <li><a href="/#home" class="mobile-nav-link">Home</a></li>
+      <li><a href="/#about" class="mobile-nav-link">About</a></li>
+      <li><a href="/#skills" class="mobile-nav-link">Capabilities</a></li>
+      <li><a href="/#achievements" class="mobile-nav-link">Achievements</a></li>
+      <li><a href="/#projects" class="mobile-nav-link">Projects</a></li>
+      <li><a href="/#resume" class="mobile-nav-link">Resume</a></li>
+      <li><a href="/#contact" class="mobile-nav-link">Contact</a></li>
+      <li><a href="/demos/" class="mobile-nav-link">Live Demos</a></li>
+    </ul>
+  </nav>
 
   <main id="home" class="container hero">
     <div>
       <span class="pill"><i data-lucide="sparkles" style="width:16px;height:16px"></i> Machine Learning Engineer @ Optimoz</span>
       <h1>Hi, I’m <span style="background:linear-gradient(90deg,var(--brand),var(--brand-2));-webkit-background-clip:text;background-clip:text;color:transparent">Vivek Modi</span>.</h1>
       <p>I build production-grade ML systems: LLMs, RAG (LangGraph), PEFT/LoRA, OCR-citations, Flask/Kafka microservices, Docker, CI/CD, AWS.</p>
-      <div style="display:flex; gap:10px; flex-wrap:wrap">
+      <div class="hero-actions">
         <a class="btn primary" href="#projects"><i data-lucide="code"></i> View Projects</a>
         <a class="btn" href="/demos/"><i data-lucide="play"></i> Live Demos</a>
         <a class="btn" href="#contact"><i data-lucide="send"></i> Contact</a>
@@ -125,7 +329,7 @@
       </div>
     </div>
     <div class="avatar card" aria-label="Avatar">
-      <i data-lucide="user" style="width:64px;height:64px;opacity:.7"></i>
+      <img src="/assets/img/vivek.jpg" alt="Vivek Modi" style="width:100%;height:100%;object-fit:cover;border-radius:20px;" />
     </div>
   </main>
 
@@ -261,15 +465,49 @@
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
     });
 
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuToggle');
+    const mobileNav = document.getElementById('mobileNav');
+    const mobileClose = document.getElementById('mobileClose');
+    const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+    function toggleMobileMenu() {
+      mobileNav.classList.toggle('active');
+      document.body.style.overflow = mobileNav.classList.contains('active') ? 'hidden' : '';
+    }
+
+    mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    mobileClose.addEventListener('click', toggleMobileMenu);
+
+    // Close mobile menu when clicking on links
+    mobileNavLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        mobileNav.classList.remove('active');
+        document.body.style.overflow = '';
+      });
+    });
+
+    // Close mobile menu when pressing escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && mobileNav.classList.contains('active')) {
+        toggleMobileMenu();
+      }
+    });
+
     // Nav active link on scroll (anchors only on this page)
     const sections = ['home','about','skills','achievements','projects','resume','contact'].map(id => document.getElementById(id));
-    const links = Array.from(document.querySelectorAll('nav a')).filter(a => a.getAttribute('href').startsWith('/#') || a.getAttribute('href').startsWith('#'));
+    const desktopLinks = Array.from(document.querySelectorAll('.desktop-nav a')).filter(a => a.getAttribute('href').startsWith('/#') || a.getAttribute('href').startsWith('#'));
+    const mobileLinks = Array.from(document.querySelectorAll('.mobile-nav-link')).filter(a => a.getAttribute('href').startsWith('/#') || a.getAttribute('href').startsWith('#'));
+    const allLinks = [...desktopLinks, ...mobileLinks];
+    
     const io = new IntersectionObserver(entries => {
       entries.forEach(e => {
         if (e.isIntersecting) {
-          links.forEach(a => a.classList.remove('active'));
-          const active = links.find(a => a.getAttribute('href').endsWith('#' + e.target.id));
-          if (active) active.classList.add('active');
+          allLinks.forEach(a => a.classList.remove('active'));
+          const activeDesktop = desktopLinks.find(a => a.getAttribute('href').endsWith('#' + e.target.id));
+          const activeMobile = mobileLinks.find(a => a.getAttribute('href').endsWith('#' + e.target.id));
+          if (activeDesktop) activeDesktop.classList.add('active');
+          if (activeMobile) activeMobile.classList.add('active');
         }
       });
     }, { rootMargin: '-40% 0px -50% 0px', threshold: 0.1 });
