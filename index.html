@@ -27,14 +27,14 @@
     :root.light {
       --bg: #ffffff;
       --surface: #f8fafc;
-      --card: #ffffff;
-      --text: #1e293b;
-      --muted: #64748b;
-      --brand: #3b82f6;
-      --brand-2: #8b5cf6;
-      --accent: #10b981;
-      --ring: rgba(59,130,246,0.45);
-      --border: #e2e8f0;
+      --card: #f8fafc;
+      --text: #0f172a;
+      --muted: #475569;
+      --brand: #2563eb;
+      --brand-2: #7c3aed;
+      --accent: #059669;
+      --ring: rgba(37,99,235,0.45);
+      --border: #cbd5e1;
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
@@ -66,7 +66,77 @@
     }
     
     :root.light header {
-      background: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.9);
+      border-bottom: 1px solid var(--border);
+    }
+    
+    /* Light theme specific overrides */
+    :root.light .card {
+      background: linear-gradient(180deg, rgba(248,250,252,0.9), rgba(241,245,249,0.8));
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(15,23,42,0.1);
+    }
+    
+    :root.light .card:hover {
+      background: linear-gradient(180deg, rgba(248,250,252,1), rgba(241,245,249,0.9));
+      border-color: var(--brand);
+      box-shadow: 0 4px 12px rgba(15,23,42,0.15);
+    }
+    
+    :root.light .btn {
+      background: rgba(248,250,252,0.9);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    
+    :root.light .btn:hover {
+      background: rgba(241,245,249,1);
+      border-color: var(--brand);
+      box-shadow: 0 2px 8px rgba(15,23,42,0.15);
+    }
+    
+    :root.light nav a:hover,
+    :root.light nav a.active {
+      background: rgba(241,245,249,0.8);
+      color: var(--text);
+    }
+    
+    :root.light .pill {
+      background: rgba(241,245,249,0.8);
+      border: 1px solid var(--border);
+    }
+    
+    :root.light .mobile-nav a {
+      background: rgba(248,250,252,0.9);
+      border: 1px solid var(--border);
+    }
+    
+    :root.light .mobile-nav a:hover,
+    :root.light .mobile-nav a.active {
+      background: rgba(241,245,249,1);
+      border-color: var(--brand);
+    }
+    
+    :root.light .input {
+      background: rgba(248,250,252,1);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    
+    :root.light .input:focus {
+      background: rgba(255,255,255,1);
+      border-color: var(--brand);
+    }
+    
+    :root.light .tag {
+      background: rgba(241,245,249,0.8);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    
+    :root.light .resume-embed {
+      background: rgba(248,250,252,1);
+      border: 1px solid var(--border);
     }
     .nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; }
     .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: 0.4px; }
@@ -494,13 +564,18 @@
     const themeBtn = document.getElementById('themeToggle');
     const currentTheme = localStorage.getItem('theme') || 'dark';
     
-    // Initialize theme
+    // Initialize theme - dark is default
     if (currentTheme === 'light') {
       document.documentElement.classList.add('light');
       themeBtn.innerHTML = '<i data-lucide="sun"></i>';
     } else {
+      // Ensure dark theme is active (remove light class if present)
       document.documentElement.classList.remove('light');
       themeBtn.innerHTML = '<i data-lucide="moon"></i>';
+      // Set theme to dark if not already saved
+      if (!localStorage.getItem('theme')) {
+        localStorage.setItem('theme', 'dark');
+      }
     }
     
     themeBtn.addEventListener('click', () => {
