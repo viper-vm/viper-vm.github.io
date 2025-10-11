@@ -1,0 +1,1679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT.io - JSON Web Token Debugger</title>
+    <style>
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2a2a2a;
+            --bg-tertiary: #333;
+            --text-primary: #ffffff;
+            --text-secondary: #999;
+            --text-muted: #666;
+            --border-color: #444;
+            --accent-color: #d23669;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --warning-color: #95a5a6;
+            --header-color: #ff6b6b;
+            --payload-color: #4ecdc4;
+            --signature-color: #45b7d1;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            --font-size: 14px;
+            --mono-font: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-tertiary: #e9ecef;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --text-muted: #adb5bd;
+            --border-color: #dee2e6;
+            --accent-color: #d23669;
+            --success-color: #198754;
+            --error-color: #dc3545;
+            --warning-color: #6c757d;
+            --header-color: #e74c3c;
+            --payload-color: #2ecc71;
+            --signature-color: #3498db;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family);
+            font-size: var(--font-size);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            background: var(--bg-tertiary);
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            color: var(--text-primary);
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .header-left p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            max-width: 500px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .control-btn {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-btn:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-1px);
+        }
+
+        .hamburger-btn {
+            padding: 8px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            gap: 3px;
+        }
+
+        .hamburger-line {
+            width: 18px;
+            height: 2px;
+            background: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-btn.active .hamburger-line:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .hamburger-btn.active .hamburger-line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active .hamburger-line:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: -4px 0 20px var(--shadow);
+        }
+
+        .sidebar.open {
+            right: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-subtitle {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .sidebar-content {
+            padding: 20px;
+        }
+
+        .setting-group {
+            margin-bottom: 30px;
+        }
+
+        .setting-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-control {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .setting-control:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(210, 54, 105, 0.1);
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .color-option {
+            width: 100%;
+            height: 40px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .color-option.active {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(210, 54, 105, 0.2);
+        }
+
+        .color-option::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .color-option.active::after {
+            opacity: 1;
+        }
+
+        .range-control {
+            width: 100%;
+            margin: 8px 0;
+        }
+
+        .range-value {
+            display: inline-block;
+            min-width: 40px;
+            text-align: center;
+            background: var(--bg-tertiary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: stretch;
+            min-height: 600px;
+        }
+
+        .section {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 4px 6px var(--shadow);
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .section:hover {
+            box-shadow: 0 8px 25px var(--shadow);
+        }
+
+        .section-header {
+            background: var(--bg-tertiary);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .enable-autofocus {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .enable-autofocus input[type="checkbox"] {
+            accent-color: var(--accent-color);
+        }
+
+        .section-content {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .token-input {
+            width: 100%;
+            min-height: 250px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            color: var(--text-primary);
+            font-family: var(--mono-font);
+            font-size: 13px;
+            resize: vertical;
+            outline: none;
+            line-height: 1.5;
+            transition: all 0.2s;
+        }
+
+        .token-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(210, 54, 105, 0.1);
+        }
+
+        .token-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .token-status {
+            margin-top: 15px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .token-status.valid {
+            background: rgba(39, 174, 96, 0.15);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+
+        .token-status.invalid {
+            background: rgba(231, 76, 60, 0.15);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+        }
+
+        .token-visual {
+            margin-top: 20px;
+            font-family: var(--mono-font);
+            font-size: 12px;
+            line-height: 1.6;
+            word-break: break-all;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .token-part {
+            margin-bottom: 16px;
+        }
+
+        .token-part:last-child {
+            margin-bottom: 0;
+        }
+
+        .token-part-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .token-part-content {
+            padding: 8px 0;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .header-part {
+            color: var(--header-color);
+        }
+
+        .payload-part {
+            color: var(--payload-color);
+        }
+
+        .signature-part {
+            color: var(--signature-color);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #b8285a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(210, 54, 105, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border-color);
+            transform: translateY(-1px);
+        }
+
+        .decoded-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex: 1;
+        }
+
+        .decoded-block {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            box-shadow: 0 2px 4px var(--shadow);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .decoded-block-header {
+            background: var(--bg-tertiary);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .decoded-block-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .tab {
+            padding: 6px 12px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .tab.active {
+            background: var(--accent-color);
+            color: #fff;
+        }
+
+        .tab:hover:not(.active) {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .decoded-content {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+        }
+
+        .json-editor {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            color: var(--text-primary);
+            font-family: var(--mono-font);
+            font-size: 13px;
+            resize: none;
+            outline: none;
+            line-height: 1.5;
+            transition: all 0.2s;
+        }
+
+        .json-editor:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(210, 54, 105, 0.1);
+        }
+
+        .claims-table {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table-container {
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        .claims-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .claims-table th,
+        .claims-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .claims-table th {
+            background: var(--bg-tertiary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .claims-table td {
+            font-family: var(--mono-font);
+            color: var(--text-primary);
+        }
+
+        .claims-table tr:hover {
+            background: var(--bg-secondary);
+        }
+
+        .verify-section {
+            grid-column: 1 / -1;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            margin-top: 30px;
+            box-shadow: 0 4px 6px var(--shadow);
+        }
+
+        .verify-header {
+            background: var(--bg-tertiary);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            border-left: 4px solid var(--signature-color);
+        }
+
+        .verify-content {
+            padding: 24px;
+        }
+
+        .secret-input {
+            width: 100%;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            color: var(--text-primary);
+            font-family: var(--mono-font);
+            font-size: 13px;
+            resize: vertical;
+            outline: none;
+            min-height: 100px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+
+        .secret-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(210, 54, 105, 0.1);
+        }
+
+        .secret-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .secret-status {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+
+        .secret-status.valid {
+            background: rgba(39, 174, 96, 0.15);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+
+        .secret-status.invalid {
+            background: rgba(231, 76, 60, 0.15);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+        }
+
+        .secret-status.neutral {
+            background: rgba(149, 165, 166, 0.15);
+            color: var(--warning-color);
+            border: 1px solid var(--warning-color);
+        }
+
+        .signature-info {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: var(--mono-font);
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .info-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .info-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--accent-color);
+        }
+
+        .info-card p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .copy-feedback {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success-color);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .copy-feedback.show {
+            transform: translateX(0);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .header-left {
+                text-align: center;
+            }
+            
+            .container {
+                padding: 20px 15px;
+            }
+
+            .sidebar {
+                width: 100%;
+                right: -100%;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                justify-content: center;
+            }
+            
+            .header-content {
+                padding: 0 15px;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+    
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">🎨 Customization</div>
+            <div class="sidebar-subtitle">Personalize your JWT debugger experience</div>
+        </div>
+        <div class="sidebar-content">
+            <!-- Font Settings -->
+            <div class="setting-group">
+                <div class="setting-label">🔤 Font Family</div>
+                <select class="setting-control" id="fontFamily" onchange="updateFontFamily()">
+                    <option value="system">System Default</option>
+                    <option value="inter">Inter</option>
+                    <option value="roboto">Roboto</option>
+                    <option value="arial">Arial</option>
+                    <option value="helvetica">Helvetica</option>
+                    <option value="georgia">Georgia</option>
+                    <option value="times">Times New Roman</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">📏 Font Size 
+                    <span class="range-value" id="fontSizeValue">14px</span>
+                </div>
+                <input type="range" class="range-control" id="fontSize" min="12" max="20" value="14" onchange="updateFontSize()">
+            </div>
+
+            <!-- Color Themes -->
+            <div class="setting-group">
+                <div class="setting-label">🎨 Accent Color</div>
+                <div class="color-grid">
+                    <div class="color-option active" style="background: #d23669" data-color="#d23669" onclick="updateAccentColor('#d23669')"></div>
+                    <div class="color-option" style="background: #667eea" data-color="#667eea" onclick="updateAccentColor('#667eea')"></div>
+                    <div class="color-option" style="background: #f093fb" data-color="#f093fb" onclick="updateAccentColor('#f093fb')"></div>
+                    <div class="color-option" style="background: #4facfe" data-color="#4facfe" onclick="updateAccentColor('#4facfe')"></div>
+                    <div class="color-option" style="background: #43e97b" data-color="#43e97b" onclick="updateAccentColor('#43e97b')"></div>
+                    <div class="color-option" style="background: #fa709a" data-color="#fa709a" onclick="updateAccentColor('#fa709a')"></div>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">🔴 Header Color</div>
+                <div class="color-grid">
+                    <div class="color-option active" style="background: #ff6b6b" data-color="#ff6b6b" onclick="updateHeaderColor('#ff6b6b')"></div>
+                    <div class="color-option" style="background: #e74c3c" data-color="#e74c3c" onclick="updateHeaderColor('#e74c3c')"></div>
+                    <div class="color-option" style="background: #ff7675" data-color="#ff7675" onclick="updateHeaderColor('#ff7675')"></div>
+                    <div class="color-option" style="background: #fd79a8" data-color="#fd79a8" onclick="updateHeaderColor('#fd79a8')"></div>
+                    <div class="color-option" style="background: #fdcb6e" data-color="#fdcb6e" onclick="updateHeaderColor('#fdcb6e')"></div>
+                    <div class="color-option" style="background: #a29bfe" data-color="#a29bfe" onclick="updateHeaderColor('#a29bfe')"></div>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">📦 Payload Color</div>
+                <div class="color-grid">
+                    <div class="color-option active" style="background: #4ecdc4" data-color="#4ecdc4" onclick="updatePayloadColor('#4ecdc4')"></div>
+                    <div class="color-option" style="background: #2ecc71" data-color="#2ecc71" onclick="updatePayloadColor('#2ecc71')"></div>
+                    <div class="color-option" style="background: #55a3ff" data-color="#55a3ff" onclick="updatePayloadColor('#55a3ff')"></div>
+                    <div class="color-option" style="background: #26de81" data-color="#26de81" onclick="updatePayloadColor('#26de81')"></div>
+                    <div class="color-option" style="background: #74b9ff" data-color="#74b9ff" onclick="updatePayloadColor('#74b9ff')"></div>
+                    <div class="color-option" style="background: #00b894" data-color="#00b894" onclick="updatePayloadColor('#00b894')"></div>
+                </div>
+            </div>
+
+            <div class="setting-group">
+                <div class="setting-label">🔐 Signature Color</div>
+                <div class="color-grid">
+                    <div class="color-option active" style="background: #45b7d1" data-color="#45b7d1" onclick="updateSignatureColor('#45b7d1')"></div>
+                    <div class="color-option" style="background: #3498db" data-color="#3498db" onclick="updateSignatureColor('#3498db')"></div>
+                    <div class="color-option" style="background: #0984e3" data-color="#0984e3" onclick="updateSignatureColor('#0984e3')"></div>
+                    <div class="color-option" style="background: #6c5ce7" data-color="#6c5ce7" onclick="updateSignatureColor('#6c5ce7')"></div>
+                    <div class="color-option" style="background: #00cec9" data-color="#00cec9" onclick="updateSignatureColor('#00cec9')"></div>
+                    <div class="color-option" style="background: #fd79a8" data-color="#fd79a8" onclick="updateSignatureColor('#fd79a8')"></div>
+                </div>
+            </div>
+
+            <!-- Reset Settings -->
+            <div class="setting-group">
+                <button class="btn btn-secondary" onclick="resetSettings()" style="width: 100%;">
+                    🔄 Reset to Defaults
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>JWT Debugger</h1>
+                <p>JSON Web Tokens are an open, industry standard RFC 7519 method for representing claims securely between two parties.</p>
+            </div>
+            <div class="header-controls">
+                <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()">
+                    <div class="hamburger-line"></div>
+                    <div class="hamburger-line"></div>
+                    <div class="hamburger-line"></div>
+                </button>
+                <button class="control-btn" onclick="toggleTheme()">
+                    <span id="theme-icon">🌙</span>
+                    <span id="theme-text">Dark Mode</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-grid">
+            <!-- Encoded Section -->
+            <div class="section" id="encoded-section">
+                <div class="section-header">
+                    <div class="section-title">Encoded</div>
+                    <div class="enable-autofocus">
+                        <input type="checkbox" id="autofocus" checked>
+                        <label for="autofocus">Enable auto-focus</label>
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div style="margin-bottom: 15px;">
+                        <span style="color: var(--text-secondary); font-size: 14px; font-weight: 600;">JSON WEB TOKEN (JWT)</span>
+                    </div>
+                    <textarea 
+                        id="tokenInput" 
+                        class="token-input" 
+                        placeholder="Paste your JWT here (Bearer tokens supported)..."
+                    >eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30</textarea>
+                    
+                    <div id="tokenStatus" class="token-status valid">✅ Valid JWT</div>
+                    
+                    <div class="token-visual">
+                        <div class="token-part header-part">
+                            <div class="token-part-label">📋 Header:</div>
+                            <div class="token-part-content" id="headerRaw"></div>
+                        </div>
+                        <div class="token-part payload-part">
+                            <div class="token-part-label">📦 Payload:</div>
+                            <div class="token-part-content" id="payloadRaw"></div>
+                        </div>
+                        <div class="token-part signature-part">
+                            <div class="token-part-label">🔐 Signature:</div>
+                            <div class="token-part-content" id="signatureRaw"></div>
+                        </div>
+                    </div>
+
+                    <div class="buttons">
+                        <button class="btn btn-primary" onclick="copyToken()">
+                            📋 Copy Token
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearToken()">
+                            🗑️ Clear
+                        </button>
+                        <button class="btn btn-secondary" onclick="generateSample()">
+                            🎲 Sample
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decoded Section -->
+            <div class="section" id="decoded-section">
+                <div class="section-header">
+                    <div class="section-title">Decoded</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">
+                        <span id="decode-info">Ready to decode</span>
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="decoded-section">
+                        <!-- Header Block -->
+                        <div class="decoded-block">
+                            <div class="decoded-block-header" style="border-left: 4px solid var(--header-color);">
+                                <div class="decoded-block-title">📋 Decoded Header</div>
+                                <div class="tabs">
+                                    <button class="tab active" data-tab="header-json" onclick="switchTab('header', 'json')">JSON</button>
+                                    <button class="tab" data-tab="header-table" onclick="switchTab('header', 'table')">TABLE</button>
+                                </div>
+                            </div>
+                            <div class="decoded-content">
+                                <textarea id="headerDecoded" class="json-editor" placeholder="Header will appear here..."></textarea>
+                                <div id="headerTable" class="claims-table hidden">
+                                    <div class="table-container">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Claim</th>
+                                                    <th>Value</th>
+                                                    <th>Type</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="headerTableBody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Payload Block -->
+                        <div class="decoded-block">
+                            <div class="decoded-block-header" style="border-left: 4px solid var(--payload-color);">
+                                <div class="decoded-block-title">📦 Decoded Payload</div>
+                                <div class="tabs">
+                                    <button class="tab active" data-tab="payload-json" onclick="switchTab('payload', 'json')">JSON</button>
+                                    <button class="tab" data-tab="payload-table" onclick="switchTab('payload', 'table')">TABLE</button>
+                                </div>
+                            </div>
+                            <div class="decoded-content">
+                                <textarea id="payloadDecoded" class="json-editor" placeholder="Payload will appear here..."></textarea>
+                                <div id="payloadTable" class="claims-table hidden">
+                                    <div class="table-container">
+                                        <table>
+                                            <thead>
+                                                <tr>
+                                                    <th>Claim</th>
+                                                    <th>Value</th>
+                                                    <th>Type</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="payloadTableBody">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verify Signature Section -->
+        <div class="verify-section">
+            <div class="verify-header">
+                <div class="section-title">🔐 JWT Signature Verification (Optional)</div>
+            </div>
+            <div class="verify-content">
+                <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 14px;">
+                    Enter the secret used to sign the JWT below:
+                </p>
+                
+                <div style="margin-bottom: 20px;">
+                    <div style="color: var(--text-secondary); margin-bottom: 10px; font-size: 14px; text-transform: uppercase; font-weight: 600;">🔐 SECRET</div>
+                    <textarea 
+                        id="secretInput" 
+                        class="secret-input" 
+                        placeholder="your-256-bit-secret"
+                    >your-256-bit-secret</textarea>
+                </div>
+
+                <div id="secretStatus" class="secret-status neutral">🔍 Enter a secret to verify signature</div>
+
+                <div class="signature-info">
+HMACSHA256(<br>
+&nbsp;&nbsp;base64UrlEncode(header) + "." +<br>
+&nbsp;&nbsp;base64UrlEncode(payload),<br>
+&nbsp;&nbsp;<span style="color: var(--signature-color);">your-256-bit-secret</span><br>
+) <span style="color: var(--text-secondary);">secret base64 encoded</span>
+                </div>
+
+                <div class="info-card">
+                    <h3>💡 Pro Tip</h3>
+                    <p>For production tokens, use strong, unique secrets. For testing, the default secret works fine. HMAC algorithms (HS256, HS384, HS512) are supported for verification.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="copy-feedback" id="copyFeedback">
+        ✅ Copied to clipboard!
+    </div>
+
+    <script>
+        // Settings management
+        const defaultSettings = {
+            theme: 'dark',
+            fontFamily: 'system',
+            fontSize: 14,
+            accentColor: '#d23669',
+            headerColor: '#ff6b6b',
+            payloadColor: '#4ecdc4',
+            signatureColor: '#45b7d1'
+        };
+
+        function loadSettings() {
+            const saved = localStorage.getItem('jwt-settings');
+            return saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
+        }
+
+        function saveSettings(settings) {
+            localStorage.setItem('jwt-settings', JSON.stringify(settings));
+        }
+
+        function applySettings() {
+            const settings = loadSettings();
+            
+            // Apply theme
+            setTheme(settings.theme);
+            
+            // Apply font family
+            updateFontFamily(settings.fontFamily);
+            document.getElementById('fontFamily').value = settings.fontFamily;
+            
+            // Apply font size
+            updateFontSize(settings.fontSize);
+            document.getElementById('fontSize').value = settings.fontSize;
+            document.getElementById('fontSizeValue').textContent = settings.fontSize + 'px';
+            
+            // Apply colors
+            updateAccentColor(settings.accentColor);
+            updateHeaderColor(settings.headerColor);
+            updatePayloadColor(settings.payloadColor);
+            updateSignatureColor(settings.signatureColor);
+            
+            // Update active color options
+            updateActiveColorOptions();
+        }
+
+        function updateActiveColorOptions() {
+            const settings = loadSettings();
+            
+            // Reset all active states
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            // Set active states
+            document.querySelector(`[data-color="${settings.accentColor}"]`)?.classList.add('active');
+            document.querySelector(`[onclick="updateHeaderColor('${settings.headerColor}')"]`)?.classList.add('active');
+            document.querySelector(`[onclick="updatePayloadColor('${settings.payloadColor}')"]`)?.classList.add('active');
+            document.querySelector(`[onclick="updateSignatureColor('${settings.signatureColor}')"]`)?.classList.add('active');
+        }
+
+        // Theme management
+        function getStoredTheme() {
+            return loadSettings().theme;
+        }
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const settings = loadSettings();
+            settings.theme = theme;
+            saveSettings(settings);
+            
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            if (theme === 'light') {
+                icon.textContent = '☀️';
+                text.textContent = 'Light Mode';
+            } else {
+                icon.textContent = '🌙';
+                text.textContent = 'Dark Mode';
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = getStoredTheme();
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        // Font management
+        function updateFontFamily(family = null) {
+            if (!family) family = document.getElementById('fontFamily').value;
+            
+            const fontMap = {
+                'system': '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", sans-serif',
+                'inter': '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
+                'roboto': '"Roboto", -apple-system, BlinkMacSystemFont, sans-serif',
+                'arial': 'Arial, sans-serif',
+                'helvetica': '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                'georgia': 'Georgia, serif',
+                'times': '"Times New Roman", Times, serif'
+            };
+            
+            document.documentElement.style.setProperty('--font-family', fontMap[family] || fontMap.system);
+            
+            const settings = loadSettings();
+            settings.fontFamily = family;
+            saveSettings(settings);
+        }
+
+        function updateFontSize(size = null) {
+            if (!size) size = document.getElementById('fontSize').value;
+            
+            document.documentElement.style.setProperty('--font-size', size + 'px');
+            document.getElementById('fontSizeValue').textContent = size + 'px';
+            
+            const settings = loadSettings();
+            settings.fontSize = parseInt(size);
+            saveSettings(settings);
+        }
+
+        // Color management
+        function updateAccentColor(color) {
+            document.documentElement.style.setProperty('--accent-color', color);
+            
+            // Update active state
+            document.querySelectorAll('[data-color]').forEach(option => {
+                option.classList.remove('active');
+                if (option.dataset.color === color) {
+                    option.classList.add('active');
+                }
+            });
+            
+            const settings = loadSettings();
+            settings.accentColor = color;
+            saveSettings(settings);
+        }
+
+        function updateHeaderColor(color) {
+            document.documentElement.style.setProperty('--header-color', color);
+            
+            const settings = loadSettings();
+            settings.headerColor = color;
+            saveSettings(settings);
+            updateActiveColorOptions();
+        }
+
+        function updatePayloadColor(color) {
+            document.documentElement.style.setProperty('--payload-color', color);
+            
+            const settings = loadSettings();
+            settings.payloadColor = color;
+            saveSettings(settings);
+            updateActiveColorOptions();
+        }
+
+        function updateSignatureColor(color) {
+            document.documentElement.style.setProperty('--signature-color', color);
+            
+            const settings = loadSettings();
+            settings.signatureColor = color;
+            saveSettings(settings);
+            updateActiveColorOptions();
+        }
+
+        function resetSettings() {
+            localStorage.removeItem('jwt-settings');
+            applySettings();
+            location.reload();
+        }
+
+        // Sidebar management
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const hamburger = document.getElementById('hamburgerBtn');
+            
+            if (sidebar.classList.contains('open')) {
+                closeSidebar();
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('show');
+                hamburger.classList.add('active');
+            }
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const hamburger = document.getElementById('hamburgerBtn');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.remove('show');
+            hamburger.classList.remove('active');
+        }
+
+        // Claims table functionality
+        function switchTab(section, type) {
+            const jsonElement = document.getElementById(section + 'Decoded');
+            const tableElement = document.getElementById(section + 'Table');
+            const tabs = document.querySelectorAll(`[data-tab^="${section}-"]`);
+            
+            // Update tab states
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.tab === `${section}-${type}`) {
+                    tab.classList.add('active');
+                }
+            });
+            
+            // Show/hide content
+            if (type === 'json') {
+                jsonElement.classList.remove('hidden');
+                tableElement.classList.add('hidden');
+            } else {
+                jsonElement.classList.add('hidden');
+                tableElement.classList.remove('hidden');
+                updateClaimsTable(section);
+            }
+        }
+
+        function updateClaimsTable(section) {
+            const textareaId = section + 'Decoded';
+            const tableBodyId = section + 'TableBody';
+            
+            try {
+                const jsonText = document.getElementById(textareaId).value;
+                if (!jsonText.trim()) {
+                    document.getElementById(tableBodyId).innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted);">No data available</td></tr>';
+                    return;
+                }
+                
+                const data = JSON.parse(jsonText);
+                const tbody = document.getElementById(tableBodyId);
+                tbody.innerHTML = '';
+                
+                Object.entries(data).forEach(([key, value]) => {
+                    const row = document.createElement('tr');
+                    const type = typeof value;
+                    const displayValue = type === 'object' ? JSON.stringify(value) : String(value);
+                    
+                    row.innerHTML = `
+                        <td style="font-weight: 600; color: var(--accent-color);">${key}</td>
+                        <td style="word-break: break-all;">${displayValue}</td>
+                        <td style="color: var(--text-secondary); text-transform: capitalize;">${type}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+            } catch (error) {
+                document.getElementById(tableBodyId).innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--error-color);">Invalid JSON data</td></tr>';
+            }
+        }
+
+        // Base64 URL encoding/decoding utilities
+        function base64UrlDecode(str) {
+            try {
+                let padded = str;
+                while (padded.length % 4) {
+                    padded += '=';
+                }
+                
+                const base64 = padded.replace(/-/g, '+').replace(/_/g, '/');
+                const decoded = atob(base64);
+                const utf8 = decodeURIComponent(escape(decoded));
+                
+                return utf8;
+            } catch (e) {
+                console.error('Base64URL decode error:', e);
+                throw new Error('Invalid base64url encoding');
+            }
+        }
+
+        function base64UrlEncode(str) {
+            try {
+                const utf8 = unescape(encodeURIComponent(str));
+                const base64 = btoa(utf8);
+                return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+            } catch (e) {
+                console.error('Base64URL encode error:', e);
+                throw new Error('Encoding failed');
+            }
+        }
+
+        function cleanToken(token) {
+            if (!token) return '';
+            
+            token = token.trim();
+            if (token.toLowerCase().startsWith('bearer ')) {
+                token = token.substring(7).trim();
+            }
+            
+            return token.replace(/\s+/g, '');
+        }
+
+        function parseJWT(token) {
+            const cleanedToken = cleanToken(token);
+            
+            if (!cleanedToken) {
+                throw new Error('No token provided');
+            }
+
+            const parts = cleanedToken.split('.');
+            if (parts.length !== 3) {
+                throw new Error('Invalid JWT format - must have 3 parts separated by dots');
+            }
+
+            try {
+                const headerJson = base64UrlDecode(parts[0]);
+                const payloadJson = base64UrlDecode(parts[1]);
+                
+                const header = JSON.parse(headerJson);
+                const payload = JSON.parse(payloadJson);
+                
+                return {
+                    header: header,
+                    payload: payload,
+                    signature: parts[2],
+                    parts: parts,
+                    raw: cleanedToken
+                };
+            } catch (error) {
+                console.error('JWT parsing error:', error);
+                throw new Error('Failed to decode JWT: ' + error.message);
+            }
+        }
+
+        function formatJSON(obj) {
+            return JSON.stringify(obj, null, 2);
+        }
+
+        function updateUI(jwt) {
+            // Update raw token parts
+            document.getElementById('headerRaw').textContent = jwt.parts[0];
+            document.getElementById('payloadRaw').textContent = jwt.parts[1];
+            document.getElementById('signatureRaw').textContent = jwt.parts[2];
+            
+            // Update decoded JSON
+            document.getElementById('headerDecoded').value = formatJSON(jwt.header);
+            document.getElementById('payloadDecoded').value = formatJSON(jwt.payload);
+            
+            // Update status
+            document.getElementById('tokenStatus').textContent = '✅ Valid JWT';
+            document.getElementById('tokenStatus').className = 'token-status valid';
+            
+            // Update decode info
+            const algorithm = jwt.header.alg || 'Unknown';
+            const type = jwt.header.typ || 'Unknown';
+            document.getElementById('decode-info').textContent = `${algorithm} • ${type}`;
+            
+            // Update table views if they're active
+            updateClaimsTable('header');
+            updateClaimsTable('payload');
+        }
+
+        function showError(message) {
+            document.getElementById('tokenStatus').textContent = '❌ ' + message;
+            document.getElementById('tokenStatus').className = 'token-status invalid';
+            
+            // Clear decoded sections
+            document.getElementById('headerDecoded').value = '';
+            document.getElementById('payloadDecoded').value = '';
+            document.getElementById('headerRaw').textContent = '';
+            document.getElementById('payloadRaw').textContent = '';
+            document.getElementById('signatureRaw').textContent = '';
+            document.getElementById('decode-info').textContent = 'Invalid token';
+            
+            // Clear table views
+            updateClaimsTable('header');
+            updateClaimsTable('payload');
+        }
+
+        function processToken() {
+            const token = document.getElementById('tokenInput').value;
+            
+            if (!token.trim()) {
+                document.getElementById('tokenStatus').textContent = '⏳ Enter a JWT token';
+                document.getElementById('tokenStatus').className = 'token-status invalid';
+                
+                // Clear all fields
+                document.getElementById('headerDecoded').value = '';
+                document.getElementById('payloadDecoded').value = '';
+                document.getElementById('headerRaw').textContent = '';
+                document.getElementById('payloadRaw').textContent = '';
+                document.getElementById('signatureRaw').textContent = '';
+                document.getElementById('decode-info').textContent = 'Ready to decode';
+                
+                // Clear table views
+                updateClaimsTable('header');
+                updateClaimsTable('payload');
+                return;
+            }
+
+            try {
+                const jwt = parseJWT(token);
+                updateUI(jwt);
+                verifySignature();
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        async function hmacSHA(algorithm, key, data) {
+            const encoder = new TextEncoder();
+            const keyData = encoder.encode(key);
+            const messageData = encoder.encode(data);
+            
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw',
+                keyData,
+                { name: 'HMAC', hash: algorithm },
+                false,
+                ['sign']
+            );
+            
+            const signature = await crypto.subtle.sign('HMAC', cryptoKey, messageData);
+            const signatureArray = new Uint8Array(signature);
+            const signatureString = String.fromCharCode.apply(null, signatureArray);
+            return base64UrlEncode(btoa(signatureString));
+        }
+
+        async function generateSignature(header, payload, secret) {
+            const data = `${base64UrlEncode(JSON.stringify(header))}.${base64UrlEncode(JSON.stringify(payload))}`;
+            
+            const algorithm = header.alg;
+            switch (algorithm) {
+                case 'HS256':
+                    return await hmacSHA('SHA-256', secret, data);
+                case 'HS384':
+                    return await hmacSHA('SHA-384', secret, data);
+                case 'HS512':
+                    return await hmacSHA('SHA-512', secret, data);
+                default:
+                    throw new Error(`Algorithm ${algorithm} not supported`);
+            }
+        }
+
+        async function verifySignature() {
+            try {
+                const token = document.getElementById('tokenInput').value;
+                const secret = document.getElementById('secretInput').value;
+                
+                if (!token.trim()) {
+                    document.getElementById('secretStatus').textContent = '⏳ Enter a JWT token first';
+                    document.getElementById('secretStatus').className = 'secret-status neutral';
+                    return;
+                }
+                
+                const jwt = parseJWT(token);
+                const algorithm = jwt.header.alg;
+                
+                if (['HS256', 'HS384', 'HS512'].includes(algorithm)) {
+                    const expectedSignature = await generateSignature(jwt.header, jwt.payload, secret);
+                    const isValid = expectedSignature === jwt.signature;
+                    
+                    if (isValid) {
+                        document.getElementById('secretStatus').textContent = '✅ Signature verified successfully';
+                        document.getElementById('secretStatus').className = 'secret-status valid';
+                    } else {
+                        document.getElementById('secretStatus').textContent = '❌ Invalid signature - wrong secret';
+                        document.getElementById('secretStatus').className = 'secret-status invalid';
+                    }
+                } else {
+                    document.getElementById('secretStatus').textContent = `⚠️ Algorithm ${algorithm} verification not supported`;
+                    document.getElementById('secretStatus').className = 'secret-status neutral';
+                }
+            } catch (error) {
+                document.getElementById('secretStatus').textContent = '❌ Verification failed';
+                document.getElementById('secretStatus').className = 'secret-status invalid';
+            }
+        }
+
+        function showCopyFeedback() {
+            const feedback = document.getElementById('copyFeedback');
+            feedback.classList.add('show');
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 2000);
+        }
+
+        function copyToken() {
+            const token = document.getElementById('tokenInput').value.trim();
+            if (token) {
+                navigator.clipboard.writeText(token).then(() => {
+                    showCopyFeedback();
+                }).catch(() => {
+                    alert('Failed to copy token to clipboard');
+                });
+            }
+        }
+
+        function clearToken() {
+            document.getElementById('tokenInput').value = '';
+            processToken();
+        }
+
+        function generateSample() {
+            const sampleToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30';
+            document.getElementById('tokenInput').value = sampleToken;
+            processToken();
+        }
+
+        // Event listeners
+        document.getElementById('tokenInput').addEventListener('input', processToken);
+        document.getElementById('tokenInput').addEventListener('paste', () => {
+            setTimeout(processToken, 50);
+        });
+        
+        document.getElementById('secretInput').addEventListener('input', verifySignature);
+        
+        document.getElementById('headerDecoded').addEventListener('input', () => {
+            updateTokenFromEdits();
+            updateClaimsTable('header');
+        });
+        document.getElementById('payloadDecoded').addEventListener('input', () => {
+            updateTokenFromEdits();
+            updateClaimsTable('payload');
+        });
+
+        async function updateTokenFromEdits() {
+            try {
+                const headerText = document.getElementById('headerDecoded').value;
+                const payloadText = document.getElementById('payloadDecoded').value;
+                
+                if (!headerText.trim() || !payloadText.trim()) return;
+                
+                const header = JSON.parse(headerText);
+                const payload = JSON.parse(payloadText);
+                
+                const headerEncoded = base64UrlEncode(JSON.stringify(header));
+                const payloadEncoded = base64UrlEncode(JSON.stringify(payload));
+                
+                const currentToken = document.getElementById('tokenInput').value;
+                let signature = '';
+                
+                if (currentToken && currentToken.split('.').length === 3) {
+                    signature = currentToken.split('.')[2];
+                } else {
+                    signature = 'signature';
+                }
+                
+                const newToken = `${headerEncoded}.${payloadEncoded}.${signature}`;
+                document.getElementById('tokenInput').value = newToken;
+                
+                document.getElementById('headerRaw').textContent = headerEncoded;
+                document.getElementById('payloadRaw').textContent = payloadEncoded;
+                document.getElementById('signatureRaw').textContent = signature;
+                
+            } catch (error) {
+                // Ignore JSON parsing errors during editing
+            }
+        }
+
+        // Auto-focus functionality
+        document.getElementById('autofocus').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('tokenInput').focus();
+            }
+        });
+
+        // Close sidebar on escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeSidebar();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            applySettings();
+            processToken();
+            if (document.getElementById('autofocus').checked) {
+                document.getElementById('tokenInput').focus();
+            }
+        });
+        
+        // Apply settings and process token
+        applySettings();
+        processToken();
+    </script>
+</body>
+</html>

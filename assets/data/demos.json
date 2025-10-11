@@ -1,5 +1,19 @@
 [
   {
+    "id": "jwt-decoder",
+    "title": "JWT.io Clone",
+    "summary": "Complete JWT token decoder and encoder with algorithm support and signature verification.",
+    "category": "Security",
+    "demo_url": "/demos/jwt.html"
+  },
+  {
+    "id": "wordle",
+    "title": "Wordle Clone",
+    "summary": "A fully functional Wordle clone game with daily words and statistics.",
+    "category": "Game",
+    "demo_url": "/demos/wordle.html"
+  },
+  {
     "id": "macrohard",
     "title": "MacroHard Live",
     "summary": "Run the MacroHard demo in-browser.",
