@@ -1,0 +1,77 @@
+{
+  "manifest_version": 3,
+  "name": "WordGen - Smart Synonym Finder",
+  "version": "1.0.0",
+  "description": "Double-click any word to get instant context-aware synonym suggestions. Improve your writing with intelligent word replacements.",
+  "author": "Vivek Modi",
+
+  "permissions": [
+    "storage",
+    "activeTab",
+    "contextMenus",
+    "scripting"
+  ],
+
+  "host_permissions": [
+    "<all_urls>"
+  ],
+
+  "optional_host_permissions": [
+    "https://*.openai.com/*",
+    "https://api-inference.huggingface.co/*"
+  ],
+
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["shared/nlp.js", "content/content.js"],
+      "css": ["content/content.css"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "WordGen - Smart Synonym Finder"
+  },
+
+  "options_page": "options/options.html",
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/*",
+        "content/*",
+        "shared/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+W",
+        "mac": "Command+Shift+W"
+      },
+      "description": "Open WordGen popup"
+    }
+  }
+}

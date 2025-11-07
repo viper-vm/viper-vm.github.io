@@ -1,0 +1,350 @@
+/**
+ * content.css
+ * Styles for WordGen floating widget
+ */
+
+/* Main widget container */
+.wordgen-widget {
+  position: fixed !important;
+  z-index: 2147483647 !important; /* Maximum z-index */
+  background: white !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  max-width: 320px !important;
+  min-width: 240px !important;
+  overflow: hidden !important;
+  animation: wordgen-fade-in 0.2s ease-out !important;
+}
+
+@keyframes wordgen-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .wordgen-widget {
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+    color: #f9fafb !important;
+  }
+}
+
+/* Header */
+.wordgen-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  background: #f9fafb !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wordgen-header {
+    background: #111827 !important;
+    border-color: #374151 !important;
+  }
+}
+
+.wordgen-header strong {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #111827 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wordgen-header strong {
+    color: #f9fafb !important;
+  }
+}
+
+.wordgen-pos {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  text-transform: uppercase !important;
+  font-weight: 500 !important;
+  background: #e5e7eb !important;
+  padding: 2px 8px !important;
+  border-radius: 4px !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wordgen-pos {
+    background: #374151 !important;
+    color: #9ca3af !important;
+  }
+}
+
+/* Message (loading, error, etc.) */
+.wordgen-message {
+  padding: 16px !important;
+  text-align: center !important;
+  color: #6b7280 !important;
+  font-size: 14px !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wordgen-message {
+    color: #9ca3af !important;
+  }
+}
+
+/* Synonym list */
+.wordgen-list {
+  max-height: 400px !important;
+  overflow-y: auto !important;
+  padding: 4px !important;
+}
+
+/* Scrollbar styling */
+.wordgen-list::-webkit-scrollbar {
+  width: 8px !important;
+}
+
+.wordgen-list::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.wordgen-list::-webkit-scrollbar-thumb {
+  background: #d1d5db !important;
+  border-radius: 4px !important;
+}
+
+.wordgen-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wordgen-list::-webkit-scrollbar-thumb {
+    background: #4b5563 !important;
+  }
+
+  .wordgen-list::-webkit-scrollbar-thumb:hover {
+    background: #6b7280 !important;
+  }
+}
+
+/* Individual synonym item */
+.wordgen-synonym {
+  padding: 10px 12px !important;
+  margin: 2px 0 !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  border: 1px solid transparent !important;
+}
+
+.wordgen-synonym:hover {
+  background: #f3f4f6 !important;
+  border-color: #e5e7eb !important;
+  transform: translateX(2px) !important;
+}
+
+.wordgen-synonym:active {
+  background: #e5e7eb !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wordgen-synonym:hover {
+    background: #374151 !important;
+    border-color: #4b5563 !important;
+  }
+
+  .wordgen-synonym:active {
+    background: #4b5563 !important;
+  }
+}
+
+.wordgen-synonym-word {
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  color: #111827 !important;
+  margin-bottom: 4px !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wordgen-synonym-word {
+    color: #f9fafb !important;
+  }
+}
+
+.wordgen-synonym-meta {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-wrap: wrap !important;
+  margin-bottom: 4px !important;
+}
+
+.wordgen-badge {
+  font-size: 11px !important;
+  padding: 2px 6px !important;
+  border-radius: 3px !important;
+  font-weight: 500 !important;
+  text-transform: capitalize !important;
+}
+
+/* Register badges */
+.wordgen-register-formal .wordgen-badge:first-child {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+}
+
+.wordgen-register-casual .wordgen-badge:first-child {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+.wordgen-register-neutral .wordgen-badge:first-child {
+  background: #e5e7eb !important;
+  color: #374151 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wordgen-register-formal .wordgen-badge:first-child {
+    background: #1e3a8a !important;
+    color: #bfdbfe !important;
+  }
+
+  .wordgen-register-casual .wordgen-badge:first-child {
+    background: #78350f !important;
+    color: #fde68a !important;
+  }
+
+  .wordgen-register-neutral .wordgen-badge:first-child {
+    background: #374151 !important;
+    color: #d1d5db !important;
+  }
+}
+
+/* Commonness badges */
+.wordgen-commonness-common .wordgen-badge:nth-child(2) {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+}
+
+.wordgen-commonness-uncommon .wordgen-badge:nth-child(2) {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wordgen-commonness-common .wordgen-badge:nth-child(2) {
+    background: #064e3b !important;
+    color: #a7f3d0 !important;
+  }
+
+  .wordgen-commonness-uncommon .wordgen-badge:nth-child(2) {
+    background: #7f1d1d !important;
+    color: #fecaca !important;
+  }
+}
+
+/* Similarity score */
+.wordgen-score {
+  font-size: 11px !important;
+  color: #6b7280 !important;
+  font-weight: 500 !important;
+  margin-left: auto !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wordgen-score {
+    color: #9ca3af !important;
+  }
+}
+
+/* Synonym note */
+.wordgen-synonym-note {
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  font-style: italic !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wordgen-synonym-note {
+    color: #9ca3af !important;
+  }
+}
+
+/* Footer */
+.wordgen-footer {
+  padding: 8px 12px !important;
+  border-top: 1px solid #e5e7eb !important;
+  background: #f9fafb !important;
+  text-align: center !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wordgen-footer {
+    background: #111827 !important;
+    border-color: #374151 !important;
+  }
+}
+
+.wordgen-link {
+  font-size: 12px !important;
+  color: #2563eb !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  transition: color 0.15s ease !important;
+}
+
+.wordgen-link:hover {
+  color: #1d4ed8 !important;
+  text-decoration: underline !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .wordgen-link {
+    color: #60a5fa !important;
+  }
+
+  .wordgen-link:hover {
+    color: #93c5fd !important;
+  }
+}
+
+/* Prevent text selection on widget */
+.wordgen-widget * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+/* Reset any potential conflicts */
+.wordgen-widget,
+.wordgen-widget * {
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.wordgen-widget > * {
+  margin: 0 !important;
+}
+
+/* Ensure proper stacking */
+.wordgen-widget::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: -1 !important;
+  background: inherit !important;
+  border-radius: inherit !important;
+}

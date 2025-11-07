@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WordGen — Context-Aware Synonyms & Smart Rewrites</title>
+  <meta name="description" content="Intelligent writing assistant with context-aware synonym suggestions and AI-powered sentence rephrasing." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <script defer src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="header-left">
+        <div class="logo-group">
+          <div class="logo" aria-label="WordGen Logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div>
+            <h1>WordGen</h1>
+            <p class="tagline">Context-aware synonyms & smart rewrites</p>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button id="settingsBtn" class="btn btn-secondary" aria-label="Settings">
+          <i data-lucide="settings"></i>
+          <span class="btn-text">Settings</span>
+        </button>
+        <button id="aboutBtn" class="btn btn-secondary" aria-label="About">
+          <i data-lucide="info"></i>
+          <span class="btn-text">About</span>
+        </button>
+        <button id="themeToggle" class="btn btn-icon" aria-label="Toggle theme">
+          <i data-lucide="moon"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Grid -->
+  <main class="main-grid">
+    <!-- Left Panel: Editor -->
+    <section class="editor-panel" aria-label="Text Editor">
+      <div class="panel-header">
+        <h2>
+          <i data-lucide="edit-3"></i>
+          Editor
+        </h2>
+        <div class="editor-controls">
+          <button id="loadDemoBtn" class="btn btn-sm" title="Load sample text">
+            <i data-lucide="file-text"></i>
+            Load Sample
+          </button>
+          <button id="clearBtn" class="btn btn-sm" title="Clear editor">
+            <i data-lucide="trash-2"></i>
+            Clear
+          </button>
+        </div>
+      </div>
+      <div class="editor-wrapper">
+        <div id="editor"
+             class="editor"
+             contenteditable="true"
+             spellcheck="false"
+             role="textbox"
+             aria-multiline="true"
+             aria-label="Text editor"
+             data-placeholder="Paste or type your text here. Double-click any word to see context-aware synonym suggestions...">
+        </div>
+        <div id="editorOverlay" class="editor-overlay"></div>
+      </div>
+      <div class="editor-footer">
+        <div class="stats">
+          <span id="wordCount">0 words</span>
+          <span class="separator">•</span>
+          <span id="charCount">0 characters</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Panel: Suggestions -->
+    <section class="suggestions-panel" aria-label="Suggestions">
+      <div class="panel-header">
+        <h2>
+          <i data-lucide="lightbulb"></i>
+          Suggestions
+        </h2>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state">
+        <i data-lucide="mouse-pointer-click"></i>
+        <h3>Select a word to begin</h3>
+        <p>Double-click or highlight any word in the editor to see context-aware synonym suggestions and rewrite options.</p>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loadingState" class="loading-state hidden">
+        <div class="spinner"></div>
+        <p>Analyzing context...</p>
+      </div>
+
+      <!-- Suggestions Content -->
+      <div id="suggestionsContent" class="suggestions-content hidden">
+        <!-- Target Info -->
+        <div class="target-info">
+          <div class="target-word" id="targetWord"></div>
+          <div class="target-meta">
+            <span class="tag" id="targetPos"></span>
+            <span class="target-context" id="targetContext"></span>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs" role="tablist">
+          <button class="tab active" role="tab" aria-selected="true" data-tab="synonyms">
+            <i data-lucide="layers"></i>
+            Synonyms
+            <span class="badge" id="synonymsCount">0</span>
+          </button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="rephrase">
+            <i data-lucide="refresh-cw"></i>
+            Rephrase
+          </button>
+          <button class="tab" role="tab" aria-selected="false" data-tab="more">
+            <i data-lucide="more-horizontal"></i>
+            More
+            <span class="badge" id="moreCount">0</span>
+          </button>
+        </div>
+
+        <!-- Tab Panels -->
+        <div class="tab-content">
+          <!-- Synonyms Tab -->
+          <div id="synonymsPanel" class="tab-panel active" role="tabpanel">
+            <div class="suggestions-list" id="synonymsList"></div>
+          </div>
+
+          <!-- Rephrase Tab -->
+          <div id="rephrasePanel" class="tab-panel hidden" role="tabpanel">
+            <div class="rephrase-presets">
+              <button class="preset-btn" data-preset="shorter">
+                <i data-lucide="minimize-2"></i>
+                Shorter
+              </button>
+              <button class="preset-btn" data-preset="clearer">
+                <i data-lucide="zap"></i>
+                Clearer
+              </button>
+              <button class="preset-btn" data-preset="formal">
+                <i data-lucide="briefcase"></i>
+                More Formal
+              </button>
+              <button class="preset-btn" data-preset="casual">
+                <i data-lucide="coffee"></i>
+                More Casual
+              </button>
+            </div>
+            <div class="suggestions-list" id="rephraseList"></div>
+          </div>
+
+          <!-- More Tab -->
+          <div id="morePanel" class="tab-panel hidden" role="tabpanel">
+            <div class="filters">
+              <label class="filter-toggle">
+                <input type="checkbox" id="filterCommon" checked>
+                <span>Common words only</span>
+              </label>
+              <label class="filter-toggle">
+                <input type="checkbox" id="filterFormal">
+                <span>Formal register</span>
+              </label>
+              <label class="filter-toggle">
+                <input type="checkbox" id="filterCasual">
+                <span>Casual register</span>
+              </label>
+            </div>
+            <div class="suggestions-list" id="moreList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal" role="dialog" aria-labelledby="settingsTitle" aria-hidden="true">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="settingsTitle">
+          <i data-lucide="settings"></i>
+          Settings
+        </h2>
+        <button class="modal-close" aria-label="Close settings">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Provider Selection -->
+        <div class="setting-group">
+          <label class="setting-label">LLM Provider (Optional)</label>
+          <select id="providerSelect" class="input">
+            <option value="none">None (Local Only)</option>
+            <option value="openai">OpenAI-Compatible</option>
+            <option value="huggingface">Hugging Face Inference</option>
+            <option value="custom">Custom HTTP Endpoint</option>
+          </select>
+          <small class="setting-hint">Local mode uses built-in lexicon and embeddings. API keys are stored in browser only.</small>
+        </div>
+
+        <!-- OpenAI Settings -->
+        <div id="openaiSettings" class="provider-settings hidden">
+          <div class="setting-group">
+            <label class="setting-label">API Endpoint</label>
+            <input type="url" id="openaiEndpoint" class="input" placeholder="https://api.openai.com/v1/chat/completions" />
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">API Key</label>
+            <input type="password" id="openaiKey" class="input" placeholder="sk-..." />
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Model</label>
+            <input type="text" id="openaiModel" class="input" placeholder="gpt-3.5-turbo" />
+          </div>
+        </div>
+
+        <!-- Hugging Face Settings -->
+        <div id="hfSettings" class="provider-settings hidden">
+          <div class="setting-group">
+            <label class="setting-label">API Key</label>
+            <input type="password" id="hfKey" class="input" placeholder="hf_..." />
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Model</label>
+            <input type="text" id="hfModel" class="input" placeholder="mistralai/Mistral-7B-Instruct-v0.2" />
+          </div>
+        </div>
+
+        <!-- Custom Settings -->
+        <div id="customSettings" class="provider-settings hidden">
+          <div class="setting-group">
+            <label class="setting-label">Endpoint URL</label>
+            <input type="url" id="customUrl" class="input" placeholder="https://your-api.com/generate" />
+          </div>
+          <div class="setting-group">
+            <label class="setting-label">Headers (JSON)</label>
+            <textarea id="customHeaders" class="input" rows="3" placeholder='{"Authorization": "Bearer token"}'></textarea>
+          </div>
+        </div>
+
+        <!-- Context Window -->
+        <div class="setting-group">
+          <label class="setting-label">
+            Context Window
+            <span class="setting-value" id="contextValue">300</span> chars
+          </label>
+          <input type="range" id="contextWindow" min="100" max="1000" step="50" value="300" class="slider" />
+        </div>
+
+        <!-- Style Defaults -->
+        <div class="setting-group">
+          <label class="setting-label">Default Formality</label>
+          <select id="defaultFormality" class="input">
+            <option value="casual">Casual</option>
+            <option value="neutral" selected>Neutral</option>
+            <option value="formal">Formal</option>
+          </select>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">Default Brevity</label>
+          <select id="defaultBrevity" class="input">
+            <option value="shorter">Prefer Shorter</option>
+            <option value="keep" selected>Keep Length</option>
+            <option value="longer">Allow Longer</option>
+          </select>
+        </div>
+
+        <!-- Domain -->
+        <div class="setting-group">
+          <label class="setting-label">Domain</label>
+          <select id="domain" class="input">
+            <option value="general" selected>General</option>
+            <option value="tech">Technical</option>
+            <option value="legal">Legal</option>
+            <option value="medical">Medical</option>
+          </select>
+        </div>
+
+        <!-- Privacy -->
+        <div class="setting-group">
+          <label class="setting-toggle">
+            <input type="checkbox" id="avoidJargon">
+            <span>Avoid jargon</span>
+          </label>
+        </div>
+
+        <div class="setting-group">
+          <label class="setting-label">
+            Max Characters to Send
+            <span class="setting-value" id="maxCharsValue">500</span>
+          </label>
+          <input type="range" id="maxChars" min="100" max="2000" step="100" value="500" class="slider" />
+          <small class="setting-hint">Limits data sent to external APIs for privacy.</small>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="saveSettings" class="btn btn-primary">
+          <i data-lucide="check"></i>
+          Save Settings
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Modal -->
+  <div id="aboutModal" class="modal" role="dialog" aria-labelledby="aboutTitle" aria-hidden="true">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="aboutTitle">
+          <i data-lucide="info"></i>
+          About WordGen
+        </h2>
+        <button class="modal-close" aria-label="Close about">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p><strong>WordGen</strong> is a context-aware writing assistant that provides intelligent synonym suggestions and sentence rephrasing.</p>
+
+        <h3>Features</h3>
+        <ul>
+          <li><strong>Context-Aware Synonyms:</strong> Get ranked synonym suggestions that fit your sentence context</li>
+          <li><strong>Smart Rephrasing:</strong> Rewrite sentences to be shorter, clearer, more formal, or more casual</li>
+          <li><strong>Offline First:</strong> Works entirely in your browser using built-in lexicon and embeddings</li>
+          <li><strong>Optional LLM:</strong> Enhance results with your own API key (OpenAI, Hugging Face, or custom)</li>
+          <li><strong>Privacy Focused:</strong> No data sent to servers unless you configure an API</li>
+        </ul>
+
+        <h3>How to Use</h3>
+        <ol>
+          <li>Paste or type text in the editor</li>
+          <li>Double-click or select any word</li>
+          <li>Browse synonym suggestions or rephrase options</li>
+          <li>Click "Apply" to replace</li>
+          <li>Use Ctrl+Z to undo changes</li>
+        </ol>
+
+        <h3>Keyboard Shortcuts</h3>
+        <ul>
+          <li><kbd>↑/↓</kbd> Navigate suggestions</li>
+          <li><kbd>Enter</kbd> Apply selected suggestion</li>
+          <li><kbd>Esc</kbd> Close suggestions</li>
+          <li><kbd>Ctrl+Z</kbd> Undo replacement</li>
+        </ul>
+
+        <div class="about-footer">
+          <a href="https://github.com/viper-vm" target="_blank" class="btn btn-secondary">
+            <i data-lucide="github"></i>
+            View Source
+          </a>
+          <a href="/demos/" class="btn btn-secondary">
+            <i data-lucide="arrow-left"></i>
+            All Demos
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-links">
+        <a href="/demos/" class="footer-link">
+          <i data-lucide="arrow-left"></i>
+          Live Demos
+        </a>
+        <a href="https://github.com/viper-vm" target="_blank" class="footer-link">
+          <i data-lucide="github"></i>
+          View Source
+        </a>
+        <button class="footer-link" disabled title="Coming soon">
+          <i data-lucide="puzzle"></i>
+          Chrome Extension (coming soon)
+        </button>
+      </div>
+      <div class="footer-credit">
+        Built with ❤️ by <a href="/">Vivek Modi</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

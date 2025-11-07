@@ -1,0 +1,230 @@
+{
+  "good_adj": {
+    "synonyms": ["excellent", "fine", "great", "nice", "pleasant", "positive", "satisfactory", "wonderful", "superior", "favorable"]
+  },
+  "bad_adj": {
+    "synonyms": ["poor", "terrible", "awful", "dreadful", "unpleasant", "negative", "inferior", "unsatisfactory", "horrible", "deficient"]
+  },
+  "big_adj": {
+    "synonyms": ["large", "huge", "enormous", "vast", "immense", "massive", "giant", "substantial", "considerable", "extensive"]
+  },
+  "small_adj": {
+    "synonyms": ["little", "tiny", "minute", "compact", "mini", "petite", "slight", "modest", "limited", "minor"]
+  },
+  "happy_adj": {
+    "synonyms": ["joyful", "cheerful", "content", "pleased", "delighted", "glad", "merry", "elated", "jubilant", "satisfied"]
+  },
+  "sad_adj": {
+    "synonyms": ["unhappy", "sorrowful", "mournful", "melancholy", "gloomy", "dejected", "depressed", "downcast", "miserable", "despondent"]
+  },
+  "fast_adj": {
+    "synonyms": ["quick", "rapid", "swift", "speedy", "hasty", "brisk", "prompt", "expeditious", "fleet", "immediate"]
+  },
+  "slow_adj": {
+    "synonyms": ["sluggish", "leisurely", "gradual", "unhurried", "deliberate", "plodding", "lagging", "dawdling", "tardy", "delayed"]
+  },
+  "smart_adj": {
+    "synonyms": ["intelligent", "clever", "bright", "brilliant", "wise", "sharp", "astute", "shrewd", "knowledgeable", "quick-witted"]
+  },
+  "easy_adj": {
+    "synonyms": ["simple", "effortless", "straightforward", "uncomplicated", "elementary", "clear", "plain", "basic", "manageable", "facile"]
+  },
+  "hard_adj": {
+    "synonyms": ["difficult", "challenging", "tough", "complex", "complicated", "demanding", "arduous", "laborious", "strenuous", "intricate"]
+  },
+  "important_adj": {
+    "synonyms": ["significant", "crucial", "vital", "essential", "critical", "key", "major", "fundamental", "primary", "substantial"]
+  },
+  "make_verb": {
+    "synonyms": ["create", "produce", "build", "construct", "form", "generate", "manufacture", "craft", "fabricate", "assemble"]
+  },
+  "get_verb": {
+    "synonyms": ["obtain", "acquire", "receive", "gain", "secure", "procure", "attain", "fetch", "retrieve", "collect"]
+  },
+  "use_verb": {
+    "synonyms": ["utilize", "employ", "apply", "exercise", "operate", "implement", "exploit", "harness", "wield", "deploy"]
+  },
+  "say_verb": {
+    "synonyms": ["state", "declare", "express", "articulate", "mention", "communicate", "utter", "pronounce", "assert", "remark"]
+  },
+  "think_verb": {
+    "synonyms": ["believe", "consider", "suppose", "reckon", "contemplate", "ponder", "reflect", "reason", "deliberate", "cogitate"]
+  },
+  "know_verb": {
+    "synonyms": ["understand", "comprehend", "realize", "recognize", "perceive", "grasp", "discern", "appreciate", "fathom", "cognize"]
+  },
+  "want_verb": {
+    "synonyms": ["desire", "wish", "crave", "need", "require", "seek", "long", "yearn", "covet", "fancy"]
+  },
+  "go_verb": {
+    "synonyms": ["travel", "move", "proceed", "advance", "journey", "depart", "leave", "head", "progress", "traverse"]
+  },
+  "come_verb": {
+    "synonyms": ["arrive", "approach", "appear", "reach", "enter", "emerge", "materialize", "show", "advance", "near"]
+  },
+  "take_verb": {
+    "synonyms": ["grab", "seize", "grasp", "capture", "acquire", "obtain", "accept", "receive", "carry", "remove"]
+  },
+  "give_verb": {
+    "synonyms": ["provide", "offer", "present", "supply", "deliver", "grant", "bestow", "contribute", "donate", "furnish"]
+  },
+  "find_verb": {
+    "synonyms": ["discover", "locate", "uncover", "detect", "identify", "spot", "encounter", "unearth", "determine", "ascertain"]
+  },
+  "see_verb": {
+    "synonyms": ["observe", "view", "witness", "notice", "perceive", "spot", "discern", "watch", "behold", "glimpse"]
+  },
+  "show_verb": {
+    "synonyms": ["display", "demonstrate", "exhibit", "present", "reveal", "illustrate", "indicate", "manifest", "expose", "express"]
+  },
+  "help_verb": {
+    "synonyms": ["assist", "aid", "support", "facilitate", "enable", "contribute", "serve", "benefit", "back", "collaborate"]
+  },
+  "work_verb": {
+    "synonyms": ["function", "operate", "perform", "labor", "toil", "serve", "act", "run", "endeavor", "execute"]
+  },
+  "try_verb": {
+    "synonyms": ["attempt", "endeavor", "strive", "seek", "undertake", "venture", "test", "experiment", "essay", "sample"]
+  },
+  "start_verb": {
+    "synonyms": ["begin", "commence", "initiate", "launch", "open", "embark", "inaugurate", "kickoff", "originate", "activate"]
+  },
+  "stop_verb": {
+    "synonyms": ["cease", "halt", "end", "terminate", "discontinue", "finish", "conclude", "suspend", "quit", "desist"]
+  },
+  "person_noun": {
+    "synonyms": ["individual", "human", "being", "soul", "character", "figure", "somebody", "citizen", "party", "personage"]
+  },
+  "thing_noun": {
+    "synonyms": ["object", "item", "article", "entity", "element", "matter", "substance", "unit", "piece", "component"]
+  },
+  "time_noun": {
+    "synonyms": ["period", "moment", "duration", "interval", "occasion", "era", "epoch", "span", "point", "juncture"]
+  },
+  "place_noun": {
+    "synonyms": ["location", "spot", "site", "position", "area", "region", "locale", "venue", "point", "setting"]
+  },
+  "way_noun": {
+    "synonyms": ["method", "manner", "means", "approach", "technique", "mode", "style", "system", "procedure", "process"]
+  },
+  "work_noun": {
+    "synonyms": ["job", "employment", "labor", "task", "occupation", "profession", "career", "duty", "effort", "toil"]
+  },
+  "problem_noun": {
+    "synonyms": ["issue", "difficulty", "challenge", "trouble", "complication", "dilemma", "obstacle", "predicament", "concern", "matter"]
+  },
+  "idea_noun": {
+    "synonyms": ["concept", "thought", "notion", "plan", "theory", "belief", "view", "opinion", "impression", "conception"]
+  },
+  "change_noun": {
+    "synonyms": ["alteration", "modification", "transformation", "shift", "variation", "adjustment", "revision", "conversion", "transition", "reform"]
+  },
+  "example_noun": {
+    "synonyms": ["instance", "sample", "illustration", "case", "specimen", "model", "prototype", "demonstration", "exemplar", "paradigm"]
+  },
+  "system_noun": {
+    "synonyms": ["structure", "framework", "organization", "network", "arrangement", "scheme", "setup", "mechanism", "complex", "methodology"]
+  },
+  "program_noun": {
+    "synonyms": ["plan", "project", "scheme", "initiative", "agenda", "schedule", "curriculum", "software", "application", "course"]
+  },
+  "result_noun": {
+    "synonyms": ["outcome", "consequence", "effect", "conclusion", "product", "finding", "answer", "upshot", "fruit", "output"]
+  },
+  "quickly_adv": {
+    "synonyms": ["rapidly", "swiftly", "speedily", "fast", "hastily", "promptly", "briskly", "immediately", "instantly", "expeditiously"]
+  },
+  "slowly_adv": {
+    "synonyms": ["gradually", "leisurely", "steadily", "unhurriedly", "sluggishly", "deliberately", "gently", "tardily", "languidly", "cautiously"]
+  },
+  "very_adv": {
+    "synonyms": ["extremely", "highly", "really", "particularly", "exceptionally", "remarkably", "considerably", "immensely", "greatly", "tremendously"]
+  },
+  "really_adv": {
+    "synonyms": ["actually", "truly", "genuinely", "indeed", "honestly", "certainly", "absolutely", "definitely", "positively", "verily"]
+  },
+  "often_adv": {
+    "synonyms": ["frequently", "regularly", "repeatedly", "commonly", "usually", "habitually", "routinely", "generally", "ordinarily", "recurrently"]
+  },
+  "never_adv": {
+    "synonyms": ["not ever", "at no time", "under no circumstances", "by no means", "not at all", "in no way", "not once", "on no occasion"]
+  },
+  "always_adv": {
+    "synonyms": ["constantly", "continually", "perpetually", "invariably", "forever", "eternally", "endlessly", "ceaselessly", "consistently", "unfailingly"]
+  },
+  "analyze_verb": {
+    "synonyms": ["examine", "study", "investigate", "evaluate", "assess", "inspect", "scrutinize", "dissect", "review", "explore"]
+  },
+  "identify_verb": {
+    "synonyms": ["recognize", "determine", "discover", "distinguish", "detect", "pinpoint", "establish", "ascertain", "diagnose", "name"]
+  },
+  "process_verb": {
+    "synonyms": ["handle", "treat", "deal with", "manage", "execute", "perform", "undertake", "conduct", "carry out", "accomplish"]
+  },
+  "develop_verb": {
+    "synonyms": ["create", "evolve", "advance", "progress", "expand", "grow", "build", "enhance", "cultivate", "mature"]
+  },
+  "implement_verb": {
+    "synonyms": ["execute", "apply", "enforce", "carry out", "perform", "fulfill", "accomplish", "realize", "actualize", "effectuate"]
+  },
+  "improve_verb": {
+    "synonyms": ["enhance", "better", "upgrade", "refine", "perfect", "optimize", "advance", "develop", "boost", "elevate"]
+  },
+  "increase_verb": {
+    "synonyms": ["grow", "expand", "rise", "escalate", "augment", "enlarge", "multiply", "amplify", "boost", "extend"]
+  },
+  "decrease_verb": {
+    "synonyms": ["reduce", "diminish", "decline", "lower", "lessen", "drop", "shrink", "dwindle", "abate", "contract"]
+  },
+  "require_verb": {
+    "synonyms": ["need", "demand", "necessitate", "call for", "involve", "entail", "mandate", "request", "expect", "command"]
+  },
+  "provide_verb": {
+    "synonyms": ["supply", "furnish", "give", "offer", "deliver", "contribute", "present", "equip", "grant", "yield"]
+  },
+  "maintain_verb": {
+    "synonyms": ["preserve", "sustain", "keep", "uphold", "retain", "continue", "support", "conserve", "perpetuate", "prolong"]
+  },
+  "ensure_verb": {
+    "synonyms": ["guarantee", "secure", "assure", "confirm", "certify", "validate", "verify", "safeguard", "protect", "warrant"]
+  },
+  "achieve_verb": {
+    "synonyms": ["accomplish", "attain", "reach", "realize", "complete", "fulfill", "succeed", "obtain", "secure", "gain"]
+  },
+  "demonstrate_verb": {
+    "synonyms": ["show", "prove", "illustrate", "exhibit", "display", "reveal", "manifest", "establish", "confirm", "validate"]
+  },
+  "indicate_verb": {
+    "synonyms": ["show", "suggest", "point to", "signal", "denote", "imply", "reveal", "demonstrate", "mark", "signify"]
+  },
+  "significant_adj": {
+    "synonyms": ["important", "substantial", "considerable", "major", "notable", "meaningful", "critical", "crucial", "vital", "momentous"]
+  },
+  "complex_adj": {
+    "synonyms": ["complicated", "intricate", "sophisticated", "elaborate", "involved", "difficult", "convoluted", "multifaceted", "compound", "detailed"]
+  },
+  "effective_adj": {
+    "synonyms": ["efficient", "successful", "productive", "powerful", "potent", "capable", "competent", "operative", "functional", "efficacious"]
+  },
+  "various_adj": {
+    "synonyms": ["different", "diverse", "assorted", "varied", "miscellaneous", "sundry", "multiple", "numerous", "several", "manifold"]
+  },
+  "specific_adj": {
+    "synonyms": ["particular", "precise", "exact", "definite", "explicit", "clear", "distinct", "detailed", "concrete", "express"]
+  },
+  "general_adj": {
+    "synonyms": ["common", "widespread", "universal", "broad", "overall", "comprehensive", "extensive", "prevalent", "typical", "ordinary"]
+  },
+  "common_adj": {
+    "synonyms": ["usual", "typical", "ordinary", "normal", "standard", "regular", "conventional", "frequent", "prevalent", "widespread"]
+  },
+  "possible_adj": {
+    "synonyms": ["potential", "feasible", "viable", "achievable", "practicable", "attainable", "realistic", "conceivable", "plausible", "workable"]
+  },
+  "necessary_adj": {
+    "synonyms": ["required", "essential", "needed", "vital", "crucial", "mandatory", "obligatory", "requisite", "indispensable", "compulsory"]
+  },
+  "available_adj": {
+    "synonyms": ["accessible", "obtainable", "ready", "usable", "handy", "present", "existing", "at hand", "on hand", "free"]
+  }
+}

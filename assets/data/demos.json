@@ -1,5 +1,13 @@
 [
   {
+    "id": "wordgen",
+    "title": "WordGen",
+    "summary": "Context-aware synonym suggestions and AI-powered sentence rephrasing with optional LLM integration.",
+    "category": "Writing",
+    "demo_url": "/demos/wordgen/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/wordgen"
+  },
+  {
     "id": "jwt-decoder",
     "title": "JWT.io Clone",
     "summary": "Complete JWT token decoder and encoder with algorithm support and signature verification.",

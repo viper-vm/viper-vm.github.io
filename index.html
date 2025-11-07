@@ -620,20 +620,20 @@
 
     // Theme toggle
     const themeBtn = document.getElementById('themeToggle');
-    const currentTheme = localStorage.getItem('theme') || 'dark';
-    
-    // Initialize theme - dark is default
+    const currentTheme = localStorage.getItem('theme') || 'light';
+
+    // Initialize theme - light is default
     if (currentTheme === 'light') {
       document.documentElement.classList.add('light');
       themeBtn.innerHTML = '<i data-lucide="sun"></i>';
+      // Set theme to light if not already saved
+      if (!localStorage.getItem('theme')) {
+        localStorage.setItem('theme', 'light');
+      }
     } else {
-      // Ensure dark theme is active (remove light class if present)
+      // Dark theme
       document.documentElement.classList.remove('light');
       themeBtn.innerHTML = '<i data-lucide="moon"></i>';
-      // Set theme to dark if not already saved
-      if (!localStorage.getItem('theme')) {
-        localStorage.setItem('theme', 'dark');
-      }
     }
     
     themeBtn.addEventListener('click', () => {
