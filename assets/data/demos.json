@@ -1,5 +1,12 @@
 [
   {
+    "id": "diff-checker",
+    "title": "Diff Checker",
+    "summary": "Advanced text comparison tool with analytics, history, file upload support (PDF, DOCX, code files), and document formatting for JSON, Python, JavaScript, SQL, and more.",
+    "category": "Developer Tools",
+    "demo_url": "/demos/diff/"
+  },
+  {
     "id": "wordgen",
     "title": "WordGen",
     "summary": "Context-aware synonym suggestions and AI-powered sentence rephrasing with optional LLM integration.",
