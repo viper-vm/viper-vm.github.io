@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Diff Checker — Vivek Modi</title>
+  <meta name="description" content="Advanced text comparison tool with analytics, history, and file upload support" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script defer src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.1.0/diff.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="brand">
+        <a href="/#home" class="logo">
+          <i data-lucide="bolt"></i>
+        </a>
+        <div class="brand-text">
+          <h1>Diff Checker</h1>
+          <p>Advanced text comparison & analytics</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-icon" id="themeToggle" title="Toggle theme">
+          <i data-lucide="moon"></i>
+        </button>
+        <a href="/demos/" class="btn">
+          <i data-lucide="home"></i>
+          <span>Demos</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-view="diff">
+          <i data-lucide="file-diff"></i>
+          <span>Diff View</span>
+        </button>
+        <button class="nav-item" data-view="analytics">
+          <i data-lucide="bar-chart-3"></i>
+          <span>Analytics</span>
+        </button>
+        <button class="nav-item" data-view="history">
+          <i data-lucide="clock"></i>
+          <span>History</span>
+        </button>
+        <button class="nav-item" data-view="settings">
+          <i data-lucide="settings"></i>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn btn-sm btn-primary" id="saveComparison">
+          <i data-lucide="save"></i>
+          <span>Save</span>
+        </button>
+        <button class="btn btn-sm" id="clearAll">
+          <i data-lucide="trash-2"></i>
+          <span>Clear</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Diff View -->
+      <div class="view active" id="view-diff">
+        <div class="toolbar">
+          <div class="toolbar-group">
+            <button class="btn btn-sm" id="uploadLeft">
+              <i data-lucide="upload"></i>
+              <span>Upload Left</span>
+            </button>
+            <button class="btn btn-sm" id="uploadRight">
+              <i data-lucide="upload"></i>
+              <span>Upload Right</span>
+            </button>
+          </div>
+          <div class="toolbar-group">
+            <label class="toggle">
+              <input type="checkbox" id="ignoreWhitespace">
+              <span>Ignore whitespace</span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="ignoreCase">
+              <span>Ignore case</span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="showLineNumbers" checked>
+              <span>Line numbers</span>
+            </label>
+          </div>
+          <div class="toolbar-group">
+            <button class="btn btn-sm" id="copyDiff">
+              <i data-lucide="copy"></i>
+              <span>Copy Diff</span>
+            </button>
+            <button class="btn btn-sm" id="exportDiff">
+              <i data-lucide="download"></i>
+              <span>Export</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="diff-stats-compact">
+          <button class="btn btn-sm" id="recheckDiff" title="Recheck differences">
+            <i data-lucide="refresh-ccw"></i>
+            <span>Recheck</span>
+          </button>
+          <div class="stat-compact stat-added" title="Added lines/words">
+            <i data-lucide="plus-circle"></i>
+            <span id="statAdded">0</span>
+          </div>
+          <div class="stat-compact stat-removed" title="Removed lines/words">
+            <i data-lucide="minus-circle"></i>
+            <span id="statRemoved">0</span>
+          </div>
+          <div class="stat-compact stat-modified" title="Modified lines">
+            <i data-lucide="refresh-cw"></i>
+            <span id="statModified">0</span>
+          </div>
+          <div class="stat-compact stat-similarity" title="Text similarity percentage">
+            <i data-lucide="percent"></i>
+            <span id="statSimilarity">100</span>
+          </div>
+        </div>
+
+        <div class="editor-container">
+          <div class="editor-panel">
+            <div class="editor-header">
+              <h3>Original Text</h3>
+              <div class="editor-actions">
+                <div class="editor-info">
+                  <span id="leftInfo">0 lines</span>
+                </div>
+                <button class="btn-format" id="formatLeft" title="Format document">
+                  <i data-lucide="wand-2"></i>
+                  <span>Format</span>
+                </button>
+              </div>
+            </div>
+            <textarea class="editor" id="leftEditor" placeholder="Paste or type original text here..."></textarea>
+          </div>
+
+          <div class="editor-panel">
+            <div class="editor-header">
+              <h3>Modified Text</h3>
+              <div class="editor-actions">
+                <div class="editor-info">
+                  <span id="rightInfo">0 lines</span>
+                </div>
+                <button class="btn-format" id="formatRight" title="Format document">
+                  <i data-lucide="wand-2"></i>
+                  <span>Format</span>
+                </button>
+              </div>
+            </div>
+            <textarea class="editor" id="rightEditor" placeholder="Paste or type modified text here..."></textarea>
+          </div>
+        </div>
+
+        <div class="diff-output-container">
+          <div class="diff-output-header">
+            <h3>Comparison Result</h3>
+            <div class="view-mode">
+              <button class="view-mode-btn active" data-mode="split">
+                <i data-lucide="columns"></i>
+                Split
+              </button>
+              <button class="view-mode-btn" data-mode="unified">
+                <i data-lucide="align-justify"></i>
+                Unified
+              </button>
+            </div>
+          </div>
+          <div class="diff-output" id="diffOutput">
+            <div class="empty-state">
+              <i data-lucide="file-search"></i>
+              <p>Enter text in both editors to see the comparison</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analytics View -->
+      <div class="view" id="view-analytics">
+        <div class="analytics-header">
+          <h2>Text Analytics</h2>
+          <p>Detailed statistics and insights about your comparison</p>
+        </div>
+
+        <div class="analytics-grid">
+          <div class="analytics-section">
+            <h3><i data-lucide="align-left"></i> Original Text</h3>
+            <div class="stats-grid">
+              <div class="stat-box">
+                <span class="stat-number" id="leftChars">0</span>
+                <span class="stat-desc">Characters</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number" id="leftCharsNoSpace">0</span>
+                <span class="stat-desc">Chars (no spaces)</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number" id="leftWords">0</span>
+                <span class="stat-desc">Words</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number" id="leftLines">0</span>
+                <span class="stat-desc">Lines</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number" id="leftParagraphs">0</span>
+                <span class="stat-desc">Paragraphs</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number" id="leftReadTime">0</span>
+                <span class="stat-desc">Min read time</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="analytics-section">
+            <h3><i data-lucide="align-right"></i> Modified Text</h3>
+            <div class="stats-grid">
+              <div class="stat-box">
+                <span class="stat-number" id="rightChars">0</span>
+                <span class="stat-desc">Characters</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number" id="rightCharsNoSpace">0</span>
+                <span class="stat-desc">Chars (no spaces)</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number" id="rightWords">0</span>
+                <span class="stat-desc">Words</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number" id="rightLines">0</span>
+                <span class="stat-desc">Lines</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number" id="rightParagraphs">0</span>
+                <span class="stat-desc">Paragraphs</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number" id="rightReadTime">0</span>
+                <span class="stat-desc">Min read time</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="analytics-section full-width">
+            <h3><i data-lucide="git-compare"></i> Comparison Metrics</h3>
+            <div class="comparison-metrics">
+              <div class="metric-row">
+                <span class="metric-label">Similarity Score</span>
+                <div class="metric-bar">
+                  <div class="metric-fill" id="similarityBar" style="width: 0%"></div>
+                  <span class="metric-value" id="similarityPercent">0%</span>
+                </div>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label">Lines Changed</span>
+                <div class="metric-bar">
+                  <div class="metric-fill metric-changed" id="changedBar" style="width: 0%"></div>
+                  <span class="metric-value" id="changedPercent">0%</span>
+                </div>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label">Words Changed</span>
+                <div class="metric-bar">
+                  <div class="metric-fill metric-changed" id="wordsChangedBar" style="width: 0%"></div>
+                  <span class="metric-value" id="wordsChangedPercent">0%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="analytics-section full-width">
+            <h3><i data-lucide="activity"></i> Character Distribution</h3>
+            <div class="char-distribution" id="charDistribution"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History View -->
+      <div class="view" id="view-history">
+        <div class="history-header">
+          <h2>Comparison History</h2>
+          <button class="btn btn-danger" id="clearHistory">
+            <i data-lucide="trash-2"></i>
+            <span>Clear All History</span>
+          </button>
+        </div>
+        <div class="history-list" id="historyList">
+          <div class="empty-state">
+            <i data-lucide="inbox"></i>
+            <p>No saved comparisons yet</p>
+            <small>Save a comparison to see it here</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings View -->
+      <div class="view" id="view-settings">
+        <div class="settings-header">
+          <h2>Settings</h2>
+          <p>Customize your diff checker experience</p>
+        </div>
+
+        <div class="settings-grid">
+          <div class="setting-section">
+            <h3><i data-lucide="palette"></i> Appearance</h3>
+            <div class="setting-item">
+              <label for="settingTheme">Theme</label>
+              <select id="settingTheme" class="select">
+                <option value="auto">Auto (System)</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </div>
+            <div class="setting-item">
+              <label for="settingFontSize">Editor Font Size</label>
+              <select id="settingFontSize" class="select">
+                <option value="12">12px</option>
+                <option value="14" selected>14px</option>
+                <option value="16">16px</option>
+                <option value="18">18px</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="setting-section">
+            <h3><i data-lucide="sliders"></i> Diff Options</h3>
+            <div class="setting-item">
+              <label class="checkbox-label">
+                <input type="checkbox" id="settingIgnoreWhitespace">
+                <span>Ignore whitespace by default</span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <label class="checkbox-label">
+                <input type="checkbox" id="settingIgnoreCase">
+                <span>Ignore case by default</span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <label class="checkbox-label">
+                <input type="checkbox" id="settingLineNumbers" checked>
+                <span>Show line numbers by default</span>
+              </label>
+            </div>
+            <div class="setting-item">
+              <label class="checkbox-label">
+                <input type="checkbox" id="settingAutoSave">
+                <span>Auto-save comparisons</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="setting-section">
+            <h3><i data-lucide="database"></i> Storage</h3>
+            <div class="setting-item">
+              <label for="settingHistoryLimit">History Limit</label>
+              <select id="settingHistoryLimit" class="select">
+                <option value="10">10 items</option>
+                <option value="25" selected>25 items</option>
+                <option value="50">50 items</option>
+                <option value="100">100 items</option>
+              </select>
+            </div>
+            <div class="storage-info">
+              <p><strong>Storage used:</strong> <span id="storageUsed">0 KB</span></p>
+              <button class="btn btn-danger" id="clearStorage">
+                <i data-lucide="trash-2"></i>
+                Clear All Data
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- File input (hidden) -->
+  <input type="file" id="fileInputLeft" accept=".txt,.md,.csv,.pdf,.doc,.docx,.py,.js,.ts,.java,.html,.css,.json,.xml,.yaml,.yml,.go,.rs,.cpp,.c,.h,.jsx,.tsx,.php,.rb,.swift,.kt,.sh,.bash" style="display: none;">
+  <input type="file" id="fileInputRight" accept=".txt,.md,.csv,.pdf,.doc,.docx,.py,.js,.ts,.java,.html,.css,.json,.xml,.yaml,.yml,.go,.rs,.cpp,.c,.h,.jsx,.tsx,.php,.rb,.swift,.kt,.sh,.bash" style="display: none;">
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast">
+    <i data-lucide="check-circle"></i>
+    <span id="toastMessage">Success!</span>
+  </div>
+
+  <!-- Format Modal -->
+  <div class="modal" id="formatModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Format Document</h3>
+        <button class="modal-close" id="closeModal">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Select the format type to apply:</p>
+        <div class="format-options">
+          <button class="format-option" data-format="json">
+            <i data-lucide="braces"></i>
+            <span>JSON</span>
+          </button>
+          <button class="format-option" data-format="xml">
+            <i data-lucide="code"></i>
+            <span>XML</span>
+          </button>
+          <button class="format-option" data-format="html">
+            <i data-lucide="file-code"></i>
+            <span>HTML</span>
+          </button>
+          <button class="format-option" data-format="css">
+            <i data-lucide="palette"></i>
+            <span>CSS</span>
+          </button>
+          <button class="format-option" data-format="javascript">
+            <i data-lucide="code-2"></i>
+            <span>JavaScript</span>
+          </button>
+          <button class="format-option" data-format="python">
+            <i data-lucide="file-text"></i>
+            <span>Python</span>
+          </button>
+          <button class="format-option" data-format="sql">
+            <i data-lucide="database"></i>
+            <span>SQL</span>
+          </button>
+          <button class="format-option" data-format="markdown">
+            <i data-lucide="heading"></i>
+            <span>Markdown</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
