@@ -9,6 +9,8 @@
   const root = document.documentElement;
   const $  = (s, c = document) => c.querySelector(s);
   const $$ = (s, c = document) => Array.from(c.querySelectorAll(s));
+  const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let starfieldEnsure = null; // set once the starfield is initialised
 
   /* ---------- Theme toggle ---------- */
   function applyThemeIcon(theme) {
@@ -27,6 +29,7 @@
       root.setAttribute("data-theme", next);
       try { localStorage.setItem("theme", next); } catch (e) {}
       applyThemeIcon(next);
+      if (starfieldEnsure) starfieldEnsure(); // (re)start sparkles when entering dark
     });
   });
 
@@ -122,6 +125,72 @@
       form.reset();
     });
   }
+
+  /* ---------- Ambient background: olive orbs + dark-mode starfield ---------- */
+  function initBackground() {
+    if ($(".bg-layer")) return;
+    const layer = document.createElement("div");
+    layer.className = "bg-layer";
+    layer.setAttribute("aria-hidden", "true");
+    layer.innerHTML =
+      '<div class="bg-orb bg-orb-1"></div>' +
+      '<div class="bg-orb bg-orb-2"></div>' +
+      (reduceMotion ? "" : '<canvas id="starfield"></canvas>');
+    document.body.insertBefore(layer, document.body.firstChild);
+
+    const canvas = $("#starfield", layer);
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let stars = [], W = 0, H = 0, raf = null;
+
+    function build() {
+      W = canvas.clientWidth; H = canvas.clientHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const count = Math.max(40, Math.min(150, Math.floor((W * H) / 9000)));
+      stars = [];
+      for (let i = 0; i < count; i++) {
+        stars.push({
+          x: Math.random() * W, y: Math.random() * H,
+          r: Math.random() * 1.2 + 0.3,
+          phase: Math.random() * Math.PI * 2,
+          speed: Math.random() * 0.015 + 0.004,
+          base: Math.random() * 0.5 + 0.35
+        });
+      }
+    }
+    function render() {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        s.phase += s.speed;
+        const a = s.base * ((Math.sin(s.phase) + 1) / 2);
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, 6.2832);
+        ctx.fillStyle = "rgba(214, 226, 150, " + a.toFixed(3) + ")";
+        ctx.shadowBlur = s.r * 4;
+        ctx.shadowColor = "rgba(155, 197, 58, " + (a * 0.7).toFixed(3) + ")";
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+    }
+    function loop() {
+      if (currentTheme() !== "dark") { ctx.clearRect(0, 0, W, H); raf = null; return; }
+      render();
+      raf = requestAnimationFrame(loop);
+    }
+    starfieldEnsure = function () {
+      if (currentTheme() !== "dark") return;
+      render();                                   // paint one frame immediately
+      if (!raf) raf = requestAnimationFrame(loop); // then animate while visible
+    };
+    let rt = null;
+    window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(build, 200); }, { passive: true });
+    build();
+    starfieldEnsure();
+  }
+  initBackground();
 
   /* ---------- Year stamp ---------- */
   $$("[data-year]").forEach((el) => { el.textContent = new Date().getFullYear(); });
