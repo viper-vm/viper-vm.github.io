@@ -1,24 +1,23 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Live Demos — Vivek Modi</title>
   <meta name="description" content="Live, in-browser demos by Vivek Modi — India Energy Atlas, Diff Checker, WordGen, JWT Decoder and more." />
   <link rel="canonical" href="https://viper-vm.github.io/demos/" />
-  <meta name="theme-color" content="#0a192f" media="(prefers-color-scheme: dark)" />
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#14110d" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#faf6f0" media="(prefers-color-scheme: light)" />
   <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <script>
     (function () {
       try {
         var saved = localStorage.getItem("theme");
-        var sys = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-        document.documentElement.setAttribute("data-theme", saved || sys);
-      } catch (e) { document.documentElement.setAttribute("data-theme", "dark"); }
+        document.documentElement.setAttribute("data-theme", saved || "light");
+      } catch (e) { document.documentElement.setAttribute("data-theme", "light"); }
     })();
   </script>
   <link rel="stylesheet" href="/assets/css/style.css" />
@@ -104,7 +103,15 @@
             '</div>';
           grid.appendChild(el);
         });
-        // make sure newly-added reveals are observed by site.js (loaded after, defer)
+        // These cards are added after site.js sets up its reveal observer,
+        // so reveal them directly (staggered) instead of relying on it.
+        var cards = grid.querySelectorAll(".demo-card.reveal");
+        cards.forEach(function (c, i) { setTimeout(function () { c.classList.add("in"); }, 60 + i * 70); });
+      })
+      .catch(function () {
+        document.getElementById("demosGrid").innerHTML =
+          '<p style="color:var(--muted)">Couldn\'t load the demo list. Browse them on ' +
+          '<a href="https://github.com/viper-vm/viper-vm.github.io/tree/main/demos">GitHub</a> instead.</p>';
       });
   </script>
   <script src="/assets/js/site.js" defer></script>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -19,23 +19,22 @@
   <meta name="twitter:description" content="Building production LLM & RAG systems. Projects, live demos, and resume." />
   <meta name="twitter:image" content="https://viper-vm.github.io/assets/img/vivek.jpg" />
 
-  <meta name="theme-color" content="#0a192f" media="(prefers-color-scheme: dark)" />
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#14110d" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#faf6f0" media="(prefers-color-scheme: light)" />
   <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
-  <!-- No-flash theme: system preference unless the visitor chose one -->
+  <!-- No-flash theme: light by default, unless the visitor has chosen one -->
   <script>
     (function () {
       try {
         var saved = localStorage.getItem("theme");
-        var sys = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-        document.documentElement.setAttribute("data-theme", saved || sys);
+        document.documentElement.setAttribute("data-theme", saved || "light");
       } catch (e) {
-        document.documentElement.setAttribute("data-theme", "dark");
+        document.documentElement.setAttribute("data-theme", "light");
       }
     })();
   </script>

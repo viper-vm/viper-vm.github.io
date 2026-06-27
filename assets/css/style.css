@@ -1,29 +1,32 @@
 /* ============================================================
    Vivek Modi — Portfolio
-   Unified design system · "Slate + Teal" · light/dark, system-aware
+   Unified design system · "Olive Night" · warm earthy + olive-green
+   Light is the default theme; dark adds a twinkling starfield.
    ============================================================ */
 
 /* ---------- Design tokens ---------- */
 :root {
-  /* Dark (default) */
-  --bg:            #0a192f;
-  --bg-elevated:   #112240;
-  --bg-highest:    #1d2d50;
-  --heading:       #e6f1ff;
-  --text:          #ccd6f6;
-  --muted:         #8892b0;
-  --dim:           #5b6885;
-  --accent:        #64ffda;
-  --accent-strong: #64ffda;
-  --accent-tint:   rgba(100, 255, 218, 0.10);
-  --accent-line:   rgba(100, 255, 218, 0.30);
-  --border:        #233554;
-  --card:          rgba(17, 34, 64, 0.55);
-  --shadow:        0 18px 40px -18px rgba(2, 12, 27, 0.80);
-  --shadow-soft:   0 10px 30px -15px rgba(2, 12, 27, 0.70);
-  --nav-bg:        rgba(10, 25, 47, 0.72);
+  /* Dark ("olive night") — applied when data-theme="dark" */
+  --bg:            #14110d;
+  --bg-elevated:   #1e1a14;
+  --bg-highest:    #2a241c;
+  --heading:       #faf6f0;
+  --text:          #e6dfd5;
+  --muted:         #a89070;
+  --dim:           #6f6353;
+  --accent:        #9bc53a;
+  --accent-strong: #b6dc54;
+  --accent-tint:   rgba(155, 197, 58, 0.12);
+  --accent-line:   rgba(155, 197, 58, 0.32);
+  --on-accent:     #14110d;
+  --olive-rgb:     155, 197, 58;
+  --border:        #2e2820;
+  --card:          rgba(30, 26, 20, 0.55);
+  --shadow:        0 18px 40px -18px rgba(0, 0, 0, 0.70);
+  --shadow-soft:   0 10px 30px -15px rgba(0, 0, 0, 0.55);
+  --nav-bg:        rgba(20, 17, 13, 0.72);
 
-  --font:  "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font:  "Sora", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --mono:  "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --maxw:  1120px;
   --radius: 14px;
@@ -31,22 +34,24 @@
 }
 
 :root[data-theme="light"] {
-  --bg:            #ffffff;
-  --bg-elevated:   #f6f9fc;
-  --bg-highest:    #eef3f9;
-  --heading:       #0a192f;
-  --text:          #2b3a55;
-  --muted:         #56678a;
-  --dim:           #8593ad;
-  --accent:        #0d9488;
-  --accent-strong: #0b7d72;
-  --accent-tint:   rgba(13, 148, 136, 0.09);
-  --accent-line:   rgba(13, 148, 136, 0.30);
-  --border:        #dde5f0;
-  --card:          rgba(255, 255, 255, 0.75);
-  --shadow:        0 18px 40px -22px rgba(15, 23, 42, 0.30);
-  --shadow-soft:   0 10px 28px -18px rgba(15, 23, 42, 0.22);
-  --nav-bg:        rgba(255, 255, 255, 0.80);
+  --bg:            #faf6f0;
+  --bg-elevated:   #f4ede2;
+  --bg-highest:    #ece3d4;
+  --heading:       #1c1813;
+  --text:          #3c3528;
+  --muted:         #6f6353;
+  --dim:           #9b8f7c;
+  --accent:        #557210;
+  --accent-strong: #415b06;
+  --accent-tint:   rgba(85, 114, 16, 0.10);
+  --accent-line:   rgba(85, 114, 16, 0.28);
+  --on-accent:     #faf6f0;
+  --olive-rgb:     85, 114, 16;
+  --border:        #e6ddcd;
+  --card:          rgba(255, 253, 249, 0.72);
+  --shadow:        0 18px 40px -22px rgba(60, 45, 20, 0.22);
+  --shadow-soft:   0 10px 28px -18px rgba(60, 45, 20, 0.16);
+  --nav-bg:        rgba(250, 246, 240, 0.82);
 }
 
 /* ---------- Reset / base ---------- */
@@ -61,8 +66,8 @@ body {
   line-height: 1.6;
   color: var(--text);
   background:
-    radial-gradient(900px 500px at 100% -5%, var(--accent-tint), transparent 55%),
-    radial-gradient(1000px 600px at -10% 0%, rgba(100,160,255,0.06), transparent 55%),
+    radial-gradient(900px 500px at 100% -5%, rgba(var(--olive-rgb), 0.10), transparent 55%),
+    radial-gradient(1000px 600px at -10% 0%, rgba(var(--olive-rgb), 0.06), transparent 55%),
     var(--bg);
   background-repeat: no-repeat;
   -webkit-font-smoothing: antialiased;
@@ -71,7 +76,8 @@ body {
 }
 :root[data-theme="light"] body {
   background:
-    radial-gradient(900px 500px at 100% -5%, var(--accent-tint), transparent 60%),
+    radial-gradient(900px 500px at 100% -5%, rgba(var(--olive-rgb), 0.08), transparent 60%),
+    radial-gradient(800px 500px at 0% 100%, rgba(var(--olive-rgb), 0.05), transparent 55%),
     var(--bg);
 }
 
@@ -85,7 +91,7 @@ h1, h2, h3, h4 { color: var(--heading); line-height: 1.15; font-weight: 700; let
 .mono { font-family: var(--mono); }
 
 /* ---------- Selection / focus ---------- */
-::selection { background: var(--accent); color: #0a192f; }
+::selection { background: var(--accent); color: var(--on-accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 
 /* ============================================================
@@ -176,8 +182,8 @@ h1, h2, h3, h4 { color: var(--heading); line-height: 1.15; font-weight: 700; let
 }
 .btn:hover { background: var(--accent-tint); color: var(--accent); transform: translateY(-2px); box-shadow: var(--shadow-soft); }
 .btn svg { width: 17px; height: 17px; }
-.btn.solid { background: var(--accent); color: #0a192f; border-color: var(--accent); }
-.btn.solid:hover { filter: brightness(1.08); color: #0a192f; }
+.btn.solid { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.btn.solid:hover { filter: brightness(1.08); color: var(--on-accent); }
 .btn.ghost { border-color: var(--border); color: var(--text); }
 .btn.ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-tint); }
 .btn.sm { padding: 9px 15px; font-size: 13px; }
@@ -406,6 +412,32 @@ main { overflow-x: clip; }
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
   * { scroll-behavior: auto !important; }
+}
+
+/* ============================================================
+   Ambient background: floating olive orbs + dark-mode starfield
+   (markup injected by site.js)
+   ============================================================ */
+.bg-layer { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.bg-orb {
+  position: absolute; border-radius: 50%; filter: blur(90px);
+  opacity: 0.55; animation: orbFloat 24s ease-in-out infinite;
+}
+.bg-orb-1 { width: 600px; height: 600px; top: -180px; left: -180px;
+  background: radial-gradient(circle, rgba(var(--olive-rgb), 0.18) 0, transparent 70%); }
+.bg-orb-2 { width: 520px; height: 520px; bottom: -160px; right: -160px;
+  background: radial-gradient(circle, rgba(var(--olive-rgb), 0.13) 0, transparent 70%); animation-delay: -10s; }
+#starfield { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.2s var(--ease); }
+:root[data-theme="dark"] #starfield { opacity: 1; }
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0); }
+  33%      { transform: translate(3%, -4%); }
+  66%      { transform: translate(-3%, 3%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bg-orb { animation: none; }
+  #starfield { display: none; }
 }
 
 /* ============================================================
