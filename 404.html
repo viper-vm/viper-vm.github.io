@@ -1,1 +1,37 @@
-<!doctype html><html><head><meta charset='utf-8'/><meta name='viewport' content='width=device-width, initial-scale=1'/><title>Not found</title><link rel='stylesheet' href='/assets/css/style.css'/></head><body><main class='container' style='padding:80px 0'><div class='card'><h1>404</h1><p>Oops — that page doesn’t exist. Head back <a href='/'>home</a>.</p></div></main></body></html>
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>404 — Page not found · Vivek Modi</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem("theme");
+        var sys = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", saved || sys);
+      } catch (e) { document.documentElement.setAttribute("data-theme", "dark"); }
+    })();
+  </script>
+  <link rel="stylesheet" href="/assets/css/style.css" />
+  <style>.nf{min-height:100vh;display:grid;place-items:center;text-align:center;padding:24px}.nf .code{font-family:var(--mono);font-size:clamp(72px,18vw,150px);color:var(--accent);line-height:1;letter-spacing:-2px}</style>
+</head>
+<body>
+  <main class="nf">
+    <div>
+      <div class="code">404</div>
+      <h1 style="margin:14px 0 8px">This page took a wrong turn.</h1>
+      <p style="color:var(--muted);max-width:440px;margin:0 auto 28px">The page you're looking for doesn't exist or has moved. Let's get you back on track.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a class="btn solid" href="/">Back home</a>
+        <a class="btn ghost" href="/demos/">Live demos</a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

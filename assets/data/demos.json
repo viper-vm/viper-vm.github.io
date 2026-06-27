@@ -2,60 +2,43 @@
   {
     "id": "india-energy",
     "title": "India Energy Atlas",
-    "summary": "Interactive maps (street / terrain / satellite / bathymetry) of India's oil, gas, coal, solar & wind — reserves, production, import dependency, frontier exploration, field depths, costs and feasibility, with live charts.",
+    "summary": "Interactive maps of India's oil, gas, coal, solar & wind — reserves, production, import dependency, frontier exploration, field depths, costs and feasibility, with live charts.",
     "category": "Data Viz",
+    "emoji": "🛢️",
     "demo_url": "/demos/india-energy/"
   },
   {
     "id": "diff-checker",
     "title": "Diff Checker",
-    "summary": "Advanced text comparison tool with analytics, history, file upload support (PDF, DOCX, code files), and document formatting for JSON, Python, JavaScript, SQL, and more.",
+    "summary": "Advanced text comparison with analytics, history, and file upload (PDF, DOCX, code), plus formatting for JSON, Python, JavaScript and SQL.",
     "category": "Developer Tools",
-    "demo_url": "/demos/diff/"
+    "emoji": "🔀",
+    "demo_url": "/demos/diff/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/diff"
   },
   {
     "id": "wordgen",
     "title": "WordGen",
-    "summary": "Context-aware synonym suggestions and AI-powered sentence rephrasing with optional LLM integration.",
-    "category": "Writing",
+    "summary": "Context-aware synonym suggestions and AI-powered sentence rephrasing with optional LLM integration — web app + Chrome extension.",
+    "category": "Writing / NLP",
+    "emoji": "✍️",
     "demo_url": "/demos/wordgen/",
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/wordgen"
   },
   {
     "id": "jwt-decoder",
-    "title": "JWT.io Clone",
-    "summary": "Complete JWT token decoder and encoder with algorithm support and signature verification.",
+    "title": "JWT Decoder",
+    "summary": "Decode and encode JSON Web Tokens with algorithm support and signature verification — a clean jwt.io-style tool.",
     "category": "Security",
+    "emoji": "🔐",
     "demo_url": "/demos/jwt.html"
   },
   {
     "id": "wordle",
     "title": "Wordle Clone",
-    "summary": "A fully functional Wordle clone game with daily words and statistics.",
+    "summary": "A fully playable Wordle clone with daily words and statistics.",
     "category": "Game",
+    "emoji": "🟩",
     "demo_url": "/demos/wordle.html"
-  },
-  {
-    "id": "macrohard",
-    "title": "MacroHard Live",
-    "summary": "Run the MacroHard demo in-browser.",
-    "repo": "https://github.com/CrazyDragonX007/MacroHard",
-    "category": "Frontend",
-    "demo_url": "https://your-demo-url-here"
-  },
-  {
-    "id": "mini-tweet",
-    "title": "mini\u2011tweet Live",
-    "summary": "A live version of your college microblog. (Needs a backend host.)",
-    "repo": "https://github.com/viper-vm/mini-tweet",
-    "category": "Full\u2011stack",
-    "demo_url": "https://your-mini-tweet-url"
-  },
-  {
-    "id": "playground",
-    "title": "ChatGPT\u2011generated micro\u2011app",
-    "summary": "Slot for any experimental app \u2014 plug in a URL and it works.",
-    "category": "Experimental",
-    "demo_url": "https://your-experimental-url"
   }
 ]
