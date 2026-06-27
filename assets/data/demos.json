@@ -1,5 +1,12 @@
 [
   {
+    "id": "india-energy",
+    "title": "India Energy Atlas",
+    "summary": "Interactive maps (street / terrain / satellite / bathymetry) of India's oil, gas, coal, solar & wind — reserves, production, import dependency, frontier exploration, field depths, costs and feasibility, with live charts.",
+    "category": "Data Viz",
+    "demo_url": "/demos/india-energy/"
+  },
+  {
     "id": "diff-checker",
     "title": "Diff Checker",
     "summary": "Advanced text comparison tool with analytics, history, file upload support (PDF, DOCX, code files), and document formatting for JSON, Python, JavaScript, SQL, and more.",
