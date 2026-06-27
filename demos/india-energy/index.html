@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>India Energy Atlas — Dependency, Reserves & the Hunt for More — Vivek Modi</title>
+  <meta name="description" content="Interactive atlas of India's energy: oil, gas, coal, solar, wind, frontier exploration, reserves, production, import dependency, field depths, costs and feasibility — with switchable street / terrain / satellite / bathymetry maps." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script defer src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{--bg:#0b0e14;--surface:#0f141f;--card:#111827;--text:#e5e7eb;--muted:#9ca3af;--brand:#60a5fa;--brand-2:#a78bfa;--accent:#34d399;--ring:rgba(96,165,250,.45);--border:#1f2937}
+    :root[data-theme="light"]{--bg:#f7fafc;--surface:#fff;--card:#fff;--text:#0b1220;--muted:#5b6b84;--brand:#3b82f6;--brand-2:#8b5cf6;--accent:#10b981;--ring:rgba(59,130,246,.35);--border:#e5e7eb}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}
+    body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);line-height:1.5}
+    .container{width:min(1180px,94vw);margin:0 auto}
+    a{color:var(--brand)}
+    header.site{position:sticky;top:0;backdrop-filter:saturate(1.2) blur(10px);background:color-mix(in oklab,var(--bg) 60%, transparent);border-bottom:1px solid var(--border);z-index:1200}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.4px;text-decoration:none;color:var(--text)}
+    .brand .logo{width:36px;height:36px;display:grid;place-items:center;border-radius:12px;background:radial-gradient(circle at 30% 30%,var(--brand),var(--brand-2));color:#fff}
+    nav.links a{color:var(--muted);text-decoration:none;font-weight:600;padding:10px 12px;border-radius:10px}
+    nav.links a:hover,nav.links a.active{color:var(--text);background:color-mix(in oklab,var(--bg) 70%, #000)}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:color-mix(in oklab,var(--bg) 75%, #000);color:var(--text);padding:9px 13px;border-radius:12px;text-decoration:none;font-weight:700;cursor:pointer;font-size:14px}
+    .btn:hover{border-color:var(--ring)}
+    .card{background:linear-gradient(180deg,color-mix(in oklab,var(--card) 92%, transparent),color-mix(in oklab,var(--card) 74%, transparent));border:1px solid var(--border);border-radius:16px;padding:20px}
+    .grid{display:grid;gap:16px}
+    .cols-2{grid-template-columns:repeat(2,1fr)}
+    .cols-3{grid-template-columns:repeat(3,1fr)}
+    .cols-4{grid-template-columns:repeat(4,1fr)}
+    @media(max-width:900px){.cols-2,.cols-3,.cols-4{grid-template-columns:1fr}}
+    h1{font-size:clamp(28px,4.2vw,46px);line-height:1.08;margin:0 0 10px;letter-spacing:-.5px}
+    h2.sec{font-size:clamp(20px,2.6vw,28px);margin:46px 0 6px;letter-spacing:-.3px;display:flex;align-items:center;gap:10px}
+    h3{margin:2px 0 8px}
+    .lead{color:var(--muted);font-size:18px;max-width:80ch}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--brand);background:color-mix(in oklab,var(--brand) 14%, transparent);border:1px solid color-mix(in oklab,var(--brand) 30%, transparent);padding:6px 12px;border-radius:999px}
+    .muted{color:var(--muted)}
+    .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:color-mix(in oklab,var(--bg) 80%,#000)}
+    .stat{font-family:Inter;font-weight:800;font-size:clamp(26px,3.4vw,38px);letter-spacing:-1px;line-height:1}
+    .stat small{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:0}
+    .kicker{font-size:12px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);font-weight:700}
+    /* hero stat strip */
+    .stripwrap{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:26px}
+    @media(max-width:900px){.stripwrap{grid-template-columns:repeat(2,1fr)}}
+    .strip{border:1px solid var(--border);border-radius:14px;padding:16px;background:color-mix(in oklab,var(--card) 85%,transparent)}
+    .strip .stat{margin-bottom:6px}
+    .barbg{height:7px;border-radius:99px;background:color-mix(in oklab,var(--bg) 70%,#000);overflow:hidden;margin-top:10px}
+    .barfill{height:100%;border-radius:99px}
+    /* MAP */
+    .maptools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+    .seg{display:inline-flex;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:color-mix(in oklab,var(--bg) 80%,#000)}
+    .seg button{border:0;background:transparent;color:var(--muted);font-weight:700;font-size:13px;padding:9px 13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+    .seg button.active{background:linear-gradient(180deg,var(--brand),var(--brand-2));color:#fff}
+    .chip{cursor:pointer;user-select:none;font-size:12.5px;font-weight:700;padding:7px 12px;border-radius:999px;border:1px solid var(--border);background:color-mix(in oklab,var(--bg) 80%,#000);color:var(--muted);display:inline-flex;align-items:center;gap:7px;transition:.12s}
+    .chip .dot{width:10px;height:10px;border-radius:99px;box-shadow:0 0 0 2px color-mix(in oklab,var(--bg) 60%,#000)}
+    .chip.on{color:var(--text);border-color:var(--ring);background:color-mix(in oklab,var(--brand) 12%,transparent)}
+    .chip.off{opacity:.55}
+    #map{height:620px;width:100%;border-radius:16px;border:1px solid var(--border);z-index:1}
+    @media(max-width:700px){#map{height:520px}}
+    .mapwrap{position:relative}
+    .legend{position:absolute;right:14px;bottom:14px;z-index:600;background:color-mix(in oklab,var(--bg) 88%,#000);border:1px solid var(--border);border-radius:12px;padding:10px 12px;font-size:12px;max-width:210px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+    .legend .row{display:flex;align-items:center;gap:8px;margin:3px 0}
+    .legend .dot{width:11px;height:11px;border-radius:99px}
+    .leaflet-popup-content-wrapper{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:12px}
+    .leaflet-popup-tip{background:var(--card);border:1px solid var(--border)}
+    .leaflet-popup-content{margin:12px 14px;font-family:Inter}
+    .pp h4{margin:0 0 6px;font-size:15px}
+    .pp .meta{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px;margin:6px 0}
+    .pp .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px}
+    /* detail drawer */
+    #drawer{position:fixed;top:0;right:0;height:100%;width:min(420px,92vw);background:var(--surface);border-left:1px solid var(--border);transform:translateX(102%);transition:.28s cubic-bezier(.2,.8,.2,1);z-index:1300;overflow-y:auto;box-shadow:-20px 0 60px rgba(0,0,0,.4)}
+    #drawer.open{transform:none}
+    #drawer .hd{position:sticky;top:0;background:color-mix(in oklab,var(--surface) 90%,transparent);backdrop-filter:blur(8px);padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+    #drawer .bd{padding:18px 20px}
+    .kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:14px;margin:14px 0}
+    .kv dt{color:var(--muted);font-weight:600}
+    .kv dd{margin:0;font-weight:600}
+    table.data{width:100%;border-collapse:collapse;font-size:14px}
+    table.data th,table.data td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--border)}
+    table.data th{color:var(--muted);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.6px}
+    table.data tr:hover td{background:color-mix(in oklab,var(--brand) 7%,transparent)}
+    .tag{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:99px}
+    .t-prod{background:color-mix(in oklab,#34d399 22%,transparent);color:#34d399}
+    .t-dev{background:color-mix(in oklab,#60a5fa 22%,transparent);color:#60a5fa}
+    .t-expl{background:color-mix(in oklab,#a78bfa 22%,transparent);color:#a78bfa}
+    .t-front{background:color-mix(in oklab,#f59e0b 22%,transparent);color:#f59e0b}
+    .chartbox{height:280px;position:relative}
+    .note{font-size:13px;color:var(--muted);border-left:3px solid var(--brand);padding:4px 0 4px 12px;margin:10px 0}
+    .callout{border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:12px;padding:16px;background:color-mix(in oklab,var(--accent) 7%,transparent)}
+    ul.clean{margin:8px 0;padding-left:18px}
+    ul.clean li{margin:6px 0}
+    .verdict{display:flex;gap:14px;align-items:flex-start;padding:14px;border-radius:12px;border:1px solid var(--border);margin:8px 0}
+    .verdict .ic{width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:10px}
+    .yes{background:color-mix(in oklab,#34d399 16%,transparent)}
+    .no{background:color-mix(in oklab,#ef4444 16%,transparent)}
+    .mid{background:color-mix(in oklab,#f59e0b 16%,transparent)}
+    footer{border-top:1px solid var(--border);padding:30px 0 50px;color:var(--muted);margin-top:50px}
+    .src{font-size:12.5px;color:var(--muted)}
+    .src a{color:var(--muted);text-decoration:underline}
+    .disc{font-size:12.5px;color:var(--muted);background:color-mix(in oklab,var(--bg) 80%,#000);border:1px dashed var(--border);border-radius:12px;padding:12px 14px}
+    .scrollx{overflow-x:auto}
+  </style>
+</head>
+<body>
+  <header class="site">
+    <div class="container nav">
+      <a class="brand" href="/#home"><div class="logo"><i data-lucide="bolt"></i></div><span>Vivek Modi</span></a>
+      <nav class="links">
+        <a href="/#home">Home</a>
+        <a href="/demos/">Live Demos</a>
+        <a href="/demos/india-energy/" class="active">Energy Atlas</a>
+      </nav>
+      <a class="btn" id="themeBtn"><i id="tIcon" data-lucide="moon"></i> Theme</a>
+    </div>
+  </header>
+
+  <main class="container" style="padding:42px 0 0">
+    <!-- HERO -->
+    <span class="eyebrow"><i data-lucide="globe-2" style="width:14px;height:14px"></i> India Energy Atlas · FY2024–25</span>
+    <h1>How dependent is India on the world for energy — and where might it find more?</h1>
+    <p class="lead">An interactive picture of India's oil, gas, coal, solar and wind — reserves, production, usage and import dependency — plus every major discovered and frontier zone where India could find energy next. Switch the map between <b>street</b>, <b>terrain</b>, <b>satellite</b> and <b>bathymetry/depth</b> views, and click any field for depth, capacity, cost and timeline.</p>
+
+    <div class="stripwrap">
+      <div class="strip">
+        <div class="kicker">Crude oil imported</div>
+        <div class="stat" style="color:#ef4444">89.4%<small> of supply</small></div>
+        <div class="muted" style="font-size:12.5px">All-time high (FY25). Domestic output 28.7 MT vs 243 MT imported.</div>
+        <div class="barbg"><div class="barfill" style="width:89.4%;background:#ef4444"></div></div>
+      </div>
+      <div class="strip">
+        <div class="kicker">Natural gas imported (LNG)</div>
+        <div class="stat" style="color:#fb923c">~50%<small> of demand</small></div>
+        <div class="muted" style="font-size:12.5px">~36 BCM produced vs ~72 BCM consumed. 4th-largest LNG importer.</div>
+        <div class="barbg"><div class="barfill" style="width:50%;background:#fb923c"></div></div>
+      </div>
+      <div class="strip">
+        <div class="kicker">Coal — self-reliance</div>
+        <div class="stat" style="color:#94a3b8">~75%<small> domestic</small></div>
+        <div class="muted" style="font-size:12.5px">~1.05 BT mined/yr; 5th-largest reserves. Still imports coking + some thermal.</div>
+        <div class="barbg"><div class="barfill" style="width:75%;background:#94a3b8"></div></div>
+      </div>
+      <div class="strip">
+        <div class="kicker">Renewables installed</div>
+        <div class="stat" style="color:#34d399">250+ GW<small> · 3rd globally</small></div>
+        <div class="muted" style="font-size:12.5px">Solar 136 GW + Wind 55 GW (Dec 2025). Target 500 GW non-fossil by 2030.</div>
+        <div class="barbg"><div class="barfill" style="width:50%;background:#34d399"></div></div>
+      </div>
+    </div>
+
+    <div class="disc" style="margin-top:18px">
+      <b>Read me:</b> Figures are the latest official/published values (mostly FY2024–25, PPAC / DGH / MNRE / IEA / NIWE / NISE). Field and basin <b>locations and basin outlines on the map are approximate/schematic</b> for visualization — they are not survey-grade coordinates. Capacities marked “in-place / estimated” are not the same as recoverable reserves. This is an educational explainer, not investment or operational guidance.
+    </div>
+
+    <!-- MAP -->
+    <h2 class="sec"><i data-lucide="map"></i> The energy map of India</h2>
+    <p class="muted" style="margin-top:0">Pick a <b>base view</b>, toggle <b>what to show</b>, then click any marker. Bathymetry view reveals how deep the offshore fields really sit.</p>
+
+    <div class="maptools">
+      <div class="seg" id="baseSeg">
+        <button data-base="street" class="active"><i data-lucide="map" style="width:15px;height:15px"></i>Street</button>
+        <button data-base="terrain"><i data-lucide="mountain" style="width:15px;height:15px"></i>Terrain</button>
+        <button data-base="satellite"><i data-lucide="satellite" style="width:15px;height:15px"></i>Satellite</button>
+        <button data-base="dark"><i data-lucide="moon" style="width:15px;height:15px"></i>Dark</button>
+        <button data-base="depth"><i data-lucide="waves" style="width:15px;height:15px"></i>Depth / Bathymetry</button>
+      </div>
+    </div>
+    <div class="maptools" id="chipBar"></div>
+
+    <div class="mapwrap">
+      <div id="map"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <p class="note">Tip: turn on <b>Sedimentary basins</b> to see the 26-basin canvas India is exploring, and <b>Frontier / exploration</b> (purple) to see the deepwater bets — Andaman & Mahanadi — that could change everything if they hit.</p>
+
+    <!-- DRAWER -->
+    <aside id="drawer" aria-live="polite">
+      <div class="hd">
+        <div>
+          <div class="kicker" id="dType">Field</div>
+          <h3 id="dName" style="margin:2px 0 0">—</h3>
+        </div>
+        <button class="btn" id="dClose" style="padding:7px 10px"><i data-lucide="x" style="width:16px;height:16px"></i></button>
+      </div>
+      <div class="bd" id="dBody"></div>
+    </aside>
+
+    <!-- CHARTS -->
+    <h2 class="sec"><i data-lucide="bar-chart-3"></i> The numbers behind the dependency</h2>
+    <div class="grid cols-2">
+      <div class="card"><h3>Crude oil: import dependency keeps climbing</h3><p class="muted" style="margin:0 0 8px;font-size:13px">Share of crude supply that is imported (%).</p><div class="chartbox"><canvas id="cImport"></canvas></div></div>
+      <div class="card"><h3>Domestic crude production is sliding</h3><p class="muted" style="margin:0 0 8px;font-size:13px">India's own crude output, million tonnes/yr.</p><div class="chartbox"><canvas id="cProd"></canvas></div></div>
+      <div class="card"><h3>India's primary energy mix</h3><p class="muted" style="margin:0 0 8px;font-size:13px">Share of total primary energy (approx.). Coal still dominates.</p><div class="chartbox"><canvas id="cMix"></canvas></div></div>
+      <div class="card"><h3>Gas: a widening LNG gap</h3><p class="muted" style="margin:0 0 8px;font-size:13px">Domestic production vs consumption vs LNG imports, BCM.</p><div class="chartbox"><canvas id="cGas"></canvas></div></div>
+      <div class="card"><h3>Renewables: the one curve going the right way</h3><p class="muted" style="margin:0 0 8px;font-size:13px">Installed solar &amp; wind capacity, GW.</p><div class="chartbox"><canvas id="cRe"></canvas></div></div>
+      <div class="card"><h3>How long do reserves last? (R/P ratio)</h3><p class="muted" style="margin:0 0 8px;font-size:13px">Years of proved reserves at current production rate.</p><div class="chartbox"><canvas id="cRP"></canvas></div></div>
+    </div>
+
+    <!-- IS INDIA ENERGY RICH -->
+    <h2 class="sec"><i data-lucide="scale"></i> Can India be called “energy-rich”?</h2>
+    <div class="grid cols-2">
+      <div class="card">
+        <p class="muted" style="margin-top:0">It depends entirely on which energy you mean. India is two countries at once: hydrocarbon-poor and renewable/coal-rich.</p>
+        <div class="verdict"><div class="ic no"><i data-lucide="x" style="color:#ef4444"></i></div><div><b>Oil — poor.</b> 672 MT proved reserves, ~23 years at current output, declining fields. India will import ~85–90% of its crude for the foreseeable future.</div></div>
+        <div class="verdict"><div class="ic mid"><i data-lucide="minus" style="color:#f59e0b"></i></div><div><b>Gas — modest, with upside.</b> ~1,073 BCM proved + large unexplored deepwater (KG, Andaman, Mahanadi). Still ~50% import-dependent today.</div></div>
+        <div class="verdict"><div class="ic yes"><i data-lucide="check" style="color:#34d399"></i></div><div><b>Coal — rich.</b> ~5th-largest reserves on Earth (~350+ BT geological); ~1 BT mined a year. India's true fossil endowment.</div></div>
+        <div class="verdict"><div class="ic yes"><i data-lucide="check" style="color:#34d399"></i></div><div><b>Solar &amp; wind — extraordinarily rich.</b> 3,343 GW feasible solar potential (NISE 2025) and 765 GW wind (NIWE). This is where “energy-rich” is genuinely true.</div></div>
+      </div>
+      <div class="card callout">
+        <h3 style="margin-top:0">The honest one-liner</h3>
+        <p>India is <b>fossil-fuel-import-dependent but renewables-rich.</b> It cannot drill its way to energy independence on oil — the reserves simply aren't there. It <i>can</i> get there on electricity: sun, wind, coal-backed grid, hydro, and a fast-growing nuclear + green-hydrogen layer. The strategic game is therefore <b>electrification</b> (move transport, heat and industry onto a domestic clean grid) far more than <b>exploration</b>.</p>
+        <p class="muted" style="margin-bottom:0">Exploration still matters — every domestic barrel saves hard currency and a ~$120–140 bn/yr oil import bill — but it shrinks the import problem, it doesn't eliminate it.</p>
+      </div>
+    </div>
+
+    <!-- EXPLORATION & DISCOVERIES -->
+    <h2 class="sec"><i data-lucide="search"></i> Exploration &amp; recent discoveries</h2>
+    <div class="grid cols-3">
+      <div class="card">
+        <span class="tag t-prod">Now producing</span>
+        <h3 style="margin-top:10px">KG-DWN-98/2 (Cluster-2)</h3>
+        <p class="muted" style="font-size:14px">ONGC's flagship ultra-deepwater project off the Godavari delta. First oil flowed in Jan 2024; by Oct 2024, three A-field wells lifted output to ~<b>25,000 bopd</b> across 8 wells, heading to a peak around <b>45,000 boe/d</b> + gas. ~₹40,000 cr / $5 bn programme — India's hardest engineering job in the ocean.</p>
+      </div>
+      <div class="card">
+        <span class="tag t-front">Frontier bet</span>
+        <h3 style="margin-top:10px">Andaman ultra-deepwater</h3>
+        <p class="muted" style="font-size:14px">The “could-be-Guyana” gamble. ONGC + OIL are drilling to <b>~5,000 m</b> for the first time. Wildcat <b>ANDW-7</b> in the East Andaman back-arc returned <b>traces of light crude &amp; condensate</b> in cuttings — encouraging, but <b>not yet a commercial discovery</b>. If it hits, first oil is a decade-plus, $10 bn-scale journey.</p>
+      </div>
+      <div class="card">
+        <span class="tag t-expl">Policy unlock</span>
+        <h3 style="margin-top:10px">OALP + “No-Go” areas opened</h3>
+        <p class="muted" style="font-size:14px">Only ~10% of India's sedimentary basin area was under active exploration; the government has been releasing previously off-limits (“No-Go”) defence/forest acreage and auctioning blocks via OALP rounds, aiming to push exploration acreage up sharply and bring Category-II/III basins into play.</p>
+      </div>
+    </div>
+    <p class="note">Reality check on capacity: ONGC's KG cluster holds an estimated <b>~69.6 BCM gas in place</b> (of which ~51 BCM is producible over 2018–34) plus oil — large for India, but a rounding error against the ~243 MT of crude imported every year. Frontier deepwater is the only thing on the map with the <i>scale</i> to move the needle, and it's the least certain.</p>
+
+    <!-- DEVELOPMENT TIMELINES -->
+    <h2 class="sec"><i data-lucide="clock"></i> How long from discovery to first oil/gas?</h2>
+    <div class="card scrollx">
+      <table class="data">
+        <thead><tr><th>Asset / play</th><th>Type</th><th>Status</th><th>Water depth</th><th>Lead time to first production</th><th>Why it takes that long</th></tr></thead>
+        <tbody>
+          <tr><td>Onshore (Rajasthan, Assam, Cambay)</td><td>Oil/Gas</td><td><span class="tag t-prod">Producing</span></td><td>Land</td><td>3–5 yrs</td><td>Roads, rigs, pipelines exist; fastest to monetise.</td></tr>
+          <tr><td>Shallow offshore (Mumbai High)</td><td>Oil/Gas</td><td><span class="tag t-prod">Producing</span></td><td>~75 m</td><td>4–6 yrs</td><td>Fixed platforms, mature infrastructure since 1974.</td></tr>
+          <tr><td>Deepwater (KG-D6, KG cluster-2)</td><td>Gas/Oil</td><td><span class="tag t-prod">Producing</span></td><td>400–3,200 m</td><td>7–10 yrs</td><td>Subsea trees, FPSO/floaters, long subsea tiebacks.</td></tr>
+          <tr><td>Ultra-deepwater frontier (Andaman, Mahanadi)</td><td>Oil/Gas</td><td><span class="tag t-front">Exploring</span></td><td>2,500–3,500 m</td><td>10–15 yrs <i>if</i> commercial</td><td>No nearby infrastructure, appraisal drilling, environmental + seismic risk.</td></tr>
+          <tr><td>Utility solar park (Bhadla, Khavda)</td><td>Solar</td><td><span class="tag t-dev">Scaling</span></td><td>—</td><td>1–3 yrs</td><td>Modular, no resource risk, just land + grid + panels.</td></tr>
+          <tr><td>Onshore wind farm</td><td>Wind</td><td><span class="tag t-dev">Scaling</span></td><td>—</td><td>1.5–3 yrs</td><td>Turbines + evacuation lines; resource already mapped.</td></tr>
+          <tr><td>Offshore wind (Gujarat / Tamil Nadu)</td><td>Wind</td><td><span class="tag t-expl">Early</span></td><td>20–60 m</td><td>5–8 yrs</td><td>First tenders only now; ports, vessels, grid being built.</td></tr>
+          <tr><td>Reasi lithium (J&amp;K)</td><td>Mineral</td><td><span class="tag t-expl">Re-exploring</span></td><td>—</td><td>7–10+ yrs</td><td>Clay-hosted (unproven extraction), needs G2 survey, failed first auctions.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- COST & FEASIBILITY -->
+    <h2 class="sec"><i data-lucide="dollar-sign"></i> What does it cost — and is it worth getting out?</h2>
+    <div class="grid cols-2">
+      <div class="card"><h3>Approx. break-even to lift a barrel</h3><p class="muted" style="margin:0 0 8px;font-size:13px">Indicative all-in production cost, US$/barrel of oil equivalent. Lower = more feasible. (Brent for scale ≈ $70–85.)</p><div class="chartbox"><canvas id="cCost"></canvas></div></div>
+      <div class="card">
+        <h3>The feasibility logic</h3>
+        <ul class="clean muted" style="font-size:14.5px">
+          <li><b>Onshore &amp; shallow offshore</b> (~$25–40/bbl): clearly economic at any normal oil price — but these fields are mature and <i>declining</i>, so the prize is slowing the decline, not growth.</li>
+          <li><b>Deepwater (~$45–60/bbl):</b> economic when oil &gt; ~$55–60, which is the bet behind KG cluster-2. Sensitive to price crashes.</li>
+          <li><b>Ultra-deepwater frontier (~$60–80+/bbl, est.):</b> only worth it if the find is <i>big</i> (billion-barrel class). A small Andaman pool would never pay back the rigs and pipelines.</li>
+          <li><b>The renewables twist:</b> Indian solar is among the world's cheapest electricity (record tariffs near ₹2/kWh, LCOE roughly $25–35/MWh). For <i>power</i>, building solar is cheaper and faster than chasing deep oil — which is exactly why exploration is a hedge, not the main plan.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- RENEWABLE FUTURE -->
+    <h2 class="sec"><i data-lucide="sun"></i> Where India is genuinely energy-rich: sun &amp; wind</h2>
+    <div class="grid cols-4">
+      <div class="card"><div class="kicker">Solar feasible potential</div><div class="stat" style="color:#fde047;margin-top:6px">3,343 GW</div><div class="muted" style="font-size:13px">NISE 2025, on ~6.7% of wasteland. Best: Thar (Rajasthan), Rann of Kutch.</div></div>
+      <div class="card"><div class="kicker">Wind potential</div><div class="stat" style="color:#38bdf8;margin-top:6px">765 GW</div><div class="muted" style="font-size:13px">NIWE: ~695 GW onshore + ~70 GW offshore. Best: TN, Gujarat, Karnataka.</div></div>
+      <div class="card"><div class="kicker">Khavda RE Park</div><div class="stat" style="color:#34d399;margin-top:6px">30 GW</div><div class="muted" style="font-size:13px">World's largest planned, 538 km² in the Kutch desert. Solar + wind hybrid.</div></div>
+      <div class="card"><div class="kicker">Green hydrogen target</div><div class="stat" style="color:#a78bfa;margin-top:6px">5 MT/yr</div><div class="muted" style="font-size:13px">National Green Hydrogen Mission by 2030 — to displace imported fuels.</div></div>
+    </div>
+
+    <!-- CRITICAL MINERALS & NUCLEAR -->
+    <h2 class="sec"><i data-lucide="atom"></i> The next frontier: minerals &amp; nuclear fuel</h2>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Critical minerals (the energy-transition fuels)</h3>
+        <ul class="clean muted" style="font-size:14.5px">
+          <li><b>Lithium — Reasi, J&amp;K:</b> 5.9 MT inferred (2023), at the time ~7th largest globally. But it's <b>clay-hosted</b> — extraction is unproven and first auctions failed. Now being re-explored to G2 level.</li>
+          <li><b>Lithium — Mandya, Karnataka:</b> ~1,600 t inferred — small, early.</li>
+          <li><b>Why it matters:</b> batteries decide whether India's solar/wind can run at night and power EVs without importing cells from China.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Nuclear — the thorium card</h3>
+        <ul class="clean muted" style="font-size:14.5px">
+          <li><b>Uranium:</b> Jaduguda (Jharkhand) and Tummalapalle (Andhra Pradesh) — modest reserves; India still imports uranium.</li>
+          <li><b>Thorium:</b> India holds one of the <b>world's largest thorium reserves</b> in the monazite beach sands of Kerala &amp; Tamil Nadu — the long-term bet behind India's 3-stage nuclear programme.</li>
+          <li><b>Status:</b> ~8 GW nuclear today, expanding; thorium reactors are still developmental, a multi-decade horizon.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- WHAT MORE -->
+    <h2 class="sec"><i data-lucide="database"></i> What more I can gather / build into this</h2>
+    <div class="grid cols-2">
+      <div class="card">
+        <h3>Deeper data I can pull next</h3>
+        <ul class="clean muted" style="font-size:14.5px">
+          <li><b>DGH / NDR block-level data</b> — exact OALP block polygons, well coordinates, seismic coverage (GeoJSON shapefiles).</li>
+          <li><b>PPAC monthly</b> — real crude/product import volumes, refinery throughput, country-of-origin split (Russia, Iraq, Saudi, UAE, US).</li>
+          <li><b>State-wise generation</b> — live grid mix from POSOCO/Grid-India, plant-level capacity (CEA).</li>
+          <li><b>Resource maps</b> — NIWE wind GIS layers and NISE solar irradiance (GHI) rasters as real map overlays.</li>
+          <li><b>Bathymetry &amp; geology</b> — GEBCO depth grids and basin sediment-thickness to colour fields by true reservoir depth.</li>
+          <li><b>Economics</b> — live Brent/JKM LNG prices to make the cost-feasibility chart dynamic.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Features I can add to this page</h3>
+        <ul class="clean muted" style="font-size:14.5px">
+          <li><b>Time slider</b> (1947→2030) animating fields coming online &amp; the import-dependency curve.</li>
+          <li><b>“Independence simulator”</b> — sliders for new discoveries / solar build-out that recompute import dependency live.</li>
+          <li><b>Real basin &amp; block polygons</b> from DGH instead of schematic shapes.</li>
+          <li><b>Per-state drill-down</b> dashboards and a printable PDF brief.</li>
+          <li><b>Live data feeds</b> wired to the JSON files in this repo so you just edit data, not code.</li>
+        </ul>
+        <p class="muted" style="font-size:13px;margin-bottom:0">Tell me which of these you want and I'll wire it in — the whole page is data-driven, so most are an afternoon each.</p>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="container">
+      <p class="src"><b>Sources (latest available):</b>
+        <a href="https://oilprice.com/Latest-Energy-News/World-News/Indias-Oil-Import-Dependence-Hits-All-Time-High.html" target="_blank">Oil import dependency 89.4% (FY25)</a> ·
+        <a href="https://www.ibef.org/industry/oil-gas-india" target="_blank">IBEF oil &amp; gas / reserves</a> ·
+        <a href="https://www.iea.org/reports/india-gas-market-report/executive-summary" target="_blank">IEA India Gas Market Report</a> ·
+        <a href="https://www.offshore-energy.biz/first-oil-gushes-out-of-ongcs-deepwater-development/" target="_blank">KG-DWN-98/2 first oil</a> ·
+        <a href="https://www.thecore.in/business/proven-kg-basin-to-iffy-andaman-a-10-billion-gamble-for-ultra-deepwater-crude-857965" target="_blank">Andaman ultra-deepwater</a> ·
+        <a href="https://www.saurenergy.com/solar-energy-news/nise-report-pegs-indias-solar-potential-at-3343-gw-using-67-of-feasible-wasteland-10495975" target="_blank">NISE solar potential 3,343 GW</a> ·
+        <a href="https://www.ibef.org/news/india-added-record-34-4-gw-solar-wind-power-capacity-in-nine-months-of-2025" target="_blank">RE capacity 2025</a> ·
+        <a href="https://dghindia.gov.in/index.php/page?pageId=66" target="_blank">DGH sedimentary basins</a> ·
+        <a href="https://en.wikipedia.org/wiki/Jammu_and_Kashmir_lithium_reserves" target="_blank">Reasi lithium</a>
+      </p>
+      <p class="src" style="margin-top:14px">© <span id="year"></span> <b>Vivek Modi</b> · Built with Leaflet + Chart.js · Map data © OpenStreetMap, OpenTopoMap, Esri, CARTO. Educational use; verify figures before relying on them.</p>
+      <a class="btn" href="/demos/"><i data-lucide="arrow-left" style="width:16px;height:16px"></i> Back to demos</a>
+    </div>
+  </footer>
+
+<script>
+/* ---------- theme ---------- */
+const pref = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+document.documentElement.setAttribute('data-theme', pref);
+function setTIcon(t){document.getElementById('tIcon').setAttribute('data-lucide', t==='light'?'sun':'moon');}
+setTIcon(pref);
+document.getElementById('themeBtn').addEventListener('click', ()=>{
+  const cur=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light';
+  document.documentElement.setAttribute('data-theme',cur);localStorage.setItem('theme',cur);
+  setTIcon(cur);window.lucide&&lucide.createIcons();buildCharts();
+});
+document.getElementById('year').textContent=new Date().getFullYear();
+
+/* ---------- colours by type ---------- */
+const TYPES={
+  oil:{c:'#ef4444',label:'Oil field'},
+  gas:{c:'#fb923c',label:'Gas field'},
+  oilgas:{c:'#f97316',label:'Oil + gas'},
+  frontier:{c:'#c084fc',label:'Frontier / exploration'},
+  solar:{c:'#fde047',label:'Solar zone'},
+  wind:{c:'#38bdf8',label:'Wind zone'},
+  owind:{c:'#22d3ee',label:'Offshore wind'},
+  lng:{c:'#2dd4bf',label:'LNG import terminal'},
+  coal:{c:'#94a3b8',label:'Coal belt'},
+  mineral:{c:'#34d399',label:'Critical mineral'},
+  nuclear:{c:'#a3e635',label:'Nuclear / uranium'}
+};
+
+/* ---------- the data ---------- */
+const SITES=[
+ // ---- OIL & GAS (producing) ----
+ {n:'Mumbai High',t:'oil',lat:19.5,lon:71.3,op:'ONGC',status:'Producing since 1974',depth:'~75 m water',res:'~1.4 km below seabed',cap:'India’s largest oil field; peak ~470 kbopd, now declining',cost:'~$25–35/bbl',time:'Mature',note:'The backbone of Indian crude for 50 years — Western Offshore. Redevelopment & EOR fighting natural decline.'},
+ {n:'Bassein & Satellite',t:'gas',lat:19.0,lon:71.7,op:'ONGC',status:'Producing',depth:'~80 m water',res:'~1.5–2 km',cap:'Major Western-offshore gas hub',cost:'~$3–5/mmbtu',time:'Mature',note:'Largest gas field complex in the Mumbai offshore basin.'},
+ {n:'Barmer / Mangala (Rajasthan)',t:'oil',lat:25.9,lon:71.4,op:'Vedanta (Cairn)',status:'Producing since 2009',depth:'Onshore',res:'~1–2 km',cap:'Barmer-Sanchor basin; ~a quarter of India’s domestic crude at peak',cost:'~$25–40/bbl (waxy crude, needs heated pipeline)',time:'Mature',note:'Mangala/Bhagyam/Aishwariya — the biggest onshore oil discovery in India in decades.'},
+ {n:'Ankleshwar (Cambay)',t:'oilgas',lat:21.63,lon:73.0,op:'ONGC',status:'Producing since 1961',depth:'Onshore',res:'~1.2–2 km',cap:'Classic Gujarat oilfield, long-life',cost:'~$25–35/bbl',time:'Mature',note:'Cambay basin — among India’s oldest commercial onshore fields.'},
+ {n:'Digboi & Upper Assam',t:'oil',lat:27.39,lon:95.62,op:'OIL / ONGC',status:'Producing since 1889',depth:'Onshore',res:'~0.5–3 km',cap:'Oldest oilfield in Asia; small but very long-lived',cost:'~$20–35/bbl',time:'Mature',note:'Assam-Arakan basin — Digboi, Naharkatiya, Moran. Where Indian oil began.'},
+ {n:'KG-D6 (Dhirubhai)',t:'gas',lat:16.5,lon:82.3,op:'Reliance–BP',status:'Producing gas',depth:'400–1,200 m water',res:'~2–3 km below seabed',cap:'India’s biggest deepwater gas complex; satellite fields online',cost:'~$5–6/mmbtu (deepwater)',time:'Producing',note:'Krishna-Godavari deepwater. New MJ/satellite fields restoring volumes after the famous decline.'},
+ {n:'KG-DWN-98/2 (Cluster-2)',t:'oilgas',lat:15.9,lon:82.3,op:'ONGC',status:'First oil Jan 2024',depth:'300–3,200 m water',res:'deep subsea',cap:'~69.6 BCM gas in place (~51 BCM producible 2018–34) + oil; ~25 kbopd rising to ~45 kboe/d',cost:'~$45–60/bbl; ~$5 bn project',time:'7–10 yrs from sanction',note:'ONGC’s hardest engineering job — off the Godavari delta. India’s newest big domestic barrel.'},
+ {n:'Cauvery basin',t:'oilgas',lat:10.8,lon:80.2,op:'ONGC',status:'Producing (onshore) + exploring offshore',depth:'Onshore to ~1,000 m water',res:'~1–3 km',cap:'Narimanam/Kovilkalappal onshore; offshore prospects',cost:'~$30–45/bbl',time:'Mixed',note:'Southeast coast — mature onshore plus offshore upside.'},
+ {n:'Tripura gas',t:'gas',lat:23.8,lon:91.3,op:'ONGC',status:'Producing',depth:'Onshore',res:'~2–3.5 km',cap:'Feeds NE power & fertiliser',cost:'~$3–5/mmbtu',time:'Mature',note:'Assam-Arakan fold belt — sweet gas powering the Northeast.'},
+
+ // ---- FRONTIER / EXPLORATION ----
+ {n:'Andaman ultra-deepwater',t:'frontier',lat:12.0,lon:93.6,op:'ONGC + Oil India',status:'Exploring — traces found, no commercial discovery yet',depth:'2,500–3,500 m water; drilling to ~5,000 m',res:'deep carbonate / back-arc plays',cap:'Unproven; “Guyana-like” hope if it hits',cost:'~$60–80+/bbl est.; ~$10 bn-scale to develop',time:'10–15 yrs if commercial',note:'Wildcat ANDW-7 showed light-crude & condensate traces. The single biggest blue-sky bet on the map.'},
+ {n:'Mahanadi offshore',t:'frontier',lat:19.4,lon:86.6,op:'ONGC',status:'Exploring',depth:'deepwater, east coast',res:'frontier',cap:'Prospective gas-prone deepwater',cost:'high (frontier)',time:'10+ yrs if commercial',note:'East-coast deepwater frontier, geologically linked to the prolific KG trend.'},
+ {n:'East Coast deepwater trend',t:'frontier',lat:14.2,lon:81.6,op:'ONGC / partners',status:'Appraisal & exploration',depth:'400–2,500 m water',res:'multiple plays',cap:'Where most of India’s undiscovered gas is thought to sit',cost:'$45–70/bbl-equiv',time:'7–12 yrs',note:'KG–Cauvery–Mahanadi deepwater corridor — the heart of frontier hope.'},
+
+ // ---- LNG terminals ----
+ {n:'Dahej LNG',t:'lng',lat:21.71,lon:72.6,op:'Petronet',status:'Operating',depth:'—',res:'—',cap:'~17.5 MMTPA — India’s largest import terminal',cost:'imports (JKM-linked)',time:'—',note:'Gujarat — the main gateway for imported gas that covers the ~50% domestic shortfall.'},
+ {n:'Hazira LNG',t:'lng',lat:21.1,lon:72.6,op:'Shell',status:'Operating',depth:'—',res:'—',cap:'~5+ MMTPA',cost:'imports',time:'—',note:'Gujarat west-coast import terminal.'},
+ {n:'Mundra LNG',t:'lng',lat:22.74,lon:69.53,op:'GSPC/Adani',status:'Operating',depth:'—',res:'—',cap:'~5 MMTPA',cost:'imports',time:'—',note:'Kutch coast LNG import & regas.'},
+ {n:'Dabhol LNG',t:'lng',lat:17.6,lon:73.2,op:'Konkan LNG',status:'Operating',depth:'—',res:'—',cap:'~5 MMTPA',cost:'imports',time:'—',note:'Maharashtra coast.'},
+ {n:'Kochi LNG',t:'lng',lat:9.97,lon:76.2,op:'Petronet',status:'Operating',depth:'—',res:'—',cap:'~5 MMTPA',cost:'imports',time:'—',note:'Kerala — south-west gateway.'},
+ {n:'Ennore LNG',t:'lng',lat:13.25,lon:80.32,op:'IOCL',status:'Operating',depth:'—',res:'—',cap:'~5 MMTPA',cost:'imports',time:'—',note:'Tamil Nadu — first east-coast LNG terminal.'},
+
+ // ---- SOLAR ----
+ {n:'Bhadla Solar Park',t:'solar',lat:27.54,lon:71.91,op:'Multiple',status:'Operating',depth:'—',res:'—',cap:'~2,245 MW — once the world’s largest solar park',cost:'LCOE ~$25–35/MWh',time:'1–3 yrs to build',note:'Thar desert, Rajasthan — brutal heat, brilliant irradiance.'},
+ {n:'Khavda RE Park',t:'solar',lat:23.9,lon:69.7,op:'Adani / others',status:'Building',depth:'—',res:'—',cap:'30 GW planned (solar+wind) over 538 km² — world’s largest',cost:'LCOE ~$25–35/MWh',time:'Phased to ~2030',note:'Rann of Kutch, Gujarat — the single biggest clean-energy build on Earth.'},
+ {n:'Pavagada Solar Park',t:'solar',lat:14.1,lon:77.28,op:'KSPDCL',status:'Operating',depth:'—',res:'—',cap:'~2,050 MW',cost:'LCOE ~$30/MWh',time:'Built ~2 yrs',note:'Karnataka — “land-lease” model with local farmers.'},
+ {n:'Rewa Ultra Mega Solar',t:'solar',lat:24.53,lon:81.29,op:'RUMSL',status:'Operating',depth:'—',res:'—',cap:'~750 MW',cost:'record-low tariff ~₹2.97/kWh',time:'Built ~2 yrs',note:'Madhya Pradesh — powers part of Delhi Metro.'},
+
+ // ---- WIND ----
+ {n:'Muppandal / Kanyakumari',t:'wind',lat:8.2,lon:77.5,op:'Multiple',status:'Operating',depth:'—',res:'—',cap:'~1.5 GW — one of India’s largest onshore wind clusters',cost:'LCOE ~$30–40/MWh',time:'1.5–3 yrs',note:'Tamil Nadu — the Western Ghats wind funnel.'},
+ {n:'Jaisalmer wind belt',t:'wind',lat:27.0,lon:70.9,op:'Multiple',status:'Operating',depth:'—',res:'—',cap:'GW-scale',cost:'LCOE ~$30–40/MWh',time:'1.5–3 yrs',note:'Rajasthan desert — strong, steady wind + co-located solar.'},
+ {n:'Kutch wind belt',t:'wind',lat:23.5,lon:69.4,op:'Multiple',status:'Operating/expanding',depth:'—',res:'—',cap:'GW-scale, hybrid with Khavda',cost:'LCOE ~$30–40/MWh',time:'1.5–3 yrs',note:'Gujarat — best onshore wind regime in India.'},
+
+ // ---- OFFSHORE WIND ----
+ {n:'Gulf of Khambhat offshore wind',t:'owind',lat:20.8,lon:71.3,op:'Tendering',status:'Early / tendered',depth:'20–60 m water',res:'—',cap:'~36 GW potential off Gujarat',cost:'higher; first projects',time:'5–8 yrs',note:'India’s first offshore wind zone — ports & vessels being readied.'},
+ {n:'Gulf of Mannar offshore wind',t:'owind',lat:8.8,lon:78.4,op:'Tendering',status:'Early / tendered',depth:'20–60 m water',res:'—',cap:'~35 GW potential off Tamil Nadu',cost:'higher; first projects',time:'5–8 yrs',note:'Southern offshore wind frontier near Rameswaram.'},
+
+ // ---- COAL ----
+ {n:'Jharia coalfield',t:'coal',lat:23.73,lon:86.41,op:'BCCL / Coal India',status:'Producing',depth:'shallow–deep seams',res:'—',cap:'India’s prime coking-coal field',cost:'low ($/t)',time:'Mature',note:'Jharkhand — coking coal for steel; also famous mine fires.'},
+ {n:'Korba coalfield',t:'coal',lat:22.36,lon:82.7,op:'SECL',status:'Producing',depth:'open-cast + UG',res:'—',cap:'Thermal-coal powerhouse',cost:'low',time:'Mature',note:'Chhattisgarh — “power capital”; feeds huge thermal plants.'},
+ {n:'Talcher coalfield',t:'coal',lat:20.95,lon:85.23,op:'MCL',status:'Producing',depth:'open-cast',res:'—',cap:'One of India’s largest reserves',cost:'low',time:'Mature',note:'Odisha — massive thermal-coal basin; coal-gasification hub planned.'},
+ {n:'Singrauli coalfield',t:'coal',lat:24.2,lon:82.67,op:'NCL',status:'Producing',depth:'open-cast',res:'—',cap:'Energy capital of India',cost:'low',time:'Mature',note:'MP/UP border — mine-mouth super-thermal power complex.'},
+
+ // ---- MINERALS / NUCLEAR ----
+ {n:'Reasi lithium (Salal-Haimana)',t:'mineral',lat:33.08,lon:74.95,op:'GSI (exploration)',status:'Re-exploring to G2',depth:'—',res:'—',cap:'5.9 MT inferred Li ore (clay-hosted)',cost:'extraction unproven',time:'7–10+ yrs',note:'J&K — India’s big lithium hope, but clay-hosted ore + failed first auctions = slow road.'},
+ {n:'Mandya lithium',t:'mineral',lat:12.52,lon:76.9,op:'AMD',status:'Inferred',depth:'—',res:'—',cap:'~1,600 t inferred',cost:'—',time:'early',note:'Karnataka — small early-stage lithium occurrence.'},
+ {n:'Jaduguda uranium',t:'nuclear',lat:22.65,lon:86.36,op:'UCIL',status:'Producing',depth:'underground',res:'—',cap:'India’s main uranium mine (modest grade)',cost:'—',time:'Mature',note:'Jharkhand — fuels the nuclear programme; India still imports uranium.'},
+ {n:'Tummalapalle uranium',t:'nuclear',lat:14.4,lon:78.3,op:'UCIL',status:'Producing',depth:'underground',res:'—',cap:'Large low-grade reserve',cost:'—',time:'Producing',note:'Andhra Pradesh — one of the world’s larger uranium reserves by tonnage.'},
+ {n:'Kerala thorium sands',t:'nuclear',lat:8.9,lon:76.55,op:'IREL',status:'Resource',depth:'beach placer',res:'—',cap:'Among world’s largest thorium reserves (monazite)',cost:'—',time:'multi-decade',note:'Kerala/TN coast — the fuel behind India’s long-term 3-stage thorium plan.'}
+];
+
+/* schematic sedimentary basins */
+const BASINS=[
+ {n:'Cambay (Cat-I)',cat:1,coords:[[24.2,72.0],[24.0,73.3],[21.3,73.4],[21.4,72.0]]},
+ {n:'Mumbai Offshore (Cat-I)',cat:1,coords:[[20.4,70.4],[20.3,72.0],[18.2,72.2],[18.4,70.5]]},
+ {n:'Krishna-Godavari (Cat-I)',cat:1,coords:[[17.4,80.9],[17.2,83.7],[14.9,83.4],[15.2,80.7]]},
+ {n:'Cauvery (Cat-I)',cat:1,coords:[[11.7,79.1],[11.4,81.1],[9.5,80.6],[9.8,78.9]]},
+ {n:'Assam-Arakan (Cat-I)',cat:1,coords:[[28.3,93.9],[27.8,96.4],[25.7,95.7],[26.2,93.5]]},
+ {n:'Rajasthan / Barmer (Cat-I)',cat:1,coords:[[27.1,70.4],[26.8,72.3],[24.5,72.0],[24.9,70.5]]},
+ {n:'Mahanadi (frontier)',cat:3,coords:[[20.9,85.9],[20.6,88.3],[18.5,87.7],[18.9,85.7]]},
+ {n:'Andaman (frontier)',cat:3,coords:[[14.1,92.2],[13.6,94.7],[10.4,94.2],[11.0,91.9]]}
+];
+
+/* ---------- map ---------- */
+const map=L.map('map',{center:[20.5,80],zoom:5,minZoom:3,scrollWheelZoom:true,worldCopyJump:true});
+
+const bases={
+  street:L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}),
+  terrain:L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{maxZoom:17,attribution:'© OpenTopoMap (CC-BY-SA)'}),
+  satellite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Tiles © Esri'}),
+  dark:L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19,subdomains:'abcd',attribution:'© CARTO © OpenStreetMap'}),
+  depth:L.layerGroup([
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:13,attribution:'Bathymetry © Esri, GEBCO, NOAA'}),
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}',{maxZoom:13,opacity:.9})
+  ])
+};
+let currentBase=bases.street.addTo(map);
+
+/* base switcher */
+document.getElementById('baseSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  document.querySelectorAll('#baseSeg button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  map.removeLayer(currentBase);
+  currentBase=bases[b.dataset.base].addTo(map);
+  currentBase.bringToBack&&currentBase.bringToBack();
+  // depth view: surface offshore depth labels
+  if(b.dataset.base==='depth'){depthLabels.addTo(map);} else {map.removeLayer(depthLabels);}
+});
+
+/* overlay layer groups, one per type */
+const groups={};Object.keys(TYPES).forEach(t=>groups[t]=L.layerGroup());
+
+function tagClass(s){s=(s||'').toLowerCase();if(s.includes('producing')||s.includes('first oil')||s.includes('operating'))return 't-prod';if(s.includes('build')||s.includes('scal'))return 't-dev';if(s.includes('front')||s.includes('appraisal'))return 't-front';return 't-expl';}
+
+SITES.forEach(s=>{
+  const col=TYPES[s.t].c;
+  const m=L.circleMarker([s.lat,s.lon],{radius:s.t==='frontier'?9:7,color:'#0008',weight:1,fillColor:col,fillOpacity:.92});
+  const popup=`<div class="pp"><h4>${s.n}</h4>
+    <span class="tag ${tagClass(s.status)}">${s.status}</span>
+    <div class="meta"><span><b>Operator:</b> ${s.op}</span><span><b>Depth:</b> ${s.depth}</span></div>
+    <div class="meta"><span><b>Capacity:</b> ${s.cap}</span></div>
+    <div class="meta"><span><b>Cost:</b> ${s.cost}</span><span><b>Lead time:</b> ${s.time}</span></div>
+    <p style="margin:8px 0 0;font-size:13px;color:var(--muted)">${s.note}</p>
+    </div>`;
+  m.bindPopup(popup,{maxWidth:300});
+  m.on('click',()=>openDrawer(s));
+  m.addTo(groups[s.t]);
+});
+
+/* sedimentary basin polygons */
+const basinGroup=L.layerGroup();
+BASINS.forEach(b=>{
+  const col=b.cat===1?'#34d399':'#c084fc';
+  L.polygon(b.coords,{color:col,weight:1.5,fillColor:col,fillOpacity:.12,dashArray:b.cat===1?null:'6 5'})
+    .bindTooltip(b.n,{sticky:true}).addTo(basinGroup);
+});
+
+/* depth labels for offshore sites (shown in bathymetry view) */
+const depthLabels=L.layerGroup();
+SITES.filter(s=>/m water/.test(s.depth)).forEach(s=>{
+  L.marker([s.lat,s.lon],{opacity:0})
+   .bindTooltip(s.depth.replace(' water',''),{permanent:true,direction:'top',className:'depthTip',offset:[0,-2]})
+   .addTo(depthLabels);
+});
+
+/* default-on overlays */
+['oil','gas','oilgas','frontier','lng','solar','wind','owind','coal','mineral','nuclear'].forEach(t=>groups[t].addTo(map));
+
+/* chip bar */
+const chipBar=document.getElementById('chipBar');
+const overlayDefs=[
+  ['oil','Oil'],['gas','Gas'],['oilgas','Oil + gas'],['frontier','Frontier / exploration'],
+  ['lng','LNG terminals'],['solar','Solar'],['wind','Wind'],['owind','Offshore wind'],
+  ['coal','Coal'],['mineral','Critical minerals'],['nuclear','Nuclear fuel']
+];
+overlayDefs.forEach(([t,label])=>{
+  const c=document.createElement('div');c.className='chip on';
+  c.innerHTML=`<span class="dot" style="background:${TYPES[t].c}"></span>${label}`;
+  c.onclick=()=>{const on=c.classList.toggle('on');c.classList.toggle('off',!on);on?groups[t].addTo(map):map.removeLayer(groups[t]);};
+  chipBar.appendChild(c);
+});
+// basins chip (off by default)
+const bc=document.createElement('div');bc.className='chip off';
+bc.innerHTML=`<span class="dot" style="background:#34d399"></span>Sedimentary basins`;
+bc.onclick=()=>{const on=bc.classList.toggle('on');bc.classList.toggle('off',!on);on?basinGroup.addTo(map):map.removeLayer(basinGroup);};
+chipBar.appendChild(bc);
+
+/* legend */
+document.getElementById('legend').innerHTML='<b style="font-size:12px">Legend</b>'+
+  overlayDefs.map(([t,l])=>`<div class="row"><span class="dot" style="background:${TYPES[t].c}"></span>${l}</div>`).join('')+
+  `<div class="row"><span class="dot" style="background:#34d399;opacity:.5"></span>Basin (producing)</div>`+
+  `<div class="row"><span class="dot" style="background:#c084fc;opacity:.5"></span>Basin (frontier)</div>`;
+
+/* ---------- drawer ---------- */
+const drawer=document.getElementById('drawer');
+document.getElementById('dClose').onclick=()=>drawer.classList.remove('open');
+function openDrawer(s){
+  document.getElementById('dType').textContent=TYPES[s.t].label;
+  document.getElementById('dName').textContent=s.n;
+  document.getElementById('dBody').innerHTML=`
+    <span class="tag ${tagClass(s.status)}">${s.status}</span>
+    <dl class="kv">
+      <dt>Operator</dt><dd>${s.op}</dd>
+      <dt>Depth</dt><dd>${s.depth}</dd>
+      <dt>Reservoir</dt><dd>${s.res||'—'}</dd>
+      <dt>Capacity</dt><dd>${s.cap}</dd>
+      <dt>Cost</dt><dd>${s.cost}</dd>
+      <dt>Lead time</dt><dd>${s.time}</dd>
+      <dt>Coords</dt><dd>${s.lat.toFixed(2)}, ${s.lon.toFixed(2)}</dd>
+    </dl>
+    <p class="muted" style="font-size:14px">${s.note}</p>
+    <button class="btn" style="margin-top:6px" onclick="map.flyTo([${s.lat},${s.lon}],8)"><i data-lucide="crosshair" style="width:15px;height:15px"></i> Zoom to it</button>`;
+  drawer.classList.add('open');
+  window.lucide&&lucide.createIcons();
+}
+
+/* ---------- charts ---------- */
+let charts=[];
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+function buildCharts(){
+  charts.forEach(c=>c.destroy());charts=[];
+  const text=css('--text'),muted=css('--muted'),grid=css('--border');
+  Chart.defaults.color=muted;Chart.defaults.font.family='Inter';Chart.defaults.borderColor=grid;
+  const gopt=(extra={})=>Object.assign({responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:muted,boxWidth:12}}}},extra);
+  const sc=(min,max)=>({x:{grid:{color:grid+'66'},ticks:{color:muted}},y:{grid:{color:grid+'66'},ticks:{color:muted},min,max}});
+
+  charts.push(new Chart(cImport,{type:'line',data:{labels:['2010','2012','2014','2016','2018','2020','2022','2024','2025'],
+    datasets:[{label:'% crude imported',data:[76,79,78.5,81,83.7,85,87.4,88.2,89.4],borderColor:'#ef4444',backgroundColor:'#ef444433',fill:true,tension:.35,pointRadius:3}]},
+    options:gopt({scales:sc(70,95),plugins:{legend:{display:false}}})}));
+
+  charts.push(new Chart(cProd,{type:'bar',data:{labels:['2010','2014','2018','2020','2022','2024','2025'],
+    datasets:[{label:'MT crude produced',data:[33.7,37.8,35.7,32.2,29.7,29.4,28.7],backgroundColor:'#60a5fa'}]},
+    options:gopt({scales:sc(0,42),plugins:{legend:{display:false}}})}));
+
+  charts.push(new Chart(cMix,{type:'doughnut',data:{labels:['Coal','Oil','Gas','Renewables','Hydro','Nuclear'],
+    datasets:[{data:[55,26,6,7,5,1],backgroundColor:['#94a3b8','#ef4444','#fb923c','#34d399','#60a5fa','#a3e635'],borderColor:css('--card'),borderWidth:2}]},
+    options:gopt({cutout:'58%'})}));
+
+  charts.push(new Chart(cGas,{type:'bar',data:{labels:['2018','2020','2022','2024','2030 (proj)'],
+    datasets:[
+      {label:'Domestic production',data:[32,31,34,36,38],backgroundColor:'#34d399'},
+      {label:'Consumption',data:[58,60,64,72,103],backgroundColor:'#60a5fa'},
+      {label:'LNG imports',data:[28,32,31,36,65],backgroundColor:'#fb923c'}]},
+    options:gopt({scales:sc(0,110)})}));
+
+  charts.push(new Chart(cRe,{type:'line',data:{labels:['2014','2018','2020','2022','2024','2025'],
+    datasets:[
+      {label:'Solar GW',data:[2.6,22,36,61,98,136],borderColor:'#fde047',backgroundColor:'#fde04733',fill:true,tension:.35,pointRadius:3},
+      {label:'Wind GW',data:[21,35,38,41,48,55],borderColor:'#38bdf8',backgroundColor:'#38bdf833',fill:true,tension:.35,pointRadius:3}]},
+    options:gopt({scales:sc(0,150)})}));
+
+  charts.push(new Chart(cRP,{type:'bar',data:{labels:['Oil','Gas','Coal'],
+    datasets:[{label:'Years at current production',data:[23,30,105],backgroundColor:['#ef4444','#fb923c','#94a3b8']}]},
+    options:gopt({indexAxis:'y',scales:sc(0,120),plugins:{legend:{display:false}}})}));
+
+  charts.push(new Chart(cCost,{type:'bar',data:{labels:['Assam onshore','Rajasthan onshore','Mumbai High','KG shallow','KG deepwater','Andaman ultra-DW (est)'],
+    datasets:[{label:'$/bbl (low)',data:[20,25,25,30,45,60],backgroundColor:'#34d399'},
+              {label:'$/bbl (high)',data:[15,15,10,15,15,20],backgroundColor:'#ef4444'}]},
+    options:gopt({indexAxis:'y',scales:{x:{stacked:true,grid:{color:grid+'66'},ticks:{color:muted},min:0,max:90,title:{display:true,text:'US$ / barrel (stacked = range)',color:muted}},y:{stacked:true,grid:{display:false},ticks:{color:muted}}}})}));
+}
+window.addEventListener('load',()=>{buildCharts();window.lucide&&lucide.createIcons();});
+</script>
+</body>
+</html>
