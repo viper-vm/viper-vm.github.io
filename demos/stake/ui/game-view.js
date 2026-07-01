@@ -96,11 +96,10 @@ export function renderGame(env, { gameId }) {
 
   const view = h('div.sk-view.sk-game-view', {}, [
     h('div.sk-game-topbar', {}, [
-      h('button.sk-back-link', { onclick: () => env.router.go('/') }, [icon('arrow-left'), 'Lobby']),
-      h('div.sk-game-title', {}, [
-        h('div.sk-game-title-icon', { style: { color: def.accent } }, [icon(def.icon)]),
-        h('div', {}, [h('h1', {}, def.name), h('p', {}, def.tagline)]),
-      ]),
+      h('button.sk-back-link', { onclick: () => env.router.go('/'), title: 'Lobby' }, [icon('arrow-left')]),
+      h('div.sk-game-title-icon', { style: { color: def.accent } }, [icon(def.icon)]),
+      h('h1.sk-game-name', {}, def.name),
+      h('span.sk-game-sub', {}, def.tagline),
       h('div.sk-game-badges', {}, [
         h('span.sk-badge', {}, `Edge ${pct(def.houseEdge)}`),
         h('span.sk-badge.provably', {}, [icon('shield-check'), 'Provably fair']),

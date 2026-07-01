@@ -12,10 +12,15 @@ import { Router } from './core/router.js';
 import { buildShell } from './ui/shell.js';
 
 // Register games (import side-effects call registry.register()).
-import './games/dice.js';
-import './games/limbo.js';
-import './games/mines.js';
-import './games/roulette.js';
+// Each game is a self-contained folder under games/<name>/.
+import './games/dice/index.js';
+import './games/limbo/index.js';
+import './games/mines/index.js';
+import './games/roulette/index.js';
+import './games/plinko/index.js';
+import './games/crash/index.js';
+import './games/keno/index.js';
+import './games/wheel/index.js';
 
 async function main() {
   const store = await betStore();

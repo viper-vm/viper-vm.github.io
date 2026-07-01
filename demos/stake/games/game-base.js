@@ -62,7 +62,9 @@ export async function runBet(env, def, wager, params) {
   const count = def.logic.floatsNeeded(params);
   const { floats, ctx } = await drawFloats(env, count);
   const r = def.logic.resolve(floats, params);
-  const payout = r.payout != null ? r.payout : (r.won ? wager * r.multiplier : 0);
+  // Pay the full multiplier (games that truly lose return multiplier 0);
+  // this also credits partial-return slots (e.g. a 0.4× Plinko bucket).
+  const payout = r.payout != null ? r.payout : wager * r.multiplier;
 
   const record = await settle(env, {
     game: def.id,

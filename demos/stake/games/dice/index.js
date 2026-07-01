@@ -4,11 +4,11 @@
 //  payout multiplier = (1 − edge) / winChance.
 // ============================================================
 
-import { registry } from '../core/registry.js';
-import { runBet } from './game-base.js';
-import { betPanel } from '../ui/bet-panel.js';
-import { h, refreshIcons } from '../ui/components.js';
-import { mult, pct } from '../core/format.js';
+import { registry } from '../../core/registry.js';
+import { runBet } from '../game-base.js';
+import { betPanel } from '../../ui/bet-panel.js';
+import { h, refreshIcons } from '../../ui/components.js';
+import { mult, pct } from '../../core/format.js';
 
 const EDGE = 0.01;
 

@@ -1,0 +1,4 @@
+/* Plinko */
+.sk-plinko-board { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
+.sk-plinko-canvas { max-width: 100%; height: auto; background: var(--sk-surface-2); border: 1px solid var(--sk-border); border-radius: var(--sk-radius); }
+.sk-plinko-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 360px; }

@@ -21,11 +21,21 @@ lucide icons (charts are hand-rolled SVG).
 ```
 core/     bus · store(localStorage+IndexedDB) · rng(provably-fair) · wallet(+cashier)
           registry · analytics · strategy · router · format
-games/    game-base + dice · limbo · mines · roulette   (pure logic.resolve() split from UI)
-ui/       shell · lobby · game-view · analytics-view · strategy-view
-          cashier · fairness-modal · settings-view · components · charts · bet-panel · modal
+games/    game-base (shared bet lifecycle) +
+          <name>/ { index.js (registers def) · logic.js (pure resolve) ·
+                    ui.js (interactive board) · style.css }
+          dice · limbo · mines · roulette · plinko · crash · keno · wheel
+ui/       shell · lobby · game-view · analytics-view · strategy-view · cashier
+          fairness-modal · settings-view · components · charts · bet-panel · modal
+          casino-kit (chip tray + action bar) · autobet-modal · style-loader
 app.js    bootstrap: init engine → register games → mount shell → route
 ```
+
+Each game is a **self-contained folder** so it can carry its own logic, UI, strategy
+and stylesheet independently. `game-base.js` holds the shared bet lifecycle; the felt
+table, chip tray, action bar (Rebet / 2× / Undo / Clear / Turbo) and the auto-spin
+modal (strategy presets + progression cap + safety stops + saved strategies) are shared
+across table games.
 
 ### Key ideas
 
@@ -54,16 +64,24 @@ app.js    bootstrap: init engine → register games → mount shell → route
 | Limbo | crash = (1−edge)/(1−u) | 1% (in payout) |
 | Mines | Fisher–Yates mine layout | 1% (in payout) |
 | American Roulette | float → pocket (0,00,1–36) | 5.26% (structural) |
+| Plinko | `rows` fair coin flips → slot; RTP-scaled table | 1% |
+| Crash | crash = (1−edge)/(1−u); cash out live | 1% |
+| Keno | 10 drawn from 40; hypergeometric paytable | 3% |
+| Wheel | float → segment; RTP-scaled ring | 2% |
+
+Generated-payout games (Plinko, Keno, Wheel) build their tables from the exact
+probability distribution and scale them to the target RTP, so the edge is provable and
+tunable rather than hard-coded.
 
 ## Adding a game
 
-1. Create `games/yourgame.js` exporting a `def` with `logic.floatsNeeded`, `logic.resolve`,
-   an optional `logic.strategy`, and a `create(env)` that returns `{ node, onMount }`.
-2. Call `registry.register(def)` at the bottom.
-3. Add `import './games/yourgame.js';` to `app.js`.
+1. Create `games/yourgame/` with `logic.js` (`floatsNeeded`, `resolve`, optional
+   `strategy`), `ui.js` (`create(env) → { node, onMount }`), an optional `style.css`,
+   and `index.js` that builds the `def` and calls `registry.register(def)`.
+2. Add `import './games/yourgame/index.js';` to `app.js`.
 
-That's it — it appears in the lobby, gets analytics, and (if it declares `logic.strategy`) shows up
-in the Strategy Lab automatically.
+That's it — it appears in the lobby, gets analytics, and (if it declares
+`logic.strategy`) shows up in the Strategy Lab automatically.
 
 ---
 

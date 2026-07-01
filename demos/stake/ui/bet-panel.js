@@ -85,7 +85,7 @@ export function betPanel(env, opts) {
         preset: presetSel.value, baseBet: base,
         custom: { onWin: { mode: winMode.value(), value: winVal.get() }, onLoss: { mode: lossMode.value(), value: lossVal.get() } },
         numBets: num.get(), stopProfit: stopProfit.get(), stopLoss: stopLoss.get(),
-        delayMs: speed.get(),
+        delayMs: speed.get(), alive: () => document.body.contains(startBtn),
       },
       onTick: (t) => {
         setStat('a-bets', String(t.count));
