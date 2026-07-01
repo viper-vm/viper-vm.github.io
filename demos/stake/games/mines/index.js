@@ -5,11 +5,11 @@
 //  cashMult(mines,k) = (1−edge)·Π (25−i)/(25−mines−i), i=0..k−1
 // ============================================================
 
-import { registry } from '../core/registry.js';
-import { placeWager, drawFloats, settle } from './game-base.js';
-import { h, amountField, segmented, refreshIcons, icon } from '../ui/components.js';
-import { AutoBet, PRESETS } from '../core/strategy.js';
-import { money, mult, signedMoney } from '../core/format.js';
+import { registry } from '../../core/registry.js';
+import { placeWager, drawFloats, settle } from '../game-base.js';
+import { h, amountField, segmented, refreshIcons, icon } from '../../ui/components.js';
+import { AutoBet, PRESETS } from '../../core/strategy.js';
+import { money, mult, signedMoney } from '../../core/format.js';
 
 const EDGE = 0.01;
 const TILES = 25;
@@ -97,7 +97,8 @@ function create(env) {
     auto = new AutoBet({
       betFn: (wager) => autoRound(wager, picks),
       settings: { preset: presetSel.value, baseBet: base, numBets: Number(numBets.value) || 0,
-        stopProfit: Number(stopProfit.value) || 0, stopLoss: Number(stopLoss.value) || 0, delayMs: 220 },
+        stopProfit: Number(stopProfit.value) || 0, stopLoss: Number(stopLoss.value) || 0, delayMs: 220,
+        alive: () => document.body.contains(autoBtn) },
       onTick: (t) => { setK('b', String(t.count)); setK('p', signedMoney(t.profit)); },
       onStateChange: (st) => {
         autoBtn.innerHTML = '';

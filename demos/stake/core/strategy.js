@@ -12,12 +12,13 @@
 // ============================================================
 
 export const PRESETS = {
-  flat: { label: 'Flat', desc: 'Always bet the base amount.' },
+  flat: { label: 'Flat repeat', desc: 'Always bet the base amount.' },
   martingale: { label: 'Martingale', desc: 'Double after every loss, reset on a win.' },
-  paroli: { label: 'Paroli', desc: 'Double after every win, reset on a loss.' },
-  dalembert: { label: "D'Alembert", desc: 'Raise by one unit on loss, lower by one on win.' },
+  reverse: { label: 'Reverse Martingale', desc: 'Double after a win, reset after a loss.' },
+  paroli: { label: 'Paroli', desc: 'Double after each win, up to 3 in a row, then reset.' },
+  dalembert: { label: "D'Alembert", desc: 'Increase 1 unit after a loss, decrease 1 unit after a win.' },
   fibonacci: { label: 'Fibonacci', desc: 'Walk the Fibonacci sequence up on loss, back two on win.' },
-  custom: { label: 'Custom', desc: 'Define your own on-win / on-loss adjustments.' },
+  custom: { label: 'Custom', desc: 'Your own rules on win / on loss.' },
 };
 
 // Build a progression object: { current(), apply(won) -> nextBet, reset() }.
@@ -26,7 +27,8 @@ export function makeProgression(preset, base, custom = {}) {
   const clamp = (b) => Math.max(0, b);
 
   if (preset === 'martingale') return simple(base, { onLoss: ['multiply', 2], onWin: ['reset'] });
-  if (preset === 'paroli') return simple(base, { onWin: ['multiply', 2], onLoss: ['reset'] });
+  if (preset === 'reverse' || preset === 'antimartingale') return simple(base, { onWin: ['multiply', 2], onLoss: ['reset'] });
+  if (preset === 'paroli') return paroli(base, 3);
   if (preset === 'dalembert') return simple(base, { onLoss: ['unit', base], onWin: ['unit', -base] });
   if (preset === 'fibonacci') return fibonacci(base);
   if (preset === 'custom') return simple(base, {
@@ -52,6 +54,19 @@ export function makeProgression(preset, base, custom = {}) {
       current: () => bet,
       apply(won) { bet = clamp(applyOp(won ? rules.onWin : rules.onLoss)); return bet; },
       reset() { bet = baseBet; },
+    };
+  }
+
+  function paroli(baseBet, cap) {
+    let bet = baseBet; let streak = 0;
+    return {
+      current: () => bet,
+      apply(won) {
+        if (won) { streak += 1; bet = streak >= cap ? (streak = 0, baseBet) : bet * 2; }
+        else { streak = 0; bet = baseBet; }
+        return bet;
+      },
+      reset() { bet = baseBet; streak = 0; },
     };
   }
 
@@ -110,7 +125,9 @@ export class AutoBet {
     this.onStateChange({ running: true });
 
     while (!this._cancel) {
-      const wager = round2(prog.current());
+      if (s.alive && !s.alive()) { this._stop('left game'); break; } // stop if the view was torn down
+      let wager = round2(prog.current());
+      if (s.cap > 0) wager = Math.min(wager, s.cap);
       const res = await this.betFn(wager);
       if (!res || res.error) { this._stop('error', res && res.error); break; }
 
@@ -189,6 +206,7 @@ export function backtest(def, sp, settings, { rounds = 1000, startBalance = 1000
 
   for (let i = 0; i < rounds; i++) {
     let wager = round2(prog.current());
+    if (settings.cap > 0) wager = Math.min(wager, settings.cap);
     if (wager <= 0) wager = settings.baseBet;
     if (wager > balance) { busts += 1; break; } // can't cover the bet → ruin
 
@@ -196,7 +214,7 @@ export function backtest(def, sp, settings, { rounds = 1000, startBalance = 1000
     const need = def.logic.floatsNeeded(params);
     const floats = Array.from({ length: need }, () => rand());
     const r = def.logic.resolve(floats, params);
-    const payout = r.payout != null ? r.payout : (r.won ? wager * r.multiplier : 0);
+    const payout = r.payout != null ? r.payout : wager * r.multiplier;
     const profit = payout - wager;
 
     balance += profit;

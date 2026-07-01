@@ -1,0 +1,54 @@
+/* Roulette — felt table skin (loaded on demand by ui.js) */
+
+.sk-rl2 { display: flex; flex-direction: column; gap: 14px; width: 100%; }
+.sk-rl2-stage { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+.sk-rl2-wheelwrap { display: flex; gap: 18px; align-items: center; justify-content: center; width: 100%; flex-wrap: wrap; }
+.sk-rl2-recent { display: flex; flex-direction: column; gap: 4px; width: 110px; max-height: 260px; overflow: hidden; flex-wrap: wrap; }
+.sk-rl2-recent-empty { color: var(--sk-dim); font-size: 11px; }
+.sk-rl2-chip { display: inline-grid; place-items: center; min-width: 24px; height: 24px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #fff; padding: 0 4px; }
+.sk-rl2-chip.red { background: #c1362f; } .sk-rl2-chip.black { background: #14171d; } .sk-rl2-chip.green { background: #1f8a4c; }
+
+.sk-rl2-wheel { position: relative; width: 260px; height: 260px; flex: none; }
+.sk-rl2-canvas { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 7px #3a2412, 0 0 0 9px #b98a3e, var(--sk-shadow); }
+.sk-rl2-pointer { position: absolute; top: -3px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 16px solid #ffd54a; z-index: 3; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+.sk-rl2-spin { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 104px; height: 104px; border-radius: 50%; border: 3px solid #ffd54a; z-index: 2;
+  background: radial-gradient(circle at 50% 35%, #2fbf6a, #157a41); color: #fff; font-weight: 800; font-size: 17px; letter-spacing: 0.06em; box-shadow: 0 8px 20px -6px rgba(0,0,0,.6); }
+.sk-rl2-spin:hover { filter: brightness(1.08); }
+.sk-rl2-spin.spinning { opacity: 0.8; cursor: default; }
+.sk-rl2-hold { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 11px; color: var(--sk-warn); white-space: nowrap; }
+
+.sk-rl2-status { display: flex; align-items: center; gap: 16px; justify-content: center; font-size: 14px; color: var(--sk-muted); margin-top: 8px; }
+.sk-rl2-status strong { color: var(--sk-heading); }
+.sk-rl2-result { min-width: 40px; text-align: center; font-weight: 800; padding: 4px 12px; border-radius: 8px; background: var(--sk-surface-3); color: var(--sk-heading); }
+.sk-rl2-result.red { background: #c1362f; color: #fff; } .sk-rl2-result.black { background: #14171d; color: #fff; } .sk-rl2-result.green { background: #1f8a4c; color: #fff; }
+
+/* felt board */
+.sk-felt { width: 100%; max-width: 760px; background: linear-gradient(160deg, #12643c, #0b3d26); border: 2px solid #b98a3e; border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 5px; box-shadow: inset 0 0 40px rgba(0,0,0,.35); }
+.sk-felt-top { display: grid; grid-template-columns: 46px 1fr; gap: 5px; }
+.sk-felt-zeros { display: flex; flex-direction: column; gap: 5px; }
+.sk-felt-zeros .sk-felt-cell { height: 100%; }
+.sk-felt-numbers { display: flex; flex-direction: column; gap: 5px; }
+.sk-felt-row { display: grid; grid-template-columns: repeat(12, 1fr) 44px; gap: 5px; }
+.sk-felt-cell, .sk-felt-out { position: relative; min-height: 40px; border-radius: 5px; color: #fff; font-weight: 700; display: grid; place-items: center; border: 1px solid rgba(255,255,255,0.14); cursor: pointer; font-size: clamp(10px, 1.35vw, 14px); user-select: none; }
+.sk-felt-cell.red { background: #c1362f; } .sk-felt-cell.black { background: #14171d; } .sk-felt-cell.green { background: #1f8a4c; }
+.sk-felt-out { background: rgba(255,255,255,0.05); color: #eafff2; font-size: clamp(9px, 1.2vw, 13px); }
+.sk-felt-out.red { background: #c1362f; } .sk-felt-out.black { background: #14171d; }
+.sk-felt-cell:hover, .sk-felt-out:hover { outline: 2px solid #ffd54a; outline-offset: -1px; z-index: 1; }
+.sk-felt-dozens { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-left: 51px; }
+.sk-felt-evens { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-left: 51px; }
+.sk-felt-badge { position: absolute; bottom: -7px; right: -5px; min-width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: #ffd54a; color: #3a2600; font-size: 9.5px; font-weight: 800; box-shadow: 0 2px 5px rgba(0,0,0,.4); padding: 0 3px; }
+.sk-felt-badge:empty { display: none; }
+.sk-felt-cell.has-chip, .sk-felt-out.has-chip { box-shadow: 0 0 0 2px #ffd54a inset; }
+.sk-felt-cell.winning, .sk-felt-out.winning { animation: sk-rl2-flash .5s ease 3; }
+@keyframes sk-rl2-flash { 50% { outline: 3px solid #ffd54a; outline-offset: -1px; } }
+
+.sk-rl2-bottom { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; padding-top: 6px; border-top: 1px solid var(--sk-border); }
+
+@media (max-width: 640px) {
+  .sk-rl2-recent { flex-direction: row; width: 100%; max-height: none; }
+  .sk-felt-row { grid-template-columns: repeat(12, 1fr) 30px; }
+  .sk-felt-top { grid-template-columns: 34px 1fr; }
+  .sk-felt-dozens, .sk-felt-evens { margin-left: 39px; }
+  .sk-rl2-bottom { justify-content: center; }
+}

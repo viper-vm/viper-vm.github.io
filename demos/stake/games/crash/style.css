@@ -1,0 +1,9 @@
+/* Crash */
+.sk-crash-board { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
+.sk-crash-recent { display: flex; flex-wrap: wrap; gap: 5px; }
+.sk-crash-tag { font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 6px; color: #fff; }
+.sk-crash-tag.lo { background: #c1362f; } .sk-crash-tag.mid { background: #d99a2b; } .sk-crash-tag.hi { background: #1f8a4c; }
+.sk-crash-stage { position: relative; background: var(--sk-surface-2); border: 1px solid var(--sk-border); border-radius: var(--sk-radius); overflow: hidden; }
+.sk-crash-canvas { display: block; width: 100%; height: auto; }
+.sk-crash-mult { position: absolute; inset: 0; display: grid; place-items: center; font-size: 46px; font-weight: 800; color: var(--sk-heading); font-variant-numeric: tabular-nums; text-shadow: 0 2px 12px rgba(0,0,0,.5); }
+.sk-crash-mult.win { color: var(--sk-up); } .sk-crash-mult.lose { color: var(--sk-down); }

@@ -1,0 +1,8 @@
+/* Wheel */
+.sk-wheel2-board { display: flex; flex-direction: column; align-items: center; gap: 18px; width: 100%; }
+.sk-wheel2 { position: relative; width: 300px; height: 300px; }
+.sk-wheel2-canvas { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 6px var(--sk-surface-3), var(--sk-shadow); }
+.sk-wheel2-pointer { position: absolute; top: -4px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 17px solid var(--sk-accent); z-index: 2; }
+.sk-wheel2-center { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 20px; font-weight: 800; color: var(--sk-heading); z-index: 2; }
+.sk-wheel2-center.win { color: var(--sk-up); } .sk-wheel2-center.lose { color: var(--sk-down); }
+.sk-wheel2-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 300px; }
