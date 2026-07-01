@@ -29,7 +29,8 @@ export function create(env) {
   drawCurve([], 1, false);
 
   // ----- controls -----
-  const amt = amountField(env.wallet, { value: 1 });
+  const amt = amountField(env.wallet, { value: 1, onChange: () => syncBet() });
+  function syncBet() { const bad = !(amt.get() > 0); if (!round) betBtn.disabled = bad; autoBtn.disabled = bad; }
   const target = h('input.sk-num', { type: 'number', step: 0.01, min: 1.01, value: 2 });
 
   const betBtn = h('button.sk-action-btn', { type: 'button', onclick: startManual }, 'Bet');
@@ -61,6 +62,7 @@ export function create(env) {
     manualPane, autoPane,
   ]);
 
+  syncBet();
   return { node: h('div.sk-game.sk-game-crash', {}, [panel, h('div.sk-board-wrap', {}, [board])]), onMount: () => refreshIcons() };
 
   // ---------- manual round ----------

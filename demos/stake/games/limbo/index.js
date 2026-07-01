@@ -104,6 +104,12 @@ function create(env) {
 export const def = {
   id: 'limbo', name: 'Limbo', tagline: 'How high will it go before the crash?',
   icon: 'trending-up', accent: '#22d3a6', category: 'Originals', houseEdge: EDGE,
+  rules: [
+    'Choose a target multiplier (e.g. 2.00×) and place your bet.',
+    'A provably-fair crash multiplier is drawn. If it is at or above your target, you win target × your bet.',
+    'Win chance = (100 − 1% edge) ÷ target, so higher targets pay more but hit less often.',
+    'It’s a pure one-tap game — great for testing progressions in Auto or the Strategy Lab. House edge 1%.',
+  ],
   logic, create,
 };
 registry.register(def);

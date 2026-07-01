@@ -1,11 +1,12 @@
 // ============================================================
-//  Shell — app chrome (header, nav, wallet readout) and the
-//  route → view dispatcher. Views are plain render(env,params)
-//  functions returning a DOM node.
+//  Shell — app chrome. A left icon sidebar handles navigation
+//  (expands on hover, pin to keep open); a slim topbar keeps the
+//  wallet balance always visible. Route → view dispatch lives here.
+//  On narrow screens the sidebar collapses to a bottom bar.
 // ============================================================
 
 import { h, clear, icon, refreshIcons, mountToasts } from './components.js';
-import { money, signedMoney, shortHex } from '../core/format.js';
+import { money, signedMoney } from '../core/format.js';
 import { renderLobby } from './lobby.js';
 import { renderGame } from './game-view.js';
 import { renderAnalytics } from './analytics-view.js';
@@ -17,73 +18,81 @@ import { openFairness } from './fairness-modal.js';
 const NAV = [
   { path: '/', label: 'Lobby', icon: 'layout-grid' },
   { path: '/analytics', label: 'Analytics', icon: 'bar-chart-3' },
-  { path: '/strategies', label: 'Strategies', icon: 'sliders-horizontal' },
+  { path: '/strategies', label: 'Strategy Lab', icon: 'sliders-horizontal' },
 ];
 
 export function buildShell(env) {
   mountToasts(env.bus);
   initTheme();
 
-  // ---- header ----
-  const balanceEl = h('span.sk-balance-amount', {}, money(env.wallet.balance));
-  const profitEl = h('span.sk-balance-net', {}, '');
-  const seedEl = h('span.sk-seed-nonce', {}, '');
+  const items = []; // path-bound items for active state
 
-  const navButtons = NAV.map((n) => {
-    const b = h('button.sk-nav-btn', { type: 'button', dataset: { path: n.path }, onclick: () => env.router.go(n.path) },
-      [icon(n.icon), h('span', {}, n.label)]);
-    return b;
-  });
+  function sideItem(ic, label, onClick, path) {
+    const btn = h('button.sk-side-item', { type: 'button', onclick: onClick, title: label }, [
+      icon(ic), h('span.sk-side-label', {}, label),
+    ]);
+    const it = { node: btn, path, setActive: (on) => btn.classList.toggle('active', on) };
+    if (path) items.push(it);
+    return it;
+  }
 
-  const themeBtn = h('button.sk-icon-btn', { type: 'button', title: 'Toggle theme', onclick: toggleTheme }, [icon('moon')]);
-  const cashierBtn = h('button.sk-hdr-btn', { type: 'button', onclick: () => openCashier(env) }, [icon('wallet'), h('span', {}, 'Cashier')]);
-  const fairBtn = h('button.sk-hdr-btn.ghost', { type: 'button', onclick: () => openFairness(env), title: 'Provably fair' },
-    [icon('shield-check'), seedEl]);
+  const navItems = NAV.map((n) => sideItem(n.icon, n.label, () => env.router.go(n.path), n.path));
+  const cashierItem = sideItem('wallet', 'Cashier', () => openCashier(env));
+  const fairItem = sideItem('shield-check', 'Provably Fair', () => openFairness(env));
+  const settingsItem = sideItem('settings', 'Settings', () => env.router.go('/settings'), '/settings');
+  const themeItem = sideItem('moon', 'Theme', toggleTheme);
+  const exitItem = sideItem('log-out', 'Exit to portfolio', () => { location.href = '/demos/'; });
 
-  const header = h('header.sk-header', {}, [
-    h('div.sk-header-inner', {}, [
-      h('div.sk-brand', {}, [
-        h('a.sk-back', { href: '/demos/', title: 'Back to demos' }, [icon('arrow-left')]),
-        h('div.sk-logo', {}, 'S'),
-        h('div.sk-brand-text', {}, [
-          h('strong', {}, 'Stake'),
-          h('span.sk-fun-pill', {}, 'FUN MONEY · SIMULATOR'),
-        ]),
-      ]),
-      h('nav.sk-nav', {}, navButtons),
-      h('div.sk-header-right', {}, [
-        h('button.sk-balance', { type: 'button', onclick: () => openCashier(env), title: 'Cashier' }, [
-          h('div.sk-balance-main', {}, [icon('circle-dollar-sign'), balanceEl]),
-          profitEl,
-        ]),
-        cashierBtn, fairBtn, themeBtn,
+  const hamburger = h('button.sk-side-toggle', { type: 'button', title: 'Pin menu', onclick: togglePinned }, [icon('menu')]);
+  const brand = h('a.sk-side-brand', { href: '#/', title: 'Lobby', onclick: (e) => { e.preventDefault(); env.router.go('/'); } }, [
+    h('span.sk-side-logo', {}, 'S'), h('span.sk-side-label.brand', {}, 'Stake'),
+  ]);
+
+  const sidebar = h('aside.sk-sidebar', {}, [
+    h('div.sk-side-top', {}, [hamburger, brand]),
+    h('nav.sk-side-nav', {}, [
+      ...navItems.map((i) => i.node), sep(),
+      cashierItem.node, fairItem.node,
+    ]),
+    h('div.sk-side-bottom', {}, [settingsItem.node, themeItem.node, exitItem.node]),
+  ]);
+
+  // ---- topbar ----
+  const balAmt = h('span.sk-bal-amt', {}, money(env.wallet.balance));
+  const balNet = h('span.sk-bal-net', {}, '');
+  const pageTitle = h('span.sk-top-page', {}, 'Lobby');
+  const topbar = h('header.sk-topbar', {}, [
+    h('div.sk-top-left', {}, [
+      h('span.sk-fun-pill', {}, 'FUN MONEY · SIMULATOR'),
+      pageTitle,
+    ]),
+    h('div.sk-top-right', {}, [
+      h('button.sk-bal', { type: 'button', title: 'Cashier', onclick: () => openCashier(env) }, [
+        h('span.sk-bal-main', {}, [icon('circle-dollar-sign'), balAmt]),
+        balNet,
       ]),
     ]),
   ]);
 
   const main = h('main.sk-main', {});
-  const root = h('div.sk-app', {}, [header, main]);
+  const shellMain = h('div.sk-shell-main', {}, [topbar, main]);
+  const root = h('div.sk-app', {}, [sidebar, shellMain]);
   document.body.appendChild(root);
+  applyPinned();
 
-  // ---- wallet + seed reactive updates ----
+  // ---- wallet ----
   function paintWallet() {
     const st = env.wallet.state();
-    balanceEl.textContent = money(st.balance);
-    profitEl.textContent = (st.netProfit >= 0 ? '▲ ' : '▼ ') + signedMoney(st.netProfit);
-    profitEl.className = 'sk-balance-net tone-' + (st.netProfit >= 0 ? 'up' : 'down');
-  }
-  function paintSeed() {
-    const s = env.fair.publicState();
-    seedEl.textContent = `${shortHex(s.clientSeed, 4, 4)} · #${s.nonce}`;
+    balAmt.textContent = money(st.balance);
+    balNet.textContent = (st.netProfit >= 0 ? '▲ ' : '▼ ') + signedMoney(st.netProfit);
+    balNet.className = 'sk-bal-net tone-' + (st.netProfit >= 0 ? 'up' : 'down');
   }
   env.bus.on('wallet:changed', paintWallet);
   env.bus.on('cashier:changed', paintWallet);
-  env.bus.on('seed:rotated', paintSeed);
-  env.bus.on('bet:settled', paintSeed);
   paintWallet();
-  paintSeed();
 
-  // ---- route dispatch ----
+  // ---- routing ----
+  const TITLES = { '/': 'Lobby', '/analytics': 'Analytics', '/strategies': 'Strategy Lab', '/settings': 'Settings' };
   function renderRoute(route) {
     const [head, arg] = route.segs;
     clear(main);
@@ -96,15 +105,19 @@ export function buildShell(env) {
     else { node = renderLobby(env); active = '/'; }
 
     main.appendChild(node);
-    for (const b of navButtons) b.classList.toggle('active', b.dataset.path === active);
+    for (const it of items) it.setActive(it.path === active);
+    pageTitle.textContent = head === 'play' && arg ? cap(arg) : (TITLES[active] || 'Lobby');
     refreshIcons();
     if (node._onMount) node._onMount();
     window.scrollTo(0, 0);
   }
 
-  env.router = env.router || null;
   return { renderRoute };
+
+  function sep() { return h('div.sk-side-sep', {}); }
 }
+
+function cap(s) { return s ? s[0].toUpperCase() + s.slice(1) : s; }
 
 // ---------- theme ----------
 function initTheme() {
@@ -116,4 +129,16 @@ function toggleTheme() {
   const next = cur === 'light' ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', next);
   localStorage.setItem('stake:theme', next);
+}
+
+// ---------- sidebar pin ----------
+function applyPinned() {
+  const pinned = localStorage.getItem('stake:sidebar') === 'pinned';
+  document.querySelector('.sk-app')?.classList.toggle('pinned', pinned);
+}
+function togglePinned() {
+  const app = document.querySelector('.sk-app');
+  const pinned = !app.classList.contains('pinned');
+  app.classList.toggle('pinned', pinned);
+  localStorage.setItem('stake:sidebar', pinned ? 'pinned' : '');
 }
