@@ -9,8 +9,12 @@ export const RED = new Set([1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 3
 export const isRed = (n) => RED.has(n);
 
 export function betWins(key, win) {
+  // Inside bets are encoded as "nums:<sorted comma list>" — a straight
+  // is one number, a split two, a street three, a corner four, a
+  // six-line six. The bet wins if the landing pocket is in the list.
+  if (key.startsWith('nums:')) return key.slice(5).split(',').includes(win);
   const n = win === '0' || win === '00' ? -1 : Number(win);
-  if (key.startsWith('straight:')) return key.slice(9) === win;
+  if (key.startsWith('straight:')) return key.slice(9) === win; // legacy
   if (n < 0) return false;
   switch (key) {
     case 'red': return isRed(n);
@@ -30,7 +34,13 @@ export function betWins(key, win) {
 }
 
 export function payMultiple(key) {
-  if (key.startsWith('straight:')) return 36;      // 35:1
+  // Inside bets pay 36 / (numbers covered): straight 36 (35:1), split 18
+  // (17:1), street 12 (11:1), corner 9 (8:1), six-line 6 (5:1).
+  if (key.startsWith('nums:')) {
+    const c = key.slice(5).split(',').length;
+    return c === 5 ? 7 : 36 / c; // 5-number top-line is the 6:1 exception
+  }
+  if (key.startsWith('straight:')) return 36;      // 35:1 (legacy)
   if (key.startsWith('dozen:') || key.startsWith('col:')) return 3; // 2:1
   return 2;                                         // 1:1
 }
