@@ -94,6 +94,24 @@ export function renderGame(env, { gameId }) {
 
   update();
 
+  const rules = def.rules ? h('details.sk-rules', {}, [
+    h('summary', {}, [
+      icon('book-open'),
+      h('span', {}, `How to play ${def.name}`),
+      h('span.sk-rules-chev', {}, [icon('chevron-down')]),
+    ]),
+    h('ul.sk-rules-list', {}, def.rules.map((r) => h('li', {}, r))),
+    h('div.sk-rules-foot', {}, [
+      icon('shield-check'),
+      h('span', {}, `Provably fair · ${pct(def.houseEdge)} house edge · fake money only.`),
+    ]),
+  ]) : null;
+
+  const rulesBtn = def.rules ? h('button.sk-badge.sk-rules-btn', {
+    title: 'How to play',
+    onclick: () => { rules.open = true; rules.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); },
+  }, [icon('book-open'), 'Rules']) : null;
+
   const view = h('div.sk-view.sk-game-view', {}, [
     h('div.sk-game-topbar', {}, [
       h('button.sk-back-link', { onclick: () => env.router.go('/'), title: 'Lobby' }, [icon('arrow-left')]),
@@ -101,11 +119,13 @@ export function renderGame(env, { gameId }) {
       h('h1.sk-game-name', {}, def.name),
       h('span.sk-game-sub', {}, def.tagline),
       h('div.sk-game-badges', {}, [
+        rulesBtn,
         h('span.sk-badge', {}, `Edge ${pct(def.houseEdge)}`),
         h('span.sk-badge.provably', {}, [icon('shield-check'), 'Provably fair']),
       ]),
     ]),
     h('div.sk-game-layout', {}, [instance.node, panelNode]),
+    rules,
   ]);
 
   view._onMount = () => { instance.onMount && instance.onMount(); refreshIcons(); };

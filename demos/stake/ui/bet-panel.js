@@ -18,8 +18,16 @@ export function betPanel(env, opts) {
     onResult,                // optional (result) => void
   } = opts;
 
-  const amt = amountField(env.wallet, { value: 1 });
+  const amt = amountField(env.wallet, { value: 1, onChange: () => syncEnabled() });
   if (amountLabel !== 'Bet Amount') amt.node.querySelector('.sk-label').textContent = amountLabel;
+
+  // Disable action buttons whenever the bet amount isn't a positive number,
+  // so a $0 bet can never be placed.
+  function syncEnabled() {
+    const bad = !(amt.get() > 0);
+    manualBtn.disabled = bad;
+    startBtn.disabled = bad;
+  }
 
   // ----- Manual -----
   const manualBtn = h('button.sk-action-btn', { type: 'button' }, actionLabel);
@@ -132,6 +140,7 @@ export function betPanel(env, opts) {
     autoPane,
   ]);
 
+  syncEnabled();
   return { node, getAmount: amt.get, setAmount: amt.set, amountField: amt };
 
   // helpers

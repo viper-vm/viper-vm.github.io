@@ -129,6 +129,12 @@ function statBox(label, value) {
 export const def = {
   id: 'dice', name: 'Dice', tagline: 'Roll over or under your target',
   icon: 'dices', accent: '#7c5cff', category: 'Originals', houseEdge: EDGE,
+  rules: [
+    'Drag the slider to set your target, and choose whether to win by rolling OVER or UNDER it.',
+    'A provably-fair number from 0.00 to 99.99 is rolled. You win if it lands on your chosen side.',
+    'Your win chance sets the payout: multiplier = (100 − 1% edge) ÷ win chance. Slimmer chances pay more.',
+    'Use Auto with a progression (Martingale, etc.) and stop conditions to run hands-free. House edge 1%.',
+  ],
   logic, create,
 };
 registry.register(def);

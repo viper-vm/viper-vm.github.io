@@ -65,7 +65,8 @@ function create(env) {
   }
 
   // ----- controls -----
-  const amt = amountField(env.wallet, { value: 1 });
+  const amt = amountField(env.wallet, { value: 1, onChange: () => syncBet() });
+  function syncBet() { const bad = !(amt.get() > 0); if (!round) betBtn.disabled = bad; autoBtn.disabled = bad; }
   const minesSel = h('select.sk-select', {},
     Array.from({ length: 24 }, (_, i) => h('option', { value: i + 1 }, String(i + 1))));
   minesSel.value = '3';
@@ -142,6 +143,7 @@ function create(env) {
 
   refreshInfo();
   resetGrid();
+  syncBet();
 
   return {
     node: h('div.sk-game.sk-game-mines', {}, [panel, h('div.sk-board-wrap', {}, [h('div.sk-mines-board', {}, [grid])])]),
@@ -273,6 +275,12 @@ function create(env) {
 export const def = {
   id: 'mines', name: 'Mines', tagline: 'Find the gems, dodge the mines',
   icon: 'bomb', accent: '#ff5c8a', category: 'Originals', houseEdge: EDGE,
+  rules: [
+    'Choose how many mines hide on the 5×5 grid (1–24), then place your bet to start a round.',
+    'Click tiles to reveal gems. Each safe reveal raises your multiplier — the more mines, the faster it climbs.',
+    'Cash out any time to bank your winnings. Reveal a mine and you lose the bet.',
+    'Mine positions are fixed provably-fair at the start of the round. Auto reveals a set number of tiles per round. House edge 1%.',
+  ],
   logic, create,
 };
 registry.register(def);
