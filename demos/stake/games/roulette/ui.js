@@ -20,6 +20,7 @@ export function create(env) {
   const bets = new Map();        // key -> amount
   const history = [];            // {key, amount} for undo
   const cellBadges = new Map();
+  const cellEls = {};            // pocket number -> cell element (for hover highlight)
   let lastBets = [];             // snapshot for rebet
   let spinning = false;
   let turbo = false;
@@ -228,35 +229,69 @@ export function create(env) {
   function stopAuto() { if (auto) auto.stop(); }
 
   // ---------- felt DOM ----------
+  // The 36 numbers sit in a 3-row × 12-col grid; a thin "gap" track
+  // between every cell holds the inside-bet hotspots (splits, corners,
+  // streets, six-lines) so you can bet on the lines like a real table.
+  function N(r, c) { return c * 3 + (3 - r); }   // pocket at (row, col)
+
   function buildFelt() {
-    const grid = h('div.sk-felt', {});
-    const zeros = h('div.sk-felt-zeros', {}, [cell('0', 'straight:0', 'green'), cell('00', 'straight:00', 'green')]);
-    const numbers = h('div.sk-felt-numbers', {});
+    const zeros = h('div.sk-felt-zeros', {}, [cell('0', 'nums:0', 'green'), cell('00', 'nums:00', 'green')]);
+    const grid = h('div.sk-felt-numgrid', {});
+    const numCol = (c) => 1 + 2 * c;     // 1,3,5,… (12 number columns)
+    const gapCol = (c) => 2 + 2 * c;     // 2,4,…   (gap right of column c)
+    const numRow = (r) => 1 + 2 * r;     // 1,3,5   (3 number rows)
+    const gapRow = (r) => 2 + 2 * r;     // 2,4     (gap below row r)
+    const STREET = 6, COLBET = 24;
+    const pos = (el, row, col) => { el.style.gridRow = row; el.style.gridColumn = col; grid.appendChild(el); };
+
+    // number cells + column (2:1) bets
     for (let r = 0; r < 3; r++) {
-      const row = h('div.sk-felt-row', {});
-      for (let c = 0; c < 12; c++) {
-        const n = c * 3 + (3 - r);
-        row.appendChild(cell(String(n), 'straight:' + n, isRed(n) ? 'red' : 'black'));
-      }
-      row.appendChild(outside('2:1', 'col:' + (3 - r), 'col'));
-      numbers.appendChild(row);
+      for (let c = 0; c < 12; c++) { const n = N(r, c); pos(cell(String(n), 'nums:' + n, isRed(n) ? 'red' : 'black'), numRow(r), numCol(c)); }
+      pos(outside('2:1', 'col:' + (3 - r), 'col'), numRow(r), COLBET);
     }
+    // horizontal splits (within a row)
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 11; c++) pos(hotspot([N(r, c), N(r, c + 1)], 'split'), numRow(r), gapCol(c));
+    // vertical splits (between rows)
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 12; c++) pos(hotspot([N(r, c), N(r + 1, c)], 'split'), gapRow(r), numCol(c));
+    // corners (four numbers)
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 11; c++) pos(hotspot([N(r, c), N(r, c + 1), N(r + 1, c), N(r + 1, c + 1)], 'corner'), gapRow(r), gapCol(c));
+    // streets (a column of 3) along the bottom edge
+    for (let c = 0; c < 12; c++) pos(hotspot([N(0, c), N(1, c), N(2, c)], 'street'), STREET, numCol(c));
+    // six-lines (two adjacent streets = 6 numbers)
+    for (let c = 0; c < 11; c++) pos(hotspot([N(0, c), N(1, c), N(2, c), N(0, c + 1), N(1, c + 1), N(2, c + 1)], 'sixline'), STREET, gapCol(c));
+
     const dozens = h('div.sk-felt-dozens', {}, [outside('1st 12', 'dozen:1'), outside('2nd 12', 'dozen:2'), outside('3rd 12', 'dozen:3')]);
     const evens = h('div.sk-felt-evens', {}, [
       outside('1-18', 'low'), outside('EVEN', 'even'), outside('RED', 'red', 'red'),
       outside('BLACK', 'black', 'black'), outside('ODD', 'odd'), outside('19-36', 'high'),
     ]);
-    grid.append(h('div.sk-felt-top', {}, [zeros, numbers]), dozens, evens);
-    return grid;
+    return h('div.sk-felt', {}, [h('div.sk-felt-top', {}, [zeros, grid]), dozens, evens]);
   }
   function cell(label, key, color) {
     const badge = h('span.sk-felt-badge', {}); cellBadges.set(key, badge);
-    return h('button.sk-felt-cell.' + color, { type: 'button', onclick: () => place(key) }, [h('span.sk-felt-n', {}, label), badge]);
+    const el = h('button.sk-felt-cell.' + color, { type: 'button', onclick: () => place(key) }, [h('span.sk-felt-n', {}, label), badge]);
+    if (key.startsWith('nums:')) cellEls[key.slice(5)] = el;
+    return el;
   }
   function outside(label, key, color = '') {
     const badge = h('span.sk-felt-badge', {}); cellBadges.set(key, badge);
     return h('button.sk-felt-out' + (color ? '.' + color : ''), { type: 'button', onclick: () => place(key) }, [h('span', {}, label), badge]);
   }
+  function hotspot(nums, variant) {
+    const sorted = [...nums].sort((a, b) => a - b);
+    const key = 'nums:' + sorted.join(',');
+    const badge = h('span.sk-felt-badge', {}); cellBadges.set(key, badge);
+    const hl = (on) => sorted.forEach((n) => cellEls[n] && cellEls[n].classList.toggle('cover', on));
+    return h('button.sk-felt-hot.' + variant, {
+      type: 'button', title: `${sorted.join(' · ')}  (${payLabel(sorted.length)})`,
+      onclick: () => place(key),
+      onmouseenter: () => hl(true), onmouseleave: () => hl(false),
+    }, [badge]);
+  }
+}
+
+function payLabel(count) {
+  return ({ 1: '35:1', 2: '17:1', 3: '11:1', 4: '8:1', 6: '5:1' })[count] || '';
 }
 
 // press-and-hold: quick click → onClick, hold >450ms → onHold
