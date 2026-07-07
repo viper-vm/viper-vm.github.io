@@ -1,0 +1,23 @@
+{
+  "note": "RSS feeds polled daily by scripts/infra-atlas/fetch-news.mjs. Google News queries use when:2d so each run only sees fresh stories. Add or remove feeds freely.",
+  "feeds": [
+    { "name": "GNews · expressways & highways", "hint": "roads",
+      "url": "https://news.google.com/rss/search?q=(expressway%20OR%20%22national%20highway%22%20OR%20%22ring%20road%22%20OR%20tunnel)%20(inaugurated%20OR%20approved%20OR%20foundation%20OR%20completed)%20India%20when:2d&hl=en-IN&gl=IN&ceid=IN:en" },
+    { "name": "GNews · metro & RRTS", "hint": "metro",
+      "url": "https://news.google.com/rss/search?q=(metro%20OR%20%22Namo%20Bharat%22%20OR%20RRTS)%20(corridor%20OR%20line%20OR%20phase%20OR%20station)%20(approved%20OR%20inaugurated%20OR%20operational%20OR%20trial)%20India%20when:2d&hl=en-IN&gl=IN&ceid=IN:en" },
+    { "name": "GNews · railways", "hint": "rail",
+      "url": "https://news.google.com/rss/search?q=(%22Indian%20Railways%22%20OR%20%22Vande%20Bharat%22%20OR%20%22bullet%20train%22%20OR%20%22freight%20corridor%22%20OR%20%22new%20rail%20line%22)%20(approved%20OR%20inaugurated%20OR%20flagged%20OR%20commissioned%20OR%20sanctioned)%20when:2d&hl=en-IN&gl=IN&ceid=IN:en" },
+    { "name": "GNews · airports & ports", "hint": "aviation",
+      "url": "https://news.google.com/rss/search?q=(airport%20OR%20port%20OR%20terminal%20OR%20shipyard%20OR%20transshipment)%20(inaugurated%20OR%20commissioned%20OR%20operations%20OR%20expansion%20OR%20greenfield)%20India%20when:2d&hl=en-IN&gl=IN&ceid=IN:en" },
+    { "name": "GNews · energy projects", "hint": "energy",
+      "url": "https://news.google.com/rss/search?q=(%22solar%20park%22%20OR%20%22compressed%20biogas%22%20OR%20CBG%20OR%20nuclear%20OR%20hydropower%20OR%20%22green%20hydrogen%22%20OR%20transmission)%20(commissioned%20OR%20inaugurated%20OR%20approved%20OR%20criticality)%20India%20when:2d&hl=en-IN&gl=IN&ceid=IN:en" },
+    { "name": "GNews · defence", "hint": "defense",
+      "url": "https://news.google.com/rss/search?q=(DRDO%20OR%20%22Indian%20Navy%22%20OR%20%22Indian%20Air%20Force%22%20OR%20%22defence%20ministry%22)%20(test%20OR%20missile%20OR%20commissioned%20OR%20induction%20OR%20%22Defence%20Acquisition%20Council%22)%20when:2d&hl=en-IN&gl=IN&ceid=IN:en" },
+    { "name": "GNews · semiconductors & industry", "hint": "tech",
+      "url": "https://news.google.com/rss/search?q=(semiconductor%20OR%20fab%20OR%20%22data%20center%22%20OR%20%22data%20centre%22%20OR%20%22electronics%20manufacturing%22%20OR%20gigafactory)%20India%20(approved%20OR%20investment%20OR%20groundbreaking%20OR%20inaugurated)%20when:2d&hl=en-IN&gl=IN&ceid=IN:en" },
+    { "name": "GNews · dams & water", "hint": "water",
+      "url": "https://news.google.com/rss/search?q=(dam%20OR%20irrigation%20OR%20%22river%20linking%22%20OR%20%22water%20supply%20project%22%20OR%20desalination)%20India%20(approved%20OR%20inaugurated%20OR%20completed%20OR%20foundation)%20when:2d&hl=en-IN&gl=IN&ceid=IN:en" },
+    { "name": "PIB press releases", "hint": null,
+      "url": "https://www.pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3" }
+  ]
+}

@@ -1,0 +1,2176 @@
+[
+ {
+  "id": "2026-07-06-chennai-metro-phase-2-poonamallee-vadapalani-stretch",
+  "date": "2026-07-06",
+  "title": "Chennai Metro Phase 2 Poonamallee–Vadapalani stretch ready for July launch",
+  "summary": "The 14.6 km Poonamallee Bypass–Vadapalani stretch of Chennai Metro Phase 2 cleared CMRS safety checks in February 2026 and is expected to open in the second or third week of July 2026 during a visit by PM Modi, after being postponed for the Tamil Nadu Assembly election. CMRL plans to deploy 15 driverless GoA4 trainsets at 10-minute intervals, with 34 of 36 trainsets already delivered. The line is expected to cut Poonamallee–Vadapalani travel time from about 90 minutes to around 30 minutes.",
+  "category": "metro",
+  "status": "trial",
+  "location": {
+   "name": "Poonamallee–Vadapalani, Chennai",
+   "state": "Tamil Nadu",
+   "lat": 13.038,
+   "lng": 80.158
+  },
+  "investmentCr": null,
+  "capacity": "14.6 km, driverless GoA4, 15 trainsets",
+  "benefits": [
+   "Cuts Poonamallee–Vadapalani travel time from ~90 to ~30 minutes",
+   "First driverless GoA4 metro operations in Chennai",
+   "Relief for heavily congested Arcot Road–Porur corridor"
+  ],
+  "project": "Chennai Metro Phase 2",
+  "sources": [
+   {
+    "name": "News Today",
+    "url": "https://newstodaynet.com/2026/07/06/chennai-metro-phase-2-vadapalani-poonamallee-stretch-set-to-transform-travel/"
+   },
+   {
+    "name": "Metro Rail News",
+    "url": "https://metrorailnews.in/chennai-metro-phase-ii-preparing-for-its-launch/"
+   }
+  ],
+  "routePoints": [
+   [
+    80.095,
+    13.048
+   ],
+   [
+    80.135,
+    13.035
+   ],
+   [
+    80.158,
+    13.035
+   ],
+   [
+    80.174,
+    13.041
+   ],
+   [
+    80.186,
+    13.043
+   ],
+   [
+    80.212,
+    13.05
+   ]
+  ]
+ },
+ {
+  "id": "2026-07-04-pm-modi-inaugurates-new-terminal-at-jodhpur",
+  "date": "2026-07-04",
+  "title": "PM Modi inaugurates new terminal at Jodhpur Airport",
+  "summary": "Prime Minister Narendra Modi inaugurated the new terminal building at Jodhpur Airport on 4 July 2026. The 2,52,000 sq ft AAI-built terminal can handle over 2 million passengers annually and blends Rajputana architectural elements with energy simulations showing over 50% less energy use than comparable airport buildings. The launch of the revised UDAN scheme accompanied the inauguration.",
+  "category": "aviation",
+  "status": "inaugurated",
+  "location": {
+   "name": "Jodhpur",
+   "state": "Rajasthan",
+   "lat": 26.2511,
+   "lng": 73.0489
+  },
+  "investmentCr": null,
+  "capacity": "2.52 lakh sq ft; 2 million passengers/year",
+  "benefits": [
+   "Boosts tourism-led growth in Western Rajasthan",
+   "Doubles passenger handling comfort at a fast-growing airport",
+   "Job creation in hospitality and aviation services",
+   "Energy-efficient terminal design cuts operating costs"
+  ],
+  "project": "Jodhpur Airport New Terminal",
+  "sources": [
+   {
+    "name": "ANI",
+    "url": "https://www.aninews.in/news/business/jodhpur-airports-new-terminal-inaugurated-by-pm-narendra-modi20260704161909/"
+   },
+   {
+    "name": "India TV News",
+    "url": "https://www.indiatvnews.com/rajasthan/new-india-never-backs-down-pm-modi-unveils-various-projects-inaugurates-new-jodhpur-airport-terminal-2026-07-04-1047108"
+   },
+   {
+    "name": "The Statesman",
+    "url": "https://www.thestatesman.com/india/pm-modi-inaugurates-new-jodhpur-airport-terminal-launches-revised-udan-scheme-in-rajasthan-1503612904.html/amp"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-07-02-bhogapuram-international-airport-readies-for-july-august",
+  "date": "2026-07-02",
+  "title": "Bhogapuram international airport readies for July-August 2026 launch",
+  "summary": "The greenfield Bhogapuram (Alluri Sitarama Raju) International Airport near Visakhapatnam is in final commissioning, with airside works 100% complete and the terminal and ATC tower each above 93%. Opening capacity is 6 million passengers per annum, and Singapore carrier Scoot has revised its Bhogapuram operations start to 25 July 2026. Commissioning is expected in July-August 2026 after ATC works conclude.",
+  "category": "aviation",
+  "status": "under-construction",
+  "location": {
+   "name": "Bhogapuram, Vizianagaram district",
+   "state": "Andhra Pradesh",
+   "lat": 18.0333,
+   "lng": 83.5
+  },
+  "investmentCr": null,
+  "capacity": "6 MPPA at opening",
+  "benefits": [
+   "Replaces constrained Visakhapatnam airport with a modern hub",
+   "Direct international connectivity for north coastal Andhra",
+   "Catalyses real-estate and industrial corridors around Vizag",
+   "Confirmed foreign carrier interest before opening"
+  ],
+  "project": "Bhogapuram International Airport",
+  "sources": [
+   {
+    "name": "Swarajya",
+    "url": "https://swarajyamag.com/news-brief/andhra-pradeshs-bhogapuram-airport-inches-closer-to-early-launch-in-june-2026"
+   },
+   {
+    "name": "CAPA Centre for Aviation",
+    "url": "https://centreforaviation.com/data/profiles/newairports/bhogapuram-airport"
+   },
+   {
+    "name": "M9 News",
+    "url": "https://www.m9.news/politics/bhogapuram-airport-opening-may-vizag/"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-07-02-patna-metro-blue-line-services-extended-to",
+  "date": "2026-07-02",
+  "title": "Patna Metro Blue Line services extended to Malahi Pakri",
+  "summary": "Bihar authorities formally inaugurated the extension of Patna Metro services up to Malahi Pakri on 2 July 2026. The new section forms part of the north–south Blue Line, whose priority stretch has been running since October 2025. Additional elevated stations at Malahi Pakri and Khemnichak had been undergoing safety inspections earlier in 2026 ahead of the opening.",
+  "category": "metro",
+  "status": "inaugurated",
+  "location": {
+   "name": "Malahi Pakri, Patna",
+   "state": "Bihar",
+   "lat": 25.601,
+   "lng": 85.157
+  },
+  "investmentCr": null,
+  "capacity": null,
+  "benefits": [
+   "Extends Patna's first metro line toward dense Kankarbagh area",
+   "Builds ridership on the Blue Line priority corridor running since October 2025",
+   "Improves access to New ISBT for eastern Patna commuters"
+  ],
+  "project": "Patna Metro",
+  "sources": [
+   {
+    "name": "The Traveler",
+    "url": "https://www.thetraveler.org/patna-metro-nears-new-milestone-as-malahi-pakri-extension-opens/"
+   },
+   {
+    "name": "The Metro Rail Guy",
+    "url": "https://themetrorailguy.com/patna-metro-information-map-updates/"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-07-02-52-000-crore-defence-deals-cleared-pseudo",
+  "date": "2026-07-02",
+  "title": "₹52,000 crore defence deals cleared: pseudo-satellites, drones, missiles, naval systems",
+  "summary": "The Defence Acquisition Council cleared procurement proposals worth about ₹52,000 crore in early July 2026, spanning high-altitude pseudo-satellites, drones, missiles and naval systems, with a strong indigenous-manufacturing tilt.",
+  "category": "defense",
+  "status": "approved",
+  "location": {
+   "name": "New Delhi",
+   "state": "Delhi",
+   "lat": 28.6118,
+   "lng": 77.206
+  },
+  "investmentCr": 52000,
+  "capacity": null,
+  "benefits": [
+   "Major order pipeline for Indian defence manufacturers",
+   "HAPS pseudo-satellites add persistent surveillance capability",
+   "Fleet modernisation across all three services"
+  ],
+  "project": "DAC acquisitions July 2026",
+  "sources": [
+   {
+    "name": "Indian Defence News",
+    "url": "https://www.indiandefensenews.in/2026/07/india-clears-52000-crore-defence-deals.html"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-07-01-cabinet-approves-8-1-km-six-lane",
+  "date": "2026-07-01",
+  "title": "Cabinet approves 8.1-km six-lane NH-148AE tunnel corridor linking Dwarka Expressway to Vasant Kunj",
+  "summary": "The Union Cabinet on 1 July 2026 approved a six-lane road tunnel corridor on NH-148AE connecting the Dwarka Expressway with Nelson Mandela Marg in Vasant Kunj, Delhi, at a capital cost of Rs 6,969.67 crore. Of the 8.1-km stretch, about 3.1 km will run as an underground tunnel beneath the Southern Ridge forest, built on HAM with a five-year construction timeline. The project is expected to generate over 17 lakh person-days of employment.",
+  "category": "roads",
+  "status": "approved",
+  "location": {
+   "name": "Dwarka Expressway–Vasant Kunj corridor, South West Delhi",
+   "state": "Delhi",
+   "lat": 28.535,
+   "lng": 77.13
+  },
+  "investmentCr": 6969.67,
+  "capacity": "8.1 km, 6 lanes (3.1 km tunnel)",
+  "benefits": [
+   "Decongests NH-48 and airport-area traffic in south-west Delhi",
+   "Direct link between Dwarka Expressway and south Delhi",
+   "Over 17 lakh person-days of direct and indirect employment"
+  ],
+  "project": "Delhi NH-148AE Tunnel Corridor",
+  "sources": [
+   {
+    "name": "Business Today",
+    "url": "https://www.businesstoday.in/industry/infra/story/union-cabinet-approves-rs14115-crore-delhi-tunnel-up-highway-projects-to-boost-connectivity-540294-2026-07-01"
+   },
+   {
+    "name": "Free Press Journal",
+    "url": "https://www.freepressjournal.in/business/cabinet-approves-14115-crore-road-projects-in-delhi-and-uttar-pradesh"
+   }
+  ],
+  "routePoints": [
+   [
+    77.09,
+    28.56
+   ],
+   [
+    77.11,
+    28.55
+   ],
+   [
+    77.13,
+    28.54
+   ],
+   [
+    77.16,
+    28.53
+   ]
+  ]
+ },
+ {
+  "id": "2026-07-01-cabinet-clears-rs-7-145-crore-kanpur",
+  "date": "2026-07-01",
+  "title": "Cabinet clears Rs 7,145-crore Kanpur–Kabrai access-controlled highway on NH-34",
+  "summary": "The Cabinet approved construction of the 117.7-km four/six-lane access-controlled Kanpur–Kabrai section of NH-34 in Uttar Pradesh at an estimated cost of Rs 7,145.14 crore under the BOT (Toll) model. Part of the 242-km Bhopal–Kanpur Economic Corridor, it is designed for 100 kmph and will cut Kanpur–Kabrai travel time from about 3.5 hours to 1.5 hours, with completion targeted in two and a half years.",
+  "category": "roads",
+  "status": "approved",
+  "location": {
+   "name": "Kanpur–Kabrai corridor, Kanpur/Hamirpur/Mahoba districts",
+   "state": "Uttar Pradesh",
+   "lat": 25.95,
+   "lng": 80.15
+  },
+  "investmentCr": 7145.14,
+  "capacity": "117.7 km, 4-6 lanes",
+  "benefits": [
+   "Cuts Kanpur–Kabrai travel time from 3.5 hours to 1.5 hours",
+   "Key link in the Bhopal–Kanpur Economic Corridor",
+   "Over 1 crore person-days of employment during construction",
+   "Boosts Bundelkhand freight and stone-crusher industry connectivity"
+  ],
+  "project": "Bhopal–Kanpur Economic Corridor (NH-34)",
+  "sources": [
+   {
+    "name": "Business Today",
+    "url": "https://www.businesstoday.in/industry/infra/story/union-cabinet-approves-rs14115-crore-delhi-tunnel-up-highway-projects-to-boost-connectivity-540294-2026-07-01"
+   },
+   {
+    "name": "The Hitavada",
+    "url": "https://www.thehitavada.com/Encyc/2026/7/2/cabinet-clears-rs-14115-cr-road-projects-in-delhi-up.html"
+   }
+  ],
+  "routePoints": [
+   [
+    80.33,
+    26.45
+   ],
+   [
+    80.15,
+    25.95
+   ],
+   [
+    80.11,
+    25.68
+   ],
+   [
+    79.99,
+    25.4
+   ]
+  ]
+ },
+ {
+  "id": "2026-06-30-msc-arm-to-buy-49-of-adani",
+  "date": "2026-06-30",
+  "title": "MSC arm to buy 49% of Adani's Vizhinjam port for $1.4 billion",
+  "summary": "Terminal Investment Limited (TiL), a subsidiary of Mediterranean Shipping Company, agreed to acquire a 49% stake in Adani Vizhinjam Port Private Limited for about $1.4 billion, valuing the deepwater transshipment hub at roughly $2.85 billion. It is described as the largest foreign private investment in India's port infrastructure, with APSEZ retaining 51% and management control. The Kerala government has said any ownership change above 25% needs its prior approval and is scrutinising the deal.",
+  "category": "ports",
+  "status": "operational",
+  "location": {
+   "name": "Vizhinjam, Thiruvananthapuram",
+   "state": "Kerala",
+   "lat": 8.3778,
+   "lng": 76.9769
+  },
+  "investmentCr": null,
+  "capacity": "$1.4 billion for 49% stake; port at 1 million TEUs/year",
+  "benefits": [
+   "Record FDI validates India's first transshipment hub",
+   "MSC's network expected to route more mainline calls via India",
+   "Reduces Indian cargo dependence on Colombo and Singapore",
+   "Strengthens capital for phased expansion to ~6 million TEUs"
+  ],
+  "project": "Vizhinjam International Seaport",
+  "sources": [
+   {
+    "name": "Business Standard",
+    "url": "https://www.business-standard.com/companies/news/msc-buys-49-percent-stake-in-adani-vizhinjam-port-for-1-4-billion-126063000572_1.html"
+   },
+   {
+    "name": "Logistics Insider",
+    "url": "https://www.logisticsinsider.in/msc-acquires-49-percent-stake-adani-vizhinjam-port-1-4-billion-deal/"
+   },
+   {
+    "name": "Business Today",
+    "url": "https://www.businesstoday.in/india/story/adani-mscs-vizhinjam-deal-hits-a-snag-kerala-to-scrutinise-five-key-aspects-540275-2026-07-01"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-06-30-bullet-train-s-vapi-bilimora-surat-stretch",
+  "date": "2026-06-30",
+  "title": "Bullet train's Vapi–Bilimora–Surat stretch on course for August 2027 partial run",
+  "summary": "NHSRCL confirmed the first partial run of the Mumbai–Ahmedabad bullet train will take place in August 2027 on the roughly 100-km Vapi–Bilimora–Surat stretch. Corridor-wide, 352 km of viaducts and 446 km of pier work are complete, with 91% of piers, 76% of girder casting and 35% of track-bed laying done; 17 river bridges and four mountain tunnels are finished. The full 508-km corridor is targeted for December 2029, cutting Mumbai–Ahmedabad travel time to about 1 hour 58 minutes.",
+  "category": "rail",
+  "status": "under-construction",
+  "location": {
+   "name": "Surat",
+   "state": "Gujarat",
+   "lat": 21.17,
+   "lng": 72.83
+  },
+  "investmentCr": null,
+  "capacity": "508 km corridor; 352 km viaduct completed",
+  "benefits": [
+   "Mumbai–Ahmedabad travel time cut to under 2 hours",
+   "First Shinkansen-technology high-speed line in India",
+   "Connects industrial hubs Surat, Vapi, Vadodara and Ahmedabad",
+   "Large construction employment across Gujarat and Maharashtra"
+  ],
+  "project": "Mumbai–Ahmedabad High-Speed Rail",
+  "sources": [
+   {
+    "name": "ETV Bharat",
+    "url": "https://www.etvbharat.com/en/bharat/partial-run-of-bullet-train-to-take-place-in-august-2027-on-vapi-bilimora-surat-stretch-enn26063003388"
+   },
+   {
+    "name": "Swarajya",
+    "url": "https://swarajyamag.com/infrastructure/indias-first-bullet-train-project-352-km-viaducts-446-km-pier-work-completed-on-mumbai-ahmedabad-high-speed-rail-corridor"
+   }
+  ],
+  "routePoints": [
+   [
+    72.86,
+    19.07
+   ],
+   [
+    72.98,
+    19.19
+   ],
+   [
+    72.81,
+    19.46
+   ],
+   [
+    72.9,
+    20.37
+   ],
+   [
+    72.96,
+    20.77
+   ],
+   [
+    72.84,
+    21.17
+   ],
+   [
+    73.18,
+    22.31
+   ],
+   [
+    72.58,
+    23.07
+   ]
+  ]
+ },
+ {
+  "id": "2026-06-26-world-first-nuclear-heat-based-hydrogen-production",
+  "date": "2026-06-26",
+  "title": "World-first nuclear heat-based hydrogen production plant inaugurated at Kalpakkam",
+  "summary": "BARC and IGCAR commissioned a demonstration plant at Kalpakkam that produces hydrogen using the indigenously developed Copper-Chlorine (Cu-Cl) thermochemical cycle, driven by high-temperature process heat from the Fast Breeder Test Reactor instead of electrolysis. The facility, inaugurated on 26 June 2026 by DAE Secretary Dr. Ajit Kumar Mohanty, is billed as the world's first nuclear heat-based hydrogen production plant and will validate the technology for scale-up.",
+  "category": "energy",
+  "status": "inaugurated",
+  "location": {
+   "name": "Kalpakkam, Chengalpattu district",
+   "state": "Tamil Nadu",
+   "lat": 12.5576,
+   "lng": 80.1754
+  },
+  "investmentCr": null,
+  "capacity": null,
+  "benefits": [
+   "Demonstrates carbon-free hydrogen production without grid electricity",
+   "Leverages waste heat from fast reactors, improving nuclear plant economics",
+   "Positions India as a technology leader in nuclear-hydrogen coupling",
+   "Supports National Green Hydrogen Mission goals"
+  ],
+  "project": "BARC-IGCAR Nuclear Hydrogen Demonstration Plant",
+  "sources": [
+   {
+    "name": "Republic World",
+    "url": "https://www.republicworld.com/science/india-leads-green-energy-race-commissions-world-s-first-nuclear-heat-based-hydrogen-production-plant-2026-06-28-130264"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-06-23-mundra-airport-begins-scheduled-flights-as-multi",
+  "date": "2026-06-23",
+  "title": "Mundra Airport begins scheduled flights as multi-modal logistics hub",
+  "summary": "Adani's Mundra Airport launched its first scheduled services on 23 June 2026 in partnership with Star Air, with eight new routes including Mumbai and Goa — positioning Mundra as a fully integrated port-airport-rail logistics hub.",
+  "category": "aviation",
+  "status": "operational",
+  "location": {
+   "name": "Mundra",
+   "state": "Gujarat",
+   "lat": 22.839,
+   "lng": 69.721
+  },
+  "investmentCr": null,
+  "capacity": "8 routes at launch",
+  "benefits": [
+   "Air connectivity for India's largest commercial port zone",
+   "Port + airport + rail integration for high-value cargo",
+   "Opens Kutch region to business travel"
+  ],
+  "project": "Mundra multi-modal hub",
+  "sources": [
+   {
+    "name": "Adani media release",
+    "url": "https://www.adani.com/newsroom/media-releases/adani-mundra-airport-takes-flight-as-a-fully-integrated-multi-modal-logistics-and-business-hub"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-06-22-galathea-bay-transshipment-port-clears-pppac-amid",
+  "date": "2026-06-22",
+  "title": "Galathea Bay transshipment port clears PPPAC amid viability questions",
+  "summary": "The Rs 48,862 crore International Container Transshipment Port at Galathea Bay on Great Nicobar Island received an in-principle recommendation from the PPP Appraisal Committee in March 2026, though its request for Viability Gap Funding was turned down. Phase 1 targets up to 4 million TEUs capacity by 2028, and breakwater construction is nearing completion. In June 2026 Congress leader Jairam Ramesh sought details of private shareholding and the bidding process for the project.",
+  "category": "ports",
+  "status": "approved",
+  "location": {
+   "name": "Galathea Bay, Great Nicobar Island",
+   "state": "Andaman and Nicobar Islands",
+   "lat": 6.87,
+   "lng": 93.87
+  },
+  "investmentCr": 48862,
+  "capacity": "4 million TEUs Phase 1 by 2028",
+  "benefits": [
+   "Strategic Indian presence astride the Malacca Strait shipping lane",
+   "Captures transshipment cargo now routed via Colombo and Singapore",
+   "Anchor for the wider Great Nicobar development (airport, township, power)",
+   "Designed for automated, green logistics operations"
+  ],
+  "project": "Galathea Bay Transshipment Port",
+  "sources": [
+   {
+    "name": "The Tribune",
+    "url": "https://www.tribuneindia.com/news/business/great-nicobar-project-transhipment-port-at-galathea-bay-secures-approval-despite-concerns/"
+   },
+   {
+    "name": "ANI",
+    "url": "https://www.aninews.in/news/national/general-news/great-nicobar-project-jairam-ramesh-seeks-details-of-maximum-private-shareholding-bidding-process-for-transhipment-port-at-galathea-bay20260622103701/"
+   },
+   {
+    "name": "Wikipedia",
+    "url": "https://en.wikipedia.org/wiki/International_Container_Transshipment_Port,_Galathea_Bay"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-06-19-adipur-bhuj-rail-line-doubling-sanctioned-in",
+  "date": "2026-06-19",
+  "title": "Adipur–Bhuj rail line doubling sanctioned in Kutch",
+  "summary": "Indian Railways approved the doubling of the Adipur–Bhuj rail line in Gujarat's Kutch district at a sanctioned cost of about Rs 493 crore. The project will carry an additional 12 million tonnes per annum of freight and allow two additional passenger trains in each direction per day, strengthening connectivity to Bhuj and the Deendayal (Kandla) port hinterland.",
+  "category": "rail",
+  "status": "approved",
+  "location": {
+   "name": "Bhuj, Kutch",
+   "state": "Gujarat",
+   "lat": 23.24,
+   "lng": 69.67
+  },
+  "investmentCr": 493,
+  "capacity": "12 MTPA additional freight",
+  "benefits": [
+   "Adds 12 MTPA freight capacity toward Kandla/Deendayal port belt",
+   "Two extra passenger trains each way daily for Bhuj",
+   "Decongests single-line bottleneck in Kutch"
+  ],
+  "project": "Adipur–Bhuj line doubling",
+  "sources": [
+   {
+    "name": "Indian Infrastructure",
+    "url": "https://indianinfrastructure.com/2026/06/19/indian-railways-approves-adipur-bhuj-rail-line-doubling-project-in-gujarat/"
+   }
+  ],
+  "routePoints": [
+   [
+    70.1,
+    23.08
+   ],
+   [
+    69.95,
+    23.12
+   ],
+   [
+    69.8,
+    23.19
+   ],
+   [
+    69.67,
+    23.24
+   ]
+  ]
+ },
+ {
+  "id": "2026-06-18-champa-korba-third-rail-line-approved-in",
+  "date": "2026-06-18",
+  "title": "Champa–Korba third rail line approved in Chhattisgarh coal belt",
+  "summary": "Indian Railways approved construction of a 42-km third railway line between Champa and Korba on South East Central Railway in Chhattisgarh. The additional line will decongest one of India's busiest coal-evacuation corridors serving the Korba mining and thermal power cluster.",
+  "category": "rail",
+  "status": "approved",
+  "location": {
+   "name": "Korba",
+   "state": "Chhattisgarh",
+   "lat": 22.36,
+   "lng": 82.73
+  },
+  "investmentCr": null,
+  "capacity": "42 km third line",
+  "benefits": [
+   "Faster coal evacuation from the Korba mining belt",
+   "Relieves congestion on a saturated SECR freight corridor",
+   "More reliable paths for passenger trains through Champa junction"
+  ],
+  "project": "Champa–Korba third line",
+  "sources": [
+   {
+    "name": "Indian Infrastructure",
+    "url": "https://indianinfrastructure.com/2026/06/18/indian-railways-approves-champa-korba-third-rail-line-project-in-chhattisgarh/"
+   }
+  ],
+  "routePoints": [
+   [
+    82.65,
+    22.03
+   ],
+   [
+    82.68,
+    22.18
+   ],
+   [
+    82.72,
+    22.3
+   ],
+   [
+    82.75,
+    22.36
+   ]
+  ]
+ },
+ {
+  "id": "2026-06-15-noida-international-airport-at-jewar-begins-commercial",
+  "date": "2026-06-15",
+  "title": "Noida International Airport at Jewar begins commercial operations",
+  "summary": "Noida International Airport (DXN) started commercial flights on 15 June 2026 with an IndiGo service from Lucknow, after its Phase 1 inauguration on 28 March 2026 and DGCA aerodrome licence on 6 March 2026. Phase 1 has one runway and one terminal with 12 million passengers per annum capacity, scaling to 70 MPPA by 2040. Akasa Air joined on 16 June and cargo operations began 17 June; international flights are targeted for September 2026.",
+  "category": "aviation",
+  "status": "operational",
+  "location": {
+   "name": "Jewar, Gautam Buddha Nagar",
+   "state": "Uttar Pradesh",
+   "lat": 28.1103,
+   "lng": 77.6056
+  },
+  "investmentCr": null,
+  "capacity": "12 MPPA Phase 1; 70 MPPA by 2040",
+  "benefits": [
+   "Relieves pressure on Delhi IGI as NCR's second airport",
+   "Connects western Uttar Pradesh to the air network",
+   "Anchors industrial and real-estate corridors along Yamuna Expressway",
+   "New cargo capacity for NCR exporters"
+  ],
+  "project": "Noida International Airport (Jewar)",
+  "sources": [
+   {
+    "name": "FTN News",
+    "url": "https://ftnnews.com/travel-news/aviation/indias-newest-airport-noida-international-officially-opens-intends-to-relieve-pressure-on-delhis-indira-gandhi-international/"
+   },
+   {
+    "name": "Wikipedia",
+    "url": "https://en.wikipedia.org/wiki/Noida_International_Airport"
+   },
+   {
+    "name": "Pulse of Noida",
+    "url": "https://pulseofnoida.com/noida-updates/noida-international-airport-2026-commercial-flight-dates-routes-and-jewar-updates-1858/"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-06-15-lrlacm-long-range-cruise-missile-test-clears",
+  "date": "2026-06-15",
+  "title": "LRLACM long-range cruise missile test clears key milestone",
+  "summary": "DRDO again flight-tested the indigenous Long-Range Land-Attack Cruise Missile (LRLACM) from Dr APJ Abdul Kalam Island on 15 June 2026. The missile can strike targets at ranges approaching 1,000 km carrying a ~450 kg warhead, maturing India's home-grown cruise-missile ecosystem.",
+  "category": "defense",
+  "status": "test",
+  "location": {
+   "name": "Dr APJ Abdul Kalam Island",
+   "state": "Odisha",
+   "lat": 20.76,
+   "lng": 87.072
+  },
+  "investmentCr": null,
+  "capacity": "~1,000 km range, 450 kg warhead",
+  "benefits": [
+   "Standoff land-attack reach without imported systems",
+   "Ship- and ground-launched variants planned for Navy and Army",
+   "Alters strike balance in the Indo-Pacific per analysts"
+  ],
+  "project": "LRLACM cruise missile",
+  "sources": [
+   {
+    "name": "India Sentinels",
+    "url": "https://www.indiasentinels.com/defence-industry/drdo/india-clears-key-milestone-as-drdo-tests-indigenous-long-range-cruise-missile-again-7448"
+   },
+   {
+    "name": "Defence Security Asia",
+    "url": "https://defencesecurityasia.com/en/india-lrlacm-cruise-missile-test-drdo-1000km-long-range-strike-indo-pacific/"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-06-15-mp-atgm-man-portable-anti-tank-missile",
+  "date": "2026-06-15",
+  "title": "MP-ATGM man-portable anti-tank missile ready for Army induction",
+  "summary": "DRDO's man-portable fire-and-forget anti-tank guided missile (MP-ATGM) was reported ready for Indian Army induction in June 2026 after a decade of development, giving infantry a lightweight indigenous tank-killer.",
+  "category": "defense",
+  "status": "trial",
+  "location": {
+   "name": "Hyderabad (DRDO RCI)",
+   "state": "Telangana",
+   "lat": 17.408,
+   "lng": 78.581
+  },
+  "investmentCr": null,
+  "capacity": "Fire-and-forget, man-portable",
+  "benefits": [
+   "Replaces imported Milan/Konkurs class missiles with an Indian design",
+   "Top-attack capability against modern armour",
+   "Boost for DRDO-private production ecosystem"
+  ],
+  "project": "MP-ATGM",
+  "sources": [
+   {
+    "name": "Indian Masterminds",
+    "url": "https://indianmasterminds.com/news/defence/drdo-mp-atgm-indian-army-induction-after-10-years-214882/"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-06-11-drdo-tests-ad-1-ad-2-ballistic",
+  "date": "2026-06-11",
+  "title": "DRDO tests AD-1, AD-2 ballistic-missile interceptors and NASM-MR in back-to-back trials",
+  "summary": "On 10-11 June 2026 DRDO conducted consecutive flight tests of its multi-layered Ballistic Missile Defence interceptors — endo-atmospheric AD-1 and exo-atmospheric AD-2 — which successfully engaged their targets, validating capability against even ICBM-class threats, alongside the NASM-MR anti-ship missile.",
+  "category": "defense",
+  "status": "test",
+  "location": {
+   "name": "Dr APJ Abdul Kalam Island",
+   "state": "Odisha",
+   "lat": 20.758,
+   "lng": 87.075
+  },
+  "investmentCr": null,
+  "capacity": "AD-1 + AD-2 interceptors, NASM-MR",
+  "benefits": [
+   "Two-layer indigenous shield against ballistic missiles, including ICBM-class targets",
+   "Strengthens deterrence posture and takes India into an elite BMD club",
+   "NASM-MR adds a medium-range indigenous anti-ship strike option"
+  ],
+  "project": "Ballistic Missile Defence Phase 2",
+  "sources": [
+   {
+    "name": "Naval News",
+    "url": "https://www.navalnews.com/naval-news/2026/06/india-conducts-spate-of-tests-for-anti-ship-land-attack-bmd-and-hypersonic-ground-attack-missiles/"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-06-09-zojila-tunnel-achieves-final-breakthrough-all-weather",
+  "date": "2026-06-09",
+  "title": "Zojila tunnel achieves final breakthrough, all-weather Kashmir–Ladakh link excavated",
+  "summary": "The final rock barrier of the 13.153-km Zojila tunnel was blasted on 9 June 2026, completing excavation of the world's longest single-tube bi-directional road tunnel at around 11,578 ft altitude. About 85% of overall project work is complete, and the tunnel remains on track for operational commissioning by February 2028, giving Kashmir and Ladakh their first all-weather road connectivity.",
+  "category": "roads",
+  "status": "under-construction",
+  "location": {
+   "name": "Zoji La pass, Sonamarg (Ganderbal)–Drass corridor",
+   "state": "Jammu & Kashmir",
+   "lat": 34.28,
+   "lng": 75.47
+  },
+  "investmentCr": null,
+  "capacity": "13.153 km single-tube tunnel",
+  "benefits": [
+   "First all-weather road connectivity between Kashmir Valley and Ladakh",
+   "Strategic military logistics lifeline to Kargil and Leh",
+   "Removes dependence on the avalanche-prone Zoji La pass"
+  ],
+  "project": "Zojila Tunnel",
+  "sources": [
+   {
+    "name": "The Tribune",
+    "url": "https://www.tribuneindia.com/news/j-k/13-km-zojila-tunnel-achieves-final-breakthrough/"
+   },
+   {
+    "name": "Deccan Herald",
+    "url": "https://www.deccanherald.com/amp/story/india/jammu-and-kashmir/zojila-tunnel-breakthrough-strengthens-indias-strategic-lifeline-to-ladakh-4032684"
+   }
+  ],
+  "routePoints": [
+   [
+    75.3,
+    34.3
+   ],
+   [
+    75.4,
+    34.28
+   ],
+   [
+    75.5,
+    34.27
+   ],
+   [
+    75.6,
+    34.26
+   ]
+  ]
+ },
+ {
+  "id": "2026-06-05-pm-modi-inaugurates-kim-ena-and-gandeva",
+  "date": "2026-06-05",
+  "title": "PM Modi inaugurates Kim–Ena and Gandeva–Ena sections of Delhi–Mumbai Expressway",
+  "summary": "Two Gujarat packages of the Delhi–Mumbai Expressway worth Rs 7,689 crore were inaugurated in Surat on 5 June 2026: the 36-km Kim–Ena section (Package VI) and the 27.5-km Gandeva–Ena section (Package VII) on the Vadodara–Mumbai corridor. Foundation stones for four more highway projects worth Rs 4,732 crore were also laid, taking the day's total to Rs 12,421 crore.",
+  "category": "roads",
+  "status": "inaugurated",
+  "location": {
+   "name": "Kim–Ena–Gandeva stretch, Surat/Navsari districts",
+   "state": "Gujarat",
+   "lat": 21.1,
+   "lng": 72.95
+  },
+  "investmentCr": 7689,
+  "capacity": "63.5 km (two packages)",
+  "benefits": [
+   "Extends operational length of India's longest expressway toward Mumbai",
+   "Faster freight movement for Surat's textile and diamond industries",
+   "Cuts travel time on the Vadodara–Mumbai corridor"
+  ],
+  "project": "Delhi–Mumbai Expressway",
+  "sources": [
+   {
+    "name": "Sarkaritel",
+    "url": "https://www.sarkaritel.com/pm-modi-to-unveil-delhi-mumbai-expressway-stretches-and-highway-projects-worth-rs-12421-crore-in-surat-on-june-5/"
+   }
+  ],
+  "routePoints": [
+   [
+    72.93,
+    21.4
+   ],
+   [
+    72.95,
+    21.15
+   ],
+   [
+    72.98,
+    20.95
+   ],
+   [
+    73,
+    20.81
+   ]
+  ]
+ },
+ {
+  "id": "2026-06-03-ccea-approves-rameshwar-paradip-coastal-highway-in",
+  "date": "2026-06-03",
+  "title": "CCEA approves Rameshwar–Paradip coastal highway in Rs 19,834-crore three-state package",
+  "summary": "The Cabinet Committee on Economic Affairs approved the Rameshwar–Paradip section of Odisha's new coastal highway at an estimated cost of Rs 8,300.79 crore, part of a Rs 19,834-crore package of highway projects across Odisha, Telangana and Bihar cleared on 3 June 2026. The same package includes four-laning of the 143.5-km Khagaria–Purnea NH-31/NH-231 section in Bihar (Rs 3,936.05 crore) and 190.76 km of NH-63/NH-563 widening in Telangana (Rs 7,597.16 crore).",
+  "category": "roads",
+  "status": "approved",
+  "location": {
+   "name": "Rameshwar–Paradip coastal stretch, Puri/Jagatsinghpur districts",
+   "state": "Odisha",
+   "lat": 20.05,
+   "lng": 86.4
+  },
+  "investmentCr": 8300.79,
+  "capacity": null,
+  "benefits": [
+   "Direct coastal freight corridor to Paradip Port",
+   "Boosts tourism along the Puri–Konark–Paradip coast",
+   "Improves cyclone evacuation and coastal logistics resilience"
+  ],
+  "project": "Odisha Coastal Highway (Rameshwar–Paradip)",
+  "sources": [
+   {
+    "name": "Business Standard",
+    "url": "https://www.business-standard.com/economy/news/cabinet-approves-highway-projects-worth-rs-19-834-crore-in-three-states-126060301100_1.html"
+   }
+  ],
+  "routePoints": [
+   [
+    85.83,
+    19.81
+   ],
+   [
+    86.09,
+    19.89
+   ],
+   [
+    86.34,
+    19.98
+   ],
+   [
+    86.61,
+    20.32
+   ]
+  ]
+ },
+ {
+  "id": "2026-06-01-first-andhra-pradesh-stretch-of-bengaluru-chennai",
+  "date": "2026-06-01",
+  "title": "First Andhra Pradesh stretch of Bengaluru–Chennai Expressway opens to traffic",
+  "summary": "A 25-km Bethamangala–Baireddypalle section of the 258-km Bengaluru–Chennai Expressway (NE-7) was commissioned in June 2026, the first operational segment in Andhra Pradesh, joining the already-operational 71-km Karnataka section and the Chittoor stretch. Once fully complete, the four-lane access-controlled expressway will cut Bengaluru–Chennai travel time from about six hours to under three, though remaining sections have slipped to early 2027.",
+  "category": "roads",
+  "status": "operational",
+  "location": {
+   "name": "Bethamangala–Baireddypalle section, Kolar/Chittoor districts",
+   "state": "Andhra Pradesh",
+   "lat": 12.99,
+   "lng": 78.42
+  },
+  "investmentCr": null,
+  "capacity": "25 km opened; 258 km total",
+  "benefits": [
+   "Bengaluru–Chennai travel time to drop from 6 hours to under 3",
+   "Route shortens the journey by about 80 km",
+   "Boosts industrial corridors at Hoskote and Sriperumbudur"
+  ],
+  "project": "Bengaluru–Chennai Expressway",
+  "sources": [
+   {
+    "name": "Wikipedia (Bengaluru–Chennai Expressway)",
+    "url": "https://en.wikipedia.org/wiki/Bengaluru%E2%80%93Chennai_Expressway"
+   },
+   {
+    "name": "91infra",
+    "url": "https://www.91infra.com/news/bengaluru-chennai-expressway-now-expected-to-open-by-june-2026"
+   }
+  ],
+  "routePoints": [
+   [
+    77.8,
+    13.07
+   ],
+   [
+    78.18,
+    12.99
+   ],
+   [
+    78.32,
+    12.99
+   ],
+   [
+    78.53,
+    12.99
+   ],
+   [
+    79.1,
+    13.22
+   ],
+   [
+    79.33,
+    12.95
+   ],
+   [
+    79.94,
+    12.97
+   ]
+  ]
+ },
+ {
+  "id": "2026-05-22-sael-s-600-mw-kadapa-solar-project",
+  "date": "2026-05-22",
+  "title": "SAEL's 600 MW Kadapa solar project formally inaugurated in Andhra Pradesh",
+  "summary": "SAEL formally inaugurated its 600 MW solar power project in Kadapa district on 22 May 2026 after commissioning it within 11 months. The two 300 MW units, run by SAEL Solar MHP1 and SAEL Solar MHP2, achieved commercial operation on 30 January 2026 and 13 March 2026 respectively.",
+  "category": "energy",
+  "status": "inaugurated",
+  "location": {
+   "name": "Kadapa district",
+   "state": "Andhra Pradesh",
+   "lat": 14.4674,
+   "lng": 78.8241
+  },
+  "investmentCr": null,
+  "capacity": "600 MW (2x300 MW)",
+  "benefits": [
+   "Adds 600 MW of utility-scale solar to Andhra Pradesh's grid",
+   "Fast 11-month execution showcases rapid renewable build-out",
+   "Supports India's 500 GW non-fossil capacity target for 2030"
+  ],
+  "project": "SAEL Kadapa 600 MW Solar Project",
+  "sources": [
+   {
+    "name": "Saur Energy",
+    "url": "https://www.saurenergy.com/solar-energy-news/andhra-pradesh-saels-600-mw-kadapa-solar-project-to-be-formally-inaugurated-on-may-22-11857896"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-05-15-shinkun-la-tunnel-boring-reaches-50-on",
+  "date": "2026-05-15",
+  "title": "Shinkun La tunnel boring reaches 50% on Nimmu–Padum–Darcha road",
+  "summary": "As of May 2026, tunnel boring on the 4.1-km twin-tube Shinkun La tunnel is 50% complete, with round-the-clock excavation advancing from both the Lakhang (Ladakh) and Darcha (Himachal Pradesh) portals. The Rs 1,681-crore project at about 15,800 ft, set to be the world's highest road tunnel, remains on track for completion in August 2028 and will cut the Manali–Kargil distance by 522 km.",
+  "category": "roads",
+  "status": "under-construction",
+  "location": {
+   "name": "Shinku La pass, Zanskar (Darcha–Padum road)",
+   "state": "Ladakh",
+   "lat": 32.93,
+   "lng": 77.03
+  },
+  "investmentCr": 1681,
+  "capacity": "4.1 km twin-tube at 15,800 ft",
+  "benefits": [
+   "Third all-weather axis to Ladakh via the Zanskar valley",
+   "Cuts Manali–Kargil distance by 522 km",
+   "Strategic redundancy for military supply to forward areas"
+  ],
+  "project": "Shinkun La Tunnel",
+  "sources": [
+   {
+    "name": "Wikipedia (Shinku La)",
+    "url": "https://en.wikipedia.org/wiki/Shinku_La"
+   },
+   {
+    "name": "Construction Review Online",
+    "url": "https://constructionreviewonline.com/indias-prime-minister-set-to-launch-the-construction-of-the-worlds-highest-tunnel-expected-altitude-of-15800-feet/"
+   }
+  ],
+  "routePoints": [
+   [
+    77.2,
+    32.68
+   ],
+   [
+    77.12,
+    32.8
+   ],
+   [
+    77.03,
+    32.93
+   ],
+   [
+    76.95,
+    33.05
+   ]
+  ]
+ },
+ {
+  "id": "2026-05-15-jitendra-singh-inaugurates-cel-s-200-mw",
+  "date": "2026-05-15",
+  "title": "Jitendra Singh inaugurates CEL's 200 MW solar module manufacturing facility",
+  "summary": "Union Minister Dr. Jitendra Singh inaugurated a 200 MW solar module manufacturing facility of Central Electronics Limited (CEL) at Sahibabad on 15 May 2026. The line strengthens domestic PV module manufacturing capacity under the government's clean energy and Make-in-India push.",
+  "category": "energy",
+  "status": "inaugurated",
+  "location": {
+   "name": "Sahibabad, Ghaziabad",
+   "state": "Uttar Pradesh",
+   "lat": 28.6716,
+   "lng": 77.3906
+  },
+  "investmentCr": null,
+  "capacity": "200 MW/year module line",
+  "benefits": [
+   "Boosts domestic solar module manufacturing capacity",
+   "Reduces import dependence for PV modules",
+   "Creates manufacturing jobs in the NCR region"
+  ],
+  "project": "CEL Solar Module Manufacturing Facility",
+  "sources": [
+   {
+    "name": "SolarQuarter",
+    "url": "https://solarquarter.com/2026/05/15/jitendra-singh-inaugurates-200-mw-solar-module-manufacturing-facility-of-central-electronics-limited-to-strengthen-indias-clean-energy-sector/"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-05-14-amritsar-new-jalpaiguri-amrit-bharat-express-flagged",
+  "date": "2026-05-14",
+  "title": "Amritsar–New Jalpaiguri Amrit Bharat Express flagged off",
+  "summary": "Union Minister of State for Railways Ravneet Singh Bittu flagged off the Amritsar–New Jalpaiguri Amrit Bharat Express on 14 May 2026. The weekly non-AC sleeper service calls at 35 intermediate stations across Punjab, Haryana, Uttar Pradesh, Bihar and West Bengal, and uses push-pull WAP-5 locomotives of 6,000 HP at each end for faster acceleration.",
+  "category": "rail",
+  "status": "inaugurated",
+  "location": {
+   "name": "Amritsar",
+   "state": "Punjab",
+   "lat": 31.63,
+   "lng": 74.87
+  },
+  "investmentCr": null,
+  "capacity": "35 intermediate stations across 5 states",
+  "benefits": [
+   "Affordable long-distance travel for migrant workers between Punjab and North Bengal",
+   "Modern non-AC sleeper stock replacing older conventional rakes",
+   "Push-pull operation shortens journey time on the busy trunk route"
+  ],
+  "project": "Amrit Bharat Express expansion",
+  "sources": [
+   {
+    "name": "Metro Rail News",
+    "url": "https://metrorailnews.in/amritsar-new-jalpaiguri-amrit-bharat-express-flagged-off-by-the-union-minister/"
+   }
+  ],
+  "routePoints": [
+   [
+    74.87,
+    31.63
+   ],
+   [
+    76.78,
+    30.38
+   ],
+   [
+    80.95,
+    26.85
+   ],
+   [
+    85.14,
+    25.61
+   ],
+   [
+    87.57,
+    25.55
+   ],
+   [
+    88.43,
+    26.68
+   ]
+  ]
+ },
+ {
+  "id": "2026-05-05-cabinet-approves-two-more-semiconductor-projects-12",
+  "date": "2026-05-05",
+  "title": "Cabinet approves two more semiconductor projects; 12 fabs/OSATs now sanctioned",
+  "summary": "The Union Cabinet approved two additional semiconductor manufacturing projects under the India Semiconductor Mission on 5 May 2026, taking the total to 12 approved facilities across six states with cumulative investments of about ₹1.64 lakh crore.",
+  "category": "tech",
+  "status": "approved",
+  "location": {
+   "name": "New Delhi",
+   "state": "Delhi",
+   "lat": 28.6139,
+   "lng": 77.209
+  },
+  "investmentCr": 164000,
+  "capacity": "12 facilities, 6 states",
+  "benefits": [
+   "Domestic chip supply chain for auto, telecom and defence",
+   "Tens of thousands of direct high-skill jobs",
+   "Cuts import dependence on a strategic technology"
+  ],
+  "project": "India Semiconductor Mission",
+  "sources": [
+   {
+    "name": "DIGITIMES Asia",
+    "url": "https://www.digitimes.com/news/a20260522VL201/india-roundup-data-center-fab-investment-market.html"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-04-29-pm-modi-inaugurates-594-km-ganga-expressway",
+  "date": "2026-04-29",
+  "title": "PM Modi inaugurates 594-km Ganga Expressway from Meerut to Prayagraj",
+  "summary": "Prime Minister Narendra Modi inaugurated the 594-km six-lane access-controlled greenfield Ganga Expressway at Hardoi on 29 April 2026, opening Uttar Pradesh's longest expressway to traffic. The corridor cuts Meerut–Prayagraj travel time from 12-13 hours to about 6-7 hours, with toll operations live across all 23 main toll plazas from day one.",
+  "category": "roads",
+  "status": "inaugurated",
+  "location": {
+   "name": "Meerut–Prayagraj corridor (inaugurated at Hardoi)",
+   "state": "Uttar Pradesh",
+   "lat": 27.4,
+   "lng": 80.13
+  },
+  "investmentCr": null,
+  "capacity": "594 km, 6 lanes, 23 toll plazas",
+  "benefits": [
+   "Halves Meerut–Prayagraj travel time to 6-7 hours",
+   "Opens western UP to Purvanchal high-speed connectivity",
+   "Spurs industrial corridors and logistics parks along 12 districts",
+   "Faster access to Prayagraj for pilgrimage traffic"
+  ],
+  "project": "Ganga Expressway",
+  "sources": [
+   {
+    "name": "PMO India",
+    "url": "https://www.pmindia.gov.in/en/news_updates/pm-inaugurates-594-km-long-access-controlled-greenfield-ganga-expressway-in-hardoi-uttar-pradesh/"
+   }
+  ],
+  "routePoints": [
+   [
+    77.7,
+    28.99
+   ],
+   [
+    77.78,
+    28.73
+   ],
+   [
+    79.12,
+    28.03
+   ],
+   [
+    79.91,
+    27.88
+   ],
+   [
+    80.13,
+    27.4
+   ],
+   [
+    80.49,
+    26.55
+   ],
+   [
+    81.24,
+    26.23
+   ],
+   [
+    81.85,
+    25.44
+   ]
+  ]
+ },
+ {
+  "id": "2026-04-28-two-new-amrit-bharat-trains-link-varanasi",
+  "date": "2026-04-28",
+  "title": "Two new Amrit Bharat trains link Varanasi–Pune and Ayodhya–Mumbai",
+  "summary": "Prime Minister Modi flagged off two new Amrit Bharat Express trains on 28 April 2026, connecting Varanasi with Pune (Hadapsar) and Ayodhya with Mumbai (Lokmanya Tilak Terminus). The budget-friendly non-AC sleeper services extend the Amrit Bharat network between Uttar Pradesh and Maharashtra, using twin 6,000 HP WAP-5 locomotives in push-pull mode.",
+  "category": "rail",
+  "status": "inaugurated",
+  "location": {
+   "name": "Varanasi",
+   "state": "Uttar Pradesh",
+   "lat": 25.32,
+   "lng": 82.99
+  },
+  "investmentCr": null,
+  "capacity": "2 new long-distance services",
+  "benefits": [
+   "Low-cost direct connectivity from eastern UP pilgrimage cities to Mumbai and Pune",
+   "Serves high-volume migrant and pilgrim travel corridors",
+   "Faster runs than conventional sleeper trains via push-pull traction"
+  ],
+  "project": "Amrit Bharat Express expansion",
+  "sources": [
+   {
+    "name": "Metro Rail News",
+    "url": "https://metrorailnews.in/amrit-bharat-express-train/"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-04-14-pm-modi-inaugurates-210-km-delhi-dehradun",
+  "date": "2026-04-14",
+  "title": "PM Modi inaugurates 210-km Delhi–Dehradun Expressway",
+  "summary": "The full Delhi–Dehradun Expressway from Akshardham in Delhi to Dehradun was inaugurated on 14 April 2026, cutting travel time from 5-6 hours to about 2.5 hours at a 100 kmph speed limit. The corridor features a 12-km elevated stretch through Rajaji National Park, described as Asia's longest wildlife corridor, with FASTag tolling live across all 5 plazas and a full-length car toll of about Rs 670-675.",
+  "category": "roads",
+  "status": "inaugurated",
+  "location": {
+   "name": "Delhi–Dehradun corridor (Akshardham to Dehradun)",
+   "state": "Uttarakhand",
+   "lat": 30.3165,
+   "lng": 78.0322
+  },
+  "investmentCr": null,
+  "capacity": "210 km, 2.5-hour travel time",
+  "benefits": [
+   "Cuts Delhi–Dehradun travel time from 5-6 hours to 2.5 hours",
+   "12-km elevated wildlife corridor protects Rajaji National Park",
+   "Boosts Uttarakhand tourism and Char Dham access"
+  ],
+  "project": "Delhi–Dehradun Expressway",
+  "sources": [
+   {
+    "name": "India News Network",
+    "url": "https://www.indianewsnetwork.com/en/pm-modi-opens-delhi-dehradun-expressway-enhance-connectivity-20260415"
+   },
+   {
+    "name": "Blackridge Research",
+    "url": "https://www.blackridgeresearch.com/project-profiles/delhi-dehradun-expressway-cost-route-map-phases-latest-news-updates"
+   }
+  ],
+  "routePoints": [
+   [
+    77.28,
+    28.61
+   ],
+   [
+    77.22,
+    28.94
+   ],
+   [
+    77.31,
+    29.45
+   ],
+   [
+    77.55,
+    29.97
+   ],
+   [
+    78.03,
+    30.32
+   ]
+  ]
+ },
+ {
+  "id": "2026-04-09-dholera-sez-notified-for-tata-s-first",
+  "date": "2026-04-09",
+  "title": "Dholera SEZ notified for Tata's first semiconductor fab",
+  "summary": "The central government notified a Special Economic Zone for Tata Semiconductor at Dholera, Gujarat on 9 April 2026, clearing the ground for India's first commercial fab. Tata Electronics with Taiwan's PSMC will make power-management ICs, display drivers, MCUs and high-performance computing chips (~₹91,000 crore project).",
+  "category": "tech",
+  "status": "under-construction",
+  "location": {
+   "name": "Dholera",
+   "state": "Gujarat",
+   "lat": 22.244,
+   "lng": 72.193
+  },
+  "investmentCr": 91000,
+  "capacity": "~50,000 wafer starts/month (planned)",
+  "benefits": [
+   "Anchor tenant for the Dholera greenfield smart city",
+   "Chips for AI, automotive, computing and storage made in India",
+   "Draws a component-supplier ecosystem to Gujarat"
+  ],
+  "project": "Dholera Semiconductor Fab",
+  "sources": [
+   {
+    "name": "Data Center Dynamics",
+    "url": "https://www.datacenterdynamics.com/en/news/tata-electronics-and-psmc-to-build-indias-first-semiconductor-fab/"
+   },
+   {
+    "name": "India Briefing",
+    "url": "https://www.india-briefing.com/news/setting-up-a-semiconductor-fabrication-plant-in-india-what-foreign-investors-should-know-22009.html/"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-04-08-cabinet-approves-jaipur-metro-phase-2-42",
+  "date": "2026-04-08",
+  "title": "Cabinet approves Jaipur Metro Phase 2: 42.8 km Prahladpura–Todi Mod corridor",
+  "summary": "The Union Cabinet approved Jaipur Metro Phase-2, a ~41-42.8 km North-South corridor from Prahladpura to Todi Mod with 36 stations at a cost of ₹13,037.66 crore, built by Rajasthan Metro Rail Corporation (50:50 Centre-State JV). Underground stations will serve the airport area; first operations phase targeted 2029-30 and full completion by September 2031.",
+  "category": "metro",
+  "status": "approved",
+  "location": {
+   "name": "Jaipur",
+   "state": "Rajasthan",
+   "lat": 26.885,
+   "lng": 75.805
+  },
+  "investmentCr": 13037.66,
+  "capacity": "42.8 km, 36 stations",
+  "benefits": [
+   "Connects Sitapura industrial area, airport, SMS Hospital, VKIA and Vidhyadhar Nagar on one line",
+   "Interchange with Phase-1 to form a proper network, boosting public-transport share",
+   "Manifold ridership increase expected; less pressure on Tonk Road traffic"
+  ],
+  "project": "Jaipur Metro Phase 2",
+  "sources": [
+   {
+    "name": "PIB press release",
+    "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2250040&reg=3&lang=1"
+   },
+   {
+    "name": "PM India",
+    "url": "https://www.pmindia.gov.in/en/news_updates/cabinet-approves-jaipur-metro-project-phase-2/"
+   }
+  ],
+  "routePoints": [
+   [
+    75.778,
+    26.988
+   ],
+   [
+    75.789,
+    26.949
+   ],
+   [
+    75.802,
+    26.899
+   ],
+   [
+    75.806,
+    26.856
+   ],
+   [
+    75.81,
+    26.824
+   ],
+   [
+    75.794,
+    26.792
+   ],
+   [
+    75.787,
+    26.77
+   ]
+  ]
+ },
+ {
+  "id": "2026-04-07-mumbai-metro-line-9-phase-1-opens",
+  "date": "2026-04-07",
+  "title": "Mumbai Metro Line 9 Phase 1 opens from Dahisar East to Kashigaon",
+  "summary": "Maharashtra CM Devendra Fadnavis inaugurated Phase 1 of Mumbai Metro Line 9 on 7 April 2026, extending the Red Line network from Dahisar East into Mira-Bhayandar. The stretch covers four stations: Dahisar, Pandurang Wadi, Mira Gaon and Kashigaon. It is one of four Mumbai Metro lines slated to open sections during 2026.",
+  "category": "metro",
+  "status": "inaugurated",
+  "location": {
+   "name": "Mira-Bhayandar",
+   "state": "Maharashtra",
+   "lat": 19.285,
+   "lng": 72.868
+  },
+  "investmentCr": null,
+  "capacity": "4 stations, Dahisar East–Kashigaon",
+  "benefits": [
+   "First metro connectivity for Mira-Bhayandar",
+   "Extends the Dahisar Red Line corridor beyond Mumbai city limits",
+   "Relieves pressure on Western Express Highway and suburban rail"
+  ],
+  "project": "Mumbai Metro Line 9",
+  "sources": [
+   {
+    "name": "Mumbai Live",
+    "url": "https://www.mumbailive.com/en/transport/more-lines-of-the-mumbai-metro-will-open-in-2026.-91307"
+   },
+   {
+    "name": "Wikipedia - Mumbai Metro",
+    "url": "https://en.wikipedia.org/wiki/Mumbai_Metro"
+   }
+  ],
+  "routePoints": [
+   [
+    72.859,
+    19.258
+   ],
+   [
+    72.862,
+    19.272
+   ],
+   [
+    72.868,
+    19.285
+   ],
+   [
+    72.872,
+    19.297
+   ]
+  ]
+ },
+ {
+  "id": "2026-04-07-mumbai-metro-line-2b-phase-1-mandale",
+  "date": "2026-04-07",
+  "title": "Mumbai Metro Line 2B Phase 1 (Mandale–Diamond Garden) inaugurated",
+  "summary": "Phase 1 of Mumbai Metro Line 2B, running from Mandale to Diamond Garden in Chembur, was inaugurated on 7 April 2026, bringing metro connectivity to key Harbour Line areas like Chembur for the first time. The western portion of Line 2B connecting DN Nagar to Khar is expected to become operational by mid-2026.",
+  "category": "metro",
+  "status": "inaugurated",
+  "location": {
+   "name": "Chembur, Mumbai",
+   "state": "Maharashtra",
+   "lat": 19.05,
+   "lng": 72.905
+  },
+  "investmentCr": null,
+  "capacity": "Mandale–Diamond Garden section",
+  "benefits": [
+   "First metro service for Chembur and eastern Harbour Line suburbs",
+   "Feeder connectivity toward Line 2A and the wider Yellow Line corridor",
+   "Reduces road congestion on Sion–Trombay Road"
+  ],
+  "project": "Mumbai Metro Line 2B",
+  "sources": [
+   {
+    "name": "Mumbai Live",
+    "url": "https://www.mumbailive.com/en/transport/more-lines-of-the-mumbai-metro-will-open-in-2026.-91307"
+   },
+   {
+    "name": "Wikipedia - Mumbai Metro",
+    "url": "https://en.wikipedia.org/wiki/Mumbai_Metro"
+   }
+  ],
+  "routePoints": [
+   [
+    72.93,
+    19.04
+   ],
+   [
+    72.917,
+    19.046
+   ],
+   [
+    72.905,
+    19.051
+   ],
+   [
+    72.897,
+    19.056
+   ]
+  ]
+ },
+ {
+  "id": "2026-04-06-prototype-fast-breeder-reactor-attains-first-criticality",
+  "date": "2026-04-06",
+  "title": "Prototype Fast Breeder Reactor attains first criticality at Kalpakkam",
+  "summary": "India's indigenously designed 500 MWe Prototype Fast Breeder Reactor (PFBR), built by BHAVINI at the Kalpakkam nuclear complex, achieved first criticality on 6 April 2026. The milestone marks India's formal entry into the second stage of its three-stage nuclear power programme, and once fully operational India will be only the second country after Russia running a commercial-scale fast breeder reactor.",
+  "category": "energy",
+  "status": "test",
+  "location": {
+   "name": "Kalpakkam, Chengalpattu district",
+   "state": "Tamil Nadu",
+   "lat": 12.5605,
+   "lng": 80.1735
+  },
+  "investmentCr": null,
+  "capacity": "500 MWe",
+  "benefits": [
+   "Adds 500 MWe of clean baseload power once operational",
+   "Breeds more fuel than it consumes, closing the nuclear fuel cycle",
+   "Gateway to India's thorium-based third-stage nuclear programme",
+   "Major strategic energy-security milestone"
+  ],
+  "project": "Prototype Fast Breeder Reactor (PFBR) Kalpakkam",
+  "sources": [
+   {
+    "name": "World Nuclear News",
+    "url": "https://world-nuclear-news.org/articles/first-criticality-for-indian-fast-breeder-reactor"
+   },
+   {
+    "name": "PIB",
+    "url": "https://www.pib.gov.in/FactsheetDetails.aspx?Id=150617&lang=1&reg=3"
+   },
+   {
+    "name": "ANS Nuclear Newswire",
+    "url": "https://www.ans.org/news/article-7936/indias-pfbr-attains-criticality-at-last/"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-03-31-western-dedicated-freight-corridor-fully-complete-as",
+  "date": "2026-03-31",
+  "title": "Western Dedicated Freight Corridor fully complete as JNPT–Vaitarna section opens",
+  "summary": "DFCCIL declared the Western Dedicated Freight Corridor complete on 31 March 2026 with the commissioning of the final JNPT–New Saphale (Vaitarna) section. The roughly 1,506-km double-line, 2x25 kV heavy-haul corridor links Jawaharlal Nehru Port in Maharashtra to Dadri in Uttar Pradesh, built at an investment of about Rs 51,101 crore. The combined DFC network handled a record 892 freight trains in a single day in January 2026.",
+  "category": "rail",
+  "status": "operational",
+  "location": {
+   "name": "Jawaharlal Nehru Port (JNPT), Navi Mumbai",
+   "state": "Maharashtra",
+   "lat": 18.96,
+   "lng": 72.95
+  },
+  "investmentCr": 51101,
+  "capacity": "1,506 km double-line electrified freight corridor",
+  "benefits": [
+   "Direct heavy-haul freight link from JNPT port to the National Capital Region",
+   "Frees passenger-line capacity on the congested Mumbai–Delhi trunk route",
+   "Faster, cheaper container movement cutting national logistics costs",
+   "Record 892 trains/day interchange shows large capacity addition"
+  ],
+  "project": "Western Dedicated Freight Corridor",
+  "sources": [
+   {
+    "name": "Indian Infrastructure",
+    "url": "https://indianinfrastructure.com/2026/04/02/dfccil-completes-construction-work-on-dedicated-freight-corridor-project-western-corridor/"
+   },
+   {
+    "name": "RailFreight.com",
+    "url": "https://www.railfreight.com/infrastructure/2026/02/27/indias-big-plans-for-its-dedicated-freight-corridor/"
+   },
+   {
+    "name": "NewsBytes",
+    "url": "https://www.newsbytesapp.com/news/india/dfccil-completes-western-dedicated-freight-corridor-on-march-31-2026/tldr"
+   }
+  ],
+  "routePoints": [
+   [
+    72.95,
+    18.96
+   ],
+   [
+    72.86,
+    19.7
+   ],
+   [
+    72.84,
+    21.17
+   ],
+   [
+    73.18,
+    22.31
+   ],
+   [
+    72.43,
+    24.17
+   ],
+   [
+    74.64,
+    26.45
+   ],
+   [
+    76.62,
+    28.18
+   ],
+   [
+    77.55,
+    28.57
+   ]
+  ]
+ },
+ {
+  "id": "2026-03-28-icf-rolls-out-india-s-first-vande",
+  "date": "2026-03-28",
+  "title": "ICF rolls out India's first Vande Bharat freight trainset for trials",
+  "summary": "Integral Coach Factory, Chennai rolled out the prototype 16-car Vande Bharat freight EMU in late March 2026 for RDSO trials — designed to haul 264 tonnes of palletised cargo at 160 km/h. The first operational corridor is planned between Delhi NCR and Mumbai; 25 trainsets are planned to lift Railways' freight share toward 40% by 2030.",
+  "category": "rail",
+  "status": "trial",
+  "location": {
+   "name": "ICF Chennai",
+   "state": "Tamil Nadu",
+   "lat": 13.086,
+   "lng": 80.221
+  },
+  "investmentCr": null,
+  "capacity": "264 t payload @ 160 km/h",
+  "benefits": [
+   "Parcel-speed cargo competitive with road on time-sensitive freight",
+   "Higher rail freight share cuts logistics cost and emissions",
+   "Made-in-India trainset platform extended to cargo"
+  ],
+  "project": "Vande Bharat Freight",
+  "sources": [
+   {
+    "name": "Metro Rail News",
+    "url": "https://metrorailnews.in/railways-to-launch-vande-bharat-freight-train/"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-03-20-nhpc-declares-commercial-operation-of-unit-1",
+  "date": "2026-03-20",
+  "title": "NHPC declares commercial operation of Unit 1 at Subansiri Lower, 750 MW now online",
+  "summary": "NHPC declared commercial operation of the 250 MW Unit 1 of the 2,000 MW Subansiri Lower Hydroelectric Project effective midnight 20 March 2026, taking operational capacity to 750 MW with three of eight units online. India's largest hydropower project, located at Gerukamukh on the Assam-Arunachal Pradesh border, will generate about 7,422 million units annually for 16 beneficiary states, with the remaining units to be commissioned in phases during 2026-27.",
+  "category": "energy",
+  "status": "operational",
+  "location": {
+   "name": "Gerukamukh, Dhemaji district (Assam-Arunachal border)",
+   "state": "Assam",
+   "lat": 27.5539,
+   "lng": 94.2517
+  },
+  "investmentCr": null,
+  "capacity": "750 MW online of 2,000 MW (8x250 MW)",
+  "benefits": [
+   "Supplies clean peaking power to 16 states, with 1,000 MW allocated to the North-East",
+   "Free power share for Arunachal Pradesh and Assam",
+   "Improves grid resilience and flood moderation on the Subansiri river",
+   "About 7,422 million units of annual generation when complete"
+  ],
+  "project": "Subansiri Lower Hydroelectric Project",
+  "sources": [
+   {
+    "name": "International Water Power",
+    "url": "https://www.waterpowermagazine.com/news/nhpc-announces-commercial-operation-of-first-unit-at-subansiri-lower-hydroelectric-project/"
+   },
+   {
+    "name": "Business Upturn",
+    "url": "https://www.businessupturn.com/business/nhpc-declares-commercial-operation-of-unit-1-of-subansiri-lower-he-project/"
+   },
+   {
+    "name": "PIB",
+    "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2207797&reg=3&lang=1"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-03-08-pm-inaugurates-delhi-metro-phase-4-magenta",
+  "date": "2026-03-08",
+  "title": "PM inaugurates Delhi Metro Phase 4 Magenta Line extension to Majlis Park",
+  "summary": "Prime Minister Modi inaugurated the 9.9 km Deepali Chowk–Majlis Park stretch of the Magenta Line on 8 March 2026, part of Delhi Metro Phase 4 alongside a Pink Line extension. The extension takes the Magenta Line to roughly 49 km. Once fully complete by December 2027, the Botanical Garden–Inderlok corridor will span about 89 km, making it Delhi Metro's longest line.",
+  "category": "metro",
+  "status": "inaugurated",
+  "location": {
+   "name": "Rohini–Majlis Park, North West Delhi",
+   "state": "Delhi",
+   "lat": 28.724,
+   "lng": 77.14
+  },
+  "investmentCr": null,
+  "capacity": "9.9 km extension; Magenta Line now ~49 km",
+  "benefits": [
+   "Metro access for Rohini, Pitampura and Haiderpur localities",
+   "New interchanges with Red, Yellow and Pink lines in north-west Delhi",
+   "Step toward 89 km Magenta corridor, Delhi's longest by 2027"
+  ],
+  "project": "Delhi Metro Phase 4",
+  "sources": [
+   {
+    "name": "Metro Rail News",
+    "url": "https://metrorailnews.in/modi-inaugurated-2-new-sections-of-delhi-metro/"
+   },
+   {
+    "name": "The Metro Rail Guy",
+    "url": "https://themetrorailguy.com/delhi-metro-phase-4-information-map/"
+   }
+  ],
+  "routePoints": [
+   [
+    77.102,
+    28.717
+   ],
+   [
+    77.129,
+    28.722
+   ],
+   [
+    77.146,
+    28.727
+   ],
+   [
+    77.159,
+    28.73
+   ],
+   [
+    77.17,
+    28.732
+   ],
+   [
+    77.181,
+    28.724
+   ]
+  ]
+ },
+ {
+  "id": "2026-02-25-cochin-shipyard-and-hd-hyundai-advance-500",
+  "date": "2026-02-25",
+  "title": "Cochin Shipyard and HD Hyundai advance $500 million Kochi shipbuilding JV",
+  "summary": "Cochin Shipyard Limited is in final-stage talks with South Korea's HD Hyundai Group (HD KSOE) for a 50:50, $500 million joint venture to build a ship block fabrication facility in Kochi, with an agreement expected in the second half of 2026. The plant, on about 80 acres leased from Cochin Port, would produce 1,20,000 MT of steel blocks a year versus CSL's current 20,000 MT, with initial investment of roughly Rs 4,500-5,000 crore. It is expected to create around 2,000 direct jobs.",
+  "category": "ports",
+  "status": "announced",
+  "location": {
+   "name": "Kochi",
+   "state": "Kerala",
+   "lat": 9.9536,
+   "lng": 76.2822
+  },
+  "investmentCr": 4500,
+  "capacity": "1,20,000 MT/year ship block fabrication",
+  "benefits": [
+   "Six-fold jump in CSL's block fabrication capacity",
+   "Korean shipbuilding know-how transferred to Indian yards",
+   "Around 2,000 direct jobs plus indirect employment in Kochi",
+   "Supports India's push into large commercial shipbuilding"
+  ],
+  "project": "Cochin Shipyard HD Hyundai JV",
+  "sources": [
+   {
+    "name": "The Week",
+    "url": "https://www.theweek.in/news/maritime/2026/02/25/cochin-shipyard-hd-hyundai-group-advance-talks-for-dollar500-million-shipbuilding-joint-venture-in-kochi-why-it-matters.html"
+   },
+   {
+    "name": "India Shipping News",
+    "url": "https://indiashippingnews.com/500-million-boost-for-india-shipbuilding-as-cochin-shipyard-hd-hyundai-group-advance-jv-talks/"
+   },
+   {
+    "name": "Goodreturns",
+    "url": "https://www.goodreturns.in/news/cochin-shipyard-hd-hyundai-plan-500-mln-shipbuilding-jv-in-kochi-1491773.html"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-02-22-new-guwahati-airport-terminal-begins-commercial-operations",
+  "date": "2026-02-22",
+  "title": "New Guwahati airport terminal begins commercial operations",
+  "summary": "The new terminal at Lokpriya Gopinath Bordoloi International Airport, Guwahati, started commercial operations on 22 February 2026 after PM Modi inaugurated it on 20 December 2025. Built at about Rs 4,000 crore, the 140,000 sq m 'Bamboo Orchid'-themed terminal lifts annual capacity to 13.1 million passengers, the largest terminal in Northeast India. It is operated by Adani Airport Holdings.",
+  "category": "aviation",
+  "status": "operational",
+  "location": {
+   "name": "Borjhar, Guwahati",
+   "state": "Assam",
+   "lat": 26.1061,
+   "lng": 91.5859
+  },
+  "investmentCr": 4000,
+  "capacity": "13.1 million passengers/year; 140,000 sq m",
+  "benefits": [
+   "Positions Guwahati as the aviation gateway to the Northeast",
+   "Capacity headroom for South and Southeast Asia connectivity",
+   "Largest terminal in Northeast India supports tourism and trade",
+   "Showcases Assam's culture with bamboo and Japi design motifs"
+  ],
+  "project": "Guwahati Airport New Terminal",
+  "sources": [
+   {
+    "name": "Adani Group",
+    "url": "https://www.adani.com/newsroom/media-releases/guwahati-terminal-expansion-strengthens-assam-connectivity-lifts-capacity"
+   },
+   {
+    "name": "Indian Infrastructure",
+    "url": "https://indianinfrastructure.com/2026/02/23/commercial-operations-commence-at-new-terminal-of-guwahati-airport/"
+   },
+   {
+    "name": "International Airport Review",
+    "url": "https://www.internationalairportreview.com/pm-modi-inaugurates-guwahati-terminal-at-lokapriya-gopinath-bordoloi-international-airport-lgbia/541350.article"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-02-22-delhi-meerut-namo-bharat-rrts-corridor-becomes",
+  "date": "2026-02-22",
+  "title": "Delhi–Meerut Namo Bharat RRTS corridor becomes fully operational",
+  "summary": "PM Modi dedicated the complete 82 km Delhi–Meerut Namo Bharat corridor from Sarai Kale Khan to Modipuram on 22 February 2026, cutting Delhi–Meerut travel time to about 45 minutes. Commercial operations on the full stretch began at 6:00 PM the same day. Over 1 lakh passengers rode the corridor on its first full day of operations, the system's highest-ever daily ridership.",
+  "category": "rail",
+  "status": "operational",
+  "location": {
+   "name": "Delhi–Meerut corridor (Sarai Kale Khan to Modipuram)",
+   "state": "Uttar Pradesh",
+   "lat": 28.836,
+   "lng": 77.577
+  },
+  "investmentCr": null,
+  "capacity": "82 km, Delhi–Meerut in 45 minutes",
+  "benefits": [
+   "Cuts Delhi–Meerut travel time to ~45 minutes",
+   "1 lakh+ passengers on first full day of operations",
+   "Decongests NH-58/Delhi–Meerut road traffic",
+   "First Indian system where RRTS and metro trains share tracks in Meerut"
+  ],
+  "project": "Delhi–Meerut Namo Bharat RRTS",
+  "sources": [
+   {
+    "name": "DD News",
+    "url": "https://ddnews.gov.in/en/pm-modi-inaugurates-indias-first-namo-bharat-rrts-dedicates-delhi-meerut-corridor-to-nation/"
+   },
+   {
+    "name": "India.com",
+    "url": "https://www.india.com/news/india/namo-bharat-rrts-creates-history-as-over-1-lakh-passengers-ride-delhi-meerut-corridor-on-its-first-full-day-of-operations-8320077/"
+   },
+   {
+    "name": "Indian Infrastructure",
+    "url": "https://indianinfrastructure.com/2026/07/03/new-mobility-model-namo-bharat-rrts-enhances-connectivity-in-the-ncr/"
+   }
+  ],
+  "routePoints": [
+   [
+    77.256,
+    28.588
+   ],
+   [
+    77.301,
+    28.59
+   ],
+   [
+    77.39,
+    28.672
+   ],
+   [
+    77.431,
+    28.664
+   ],
+   [
+    77.452,
+    28.727
+   ],
+   [
+    77.499,
+    28.778
+   ],
+   [
+    77.577,
+    28.836
+   ],
+   [
+    77.68,
+    28.932
+   ],
+   [
+    77.703,
+    28.988
+   ],
+   [
+    77.712,
+    29.062
+   ]
+  ]
+ },
+ {
+  "id": "2026-02-22-meerut-metro-begins-commercial-operations-as-india",
+  "date": "2026-02-22",
+  "title": "Meerut Metro begins commercial operations as India's fastest metro",
+  "summary": "NCRTC launched Meerut Metro commercial operations on 22 February 2026 alongside the final section of the Delhi–Meerut Namo Bharat corridor. The roughly 23 km Modipuram–Meerut South corridor, with 13 stations (16 km elevated, 7 km underground), was built at an estimated ₹11,540 crore. With a top speed of 120 kmph, it is India's fastest metro and the first to run metro and RRTS trains on the same tracks and stations.",
+  "category": "metro",
+  "status": "operational",
+  "location": {
+   "name": "Meerut",
+   "state": "Uttar Pradesh",
+   "lat": 28.988,
+   "lng": 77.703
+  },
+  "investmentCr": 11540,
+  "capacity": "23 km, 13 stations, 120 kmph",
+  "benefits": [
+   "First intra-city mass transit for Meerut",
+   "Fastest metro in India at 120 kmph",
+   "Multimodal integration with Namo Bharat RRTS on shared tracks",
+   "Connects Modipuram, Begumpul and Meerut South growth areas"
+  ],
+  "project": "Meerut Metro",
+  "sources": [
+   {
+    "name": "Metro Rail Today",
+    "url": "https://metrorailtoday.com/news/ncrtc-launches-meerut-metro-and-final-section-of-namo-bharat-rrts-corridor"
+   },
+   {
+    "name": "Metro Rail News",
+    "url": "https://metrorailnews.in/inauguration-of-namo-bharat-meerut-metro/"
+   }
+  ],
+  "routePoints": [
+   [
+    77.712,
+    29.062
+   ],
+   [
+    77.706,
+    29.02
+   ],
+   [
+    77.703,
+    28.988
+   ],
+   [
+    77.7,
+    28.968
+   ],
+   [
+    77.685,
+    28.948
+   ],
+   [
+    77.68,
+    28.932
+   ]
+  ]
+ },
+ {
+  "id": "2026-02-18-udaipur-ahmedabad-vande-bharat-begins-regular-services",
+  "date": "2026-02-18",
+  "title": "Udaipur–Ahmedabad Vande Bharat begins regular services",
+  "summary": "Regular Vande Bharat Express services commenced on the Udaipur–Ahmedabad (Asarva) route from 18 February 2026, adding a fast Rajasthan–Gujarat intercity link. As of May 2026 the Vande Bharat network had grown to 82 routes with 164 services covering more than 274 districts across India.",
+  "category": "rail",
+  "status": "operational",
+  "location": {
+   "name": "Udaipur",
+   "state": "Rajasthan",
+   "lat": 24.58,
+   "lng": 73.71
+  },
+  "investmentCr": null,
+  "capacity": "82 routes, 164 services nationwide (May 2026)",
+  "benefits": [
+   "Fast intercity link between Udaipur's tourism hub and Ahmedabad",
+   "Boost to Mewar-region tourism and business travel",
+   "Extends semi-high-speed network on the recently gauge-converted line"
+  ],
+  "project": "Vande Bharat Express network expansion",
+  "sources": [
+   {
+    "name": "Travel And Tour World",
+    "url": "https://www.travelandtourworld.com/news/article/mionslll61yi/"
+   },
+   {
+    "name": "PIB",
+    "url": "https://www.pib.gov.in/PressReleasePage.aspx?PRID=2215265&reg=48&lang=2"
+   }
+  ],
+  "routePoints": [
+   [
+    73.71,
+    24.58
+   ],
+   [
+    73.72,
+    23.84
+   ],
+   [
+    72.97,
+    23.6
+   ],
+   [
+    72.6,
+    23.04
+   ]
+  ]
+ },
+ {
+  "id": "2026-02-01-budget-2026-27-gives-8-000-crore",
+  "date": "2026-02-01",
+  "title": "Budget 2026-27 gives ₹8,000 crore to Semiconductor Mission 2.0",
+  "summary": "The Union Budget 2026-27 allocated ₹8,000 crore to the India Semiconductor Mission — the largest single-year outlay since the programme launched — alongside the announcement of ISM 2.0 focused on ecosystem depth beyond fabs.",
+  "category": "tech",
+  "status": "announced",
+  "location": {
+   "name": "New Delhi",
+   "state": "Delhi",
+   "lat": 28.617,
+   "lng": 77.2085
+  },
+  "investmentCr": 8000,
+  "capacity": null,
+  "benefits": [
+   "Funds design, materials and equipment ecosystem, not just fabs",
+   "Signals long-term policy continuity to global chipmakers"
+  ],
+  "project": "India Semiconductor Mission",
+  "sources": [
+   {
+    "name": "India's World",
+    "url": "https://indiasworld.in/indias-semiconductor-mission-2-0-from-fabs-to-ecosystems/"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-01-24-vizhinjam-port-phase-2-expansion-construction-inaugurated",
+  "date": "2026-01-24",
+  "title": "Vizhinjam port Phase 2 expansion construction inaugurated",
+  "summary": "Kerala Chief Minister Pinarayi Vijayan inaugurated construction of Phase 2 of Vizhinjam International Seaport on 24 January 2026, with APSEZ committing around Rs 16,000 crore. The berth will be extended from 800 m to 2,000 m — creating India's longest continuous container berth — and the breakwater from 3 km to 4 km, lifting annual capacity five-fold from 1 million to 5 million TEUs. The phase also adds a railway yard, multi-purpose berth, liquid terminal and tank farm, and Exim cargo services were launched alongside.",
+  "category": "ports",
+  "status": "under-construction",
+  "location": {
+   "name": "Vizhinjam, Thiruvananthapuram",
+   "state": "Kerala",
+   "lat": 8.3778,
+   "lng": 76.9769
+  },
+  "investmentCr": 16000,
+  "capacity": "Berth 800 m to 2,000 m; 1M to 5M TEUs/year",
+  "benefits": [
+   "Five-fold jump in container handling capacity by 2028",
+   "India's longest continuous container berth at 2 km",
+   "Exim cargo services open the port to direct import-export trade",
+   "New rail yard and port road improve hinterland connectivity"
+  ],
+  "project": "Vizhinjam International Seaport",
+  "sources": [
+   {
+    "name": "Onmanorama",
+    "url": "https://www.onmanorama.com/news/kerala/2026/01/24/vizhinjam-port-expansion-phas2-inauguration-pinarayi-vijayan.html"
+   },
+   {
+    "name": "Onmanorama",
+    "url": "https://www.onmanorama.com/news/kerala/2026/01/16/vizhinjam-port-second-phase-chief-minister-pinarayi-vijayan.html"
+   },
+   {
+    "name": "Construction Week Online",
+    "url": "https://www.constructionweekonline.in/projects-tenders/vizhinjam-port"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2026-01-17-india-s-first-vande-bharat-sleeper-enters",
+  "date": "2026-01-17",
+  "title": "India's first Vande Bharat Sleeper enters service between Kamakhya and Howrah",
+  "summary": "The first commercial Vande Bharat Sleeper service was launched on 17 January 2026 between Kamakhya (Guwahati) and Howrah Junction, covering about 1,000 km six days a week. The trainset is designed for 180 km/h and cuts roughly 3 hours off conventional travel time on the route. Indian Railways plans 12 more Vande Bharat Sleeper trains by end-2026, targeting 1,000–1,500 km overnight corridors.",
+  "category": "rail",
+  "status": "operational",
+  "location": {
+   "name": "Kamakhya, Guwahati",
+   "state": "Assam",
+   "lat": 26.16,
+   "lng": 91.72
+  },
+  "investmentCr": null,
+  "capacity": "1,000 km route; 180 km/h design speed",
+  "benefits": [
+   "First premium overnight semi-high-speed service for the Northeast",
+   "Cuts Guwahati–Kolkata travel time by about 3 hours",
+   "Template for 12 more sleeper trainsets on long-distance corridors"
+  ],
+  "project": "Vande Bharat Sleeper rollout",
+  "sources": [
+   {
+    "name": "Wikipedia - Vande Bharat Sleeper Express",
+    "url": "https://en.wikipedia.org/wiki/Vande_Bharat_Sleeper_Express"
+   },
+   {
+    "name": "redBus Blog",
+    "url": "https://www.redbus.in/blog/india-first-vande-bharat-sleeper/"
+   }
+  ],
+  "routePoints": [
+   [
+    91.72,
+    26.16
+   ],
+   [
+    90.55,
+    26.5
+   ],
+   [
+    89.44,
+    26.32
+   ],
+   [
+    88.43,
+    26.68
+   ],
+   [
+    88.14,
+    25.02
+   ],
+   [
+    88.34,
+    22.58
+   ]
+  ]
+ },
+ {
+  "id": "2026-01-12-rajasthan-launches-pugal-solar-park-india-s",
+  "date": "2026-01-12",
+  "title": "Rajasthan launches Pugal Solar Park, India's first solar park integrated with battery storage",
+  "summary": "Rajasthan launched the Pugal Solar Park in Bikaner district, pairing 2,450 MW of solar capacity with a 1,600 MW/6,400 MWh battery energy storage system across 4,353 hectares in Pugal tehsil. Developed by RSDCL (an RRECL subsidiary) on a plug-and-play model, the project is expected to attract over Rs 18,000 crore in investment, with bids closing 9 March 2026 and letters of award planned for 21 April 2026.",
+  "category": "energy",
+  "status": "announced",
+  "location": {
+   "name": "Pugal, Bikaner district",
+   "state": "Rajasthan",
+   "lat": 28.5051,
+   "lng": 72.8043
+  },
+  "investmentCr": 18000,
+  "capacity": "2,450 MW solar + 1,600 MW/6,400 MWh BESS",
+  "benefits": [
+   "India's largest solar-plus-storage park, delivering dispatchable peak-hour power",
+   "Over Rs 18,000 crore of expected private investment in Rajasthan",
+   "Plug-and-play infrastructure with assured grid connectivity speeds deployment",
+   "Large construction and O&M job creation in Bikaner district"
+  ],
+  "project": "Pugal Solar Park (Solar + BESS), Bikaner",
+  "sources": [
+   {
+    "name": "pv magazine India",
+    "url": "https://www.pv-magazine-india.com/2026/01/12/rajasthan-tenders-2-45-gw-solar-power-projects-with-battery-storage-at-pugal-solar-park/"
+   },
+   {
+    "name": "SolarQuarter",
+    "url": "https://solarquarter.com/2026/01/12/rajasthan-launches-2450-mw-solar-project-with-1600-mw-6400-mwh-energy-storage-at-pugal-solar-park/"
+   },
+   {
+    "name": "Energetica India",
+    "url": "https://www.energetica-india.net/news/rajasthan-launches-pugal-solar-park-in-bikaner-with-2450-mw-solar-and-5000-mwh-bess"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2025-10-11-india-s-first-cooperative-multi-feed-compressed",
+  "date": "2025-10-11",
+  "title": "India's first cooperative multi-feed compressed biogas plant opens at Kopargaon",
+  "summary": "Union Home & Cooperation Minister inaugurated India's first cooperative-sector multi-feed CBG plant at Kopargaon, Maharashtra (October 2025). It produces about 12 tonnes of compressed biogas per day plus 75 tonnes of potash from jaggery/molasses feedstock, cutting fertiliser imports.",
+  "category": "energy",
+  "status": "inaugurated",
+  "location": {
+   "name": "Kopargaon",
+   "state": "Maharashtra",
+   "lat": 19.881,
+   "lng": 74.476
+  },
+  "investmentCr": null,
+  "capacity": "12 TPD CBG + 75 TPD potash",
+  "benefits": [
+   "Farm-waste to fuel model for the cooperative sector",
+   "Reduces potash import dependence",
+   "Template for SATAT's 5,000-plant CBG target"
+  ],
+  "project": "Kopargaon cooperative CBG plant",
+  "sources": [
+   {
+    "name": "Drishti IAS summary",
+    "url": "https://www.drishtiias.com/daily-updates/daily-news-analysis/indias-first-cooperative-compressed-biogas-plant"
+   }
+  ],
+  "routePoints": null
+ },
+ {
+  "id": "2025-10-08-pm-modi-inaugurates-navi-mumbai-international-airport",
+  "date": "2025-10-08",
+  "title": "PM Modi inaugurates Navi Mumbai International Airport",
+  "summary": "Navi Mumbai International Airport was inaugurated, a landmark second airport for the Mumbai region built by Adani Group, designed to decongest CSMIA and anchor growth on the mainland side of the metropolis.",
+  "category": "aviation",
+  "status": "inaugurated",
+  "location": {
+   "name": "Navi Mumbai (Ulwe)",
+   "state": "Maharashtra",
+   "lat": 18.997,
+   "lng": 73.071
+  },
+  "investmentCr": 18000,
+  "capacity": "20 mn passengers/yr (Phase 1)",
+  "benefits": [
+   "Second airport relieves Mumbai CSMIA congestion",
+   "Anchors Navi Mumbai's growth corridor with the Atal Setu link",
+   "Major cargo capacity addition for western India"
+  ],
+  "project": "Navi Mumbai International Airport",
+  "sources": [
+   {
+    "name": "Adani media release",
+    "url": "https://www.adani.com/newsroom/media-releases/pm-modi-inaugurates-navi-mumbai-international-airport"
+   }
+  ],
+  "routePoints": null
+ }
+]

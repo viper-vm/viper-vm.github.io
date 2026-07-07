@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>India Infra Atlas — live map of infrastructure news</title>
+  <meta name="description" content="A living map of India's infrastructure, technology, energy and defense news — pins, corridors, terrain, rail overlays, measuring tools and a timeline." />
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body data-ui="dark">
+
+  <header class="topbar">
+    <a class="brand" href="/demos/" title="Back to demos">
+      <span class="logo">🗺️</span>
+      <span>India Infra Atlas<small>news, mapped daily</small></span>
+    </a>
+
+    <div class="searchwrap">
+      <svg class="sicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="search" type="text" placeholder="Search news, projects or any place in India…" autocomplete="off" spellcheck="false" />
+      <span class="skbd">/</span>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+
+    <div class="chips" id="catChips"></div>
+
+    <div class="tb-actions">
+      <button class="iconbtn opt" id="btnTimeline" title="Toggle timeline">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h4l2-7 4 14 2-7h6"/></svg>
+      </button>
+      <button class="iconbtn opt" id="btnTheme" title="Toggle UI theme">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>
+      </button>
+      <button class="iconbtn" id="btnSettings" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <button class="iconbtn" id="btnHelp" title="Help & about">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="tabs" id="tabs">
+        <button class="tab on" data-tab="feed">Feed</button>
+        <button class="tab" data-tab="projects">Projects</button>
+        <button class="tab" data-tab="stats">Stats</button>
+        <button class="tab" data-tab="marks">My marks</button>
+      </div>
+      <div class="panelbody" id="panelFeed">
+        <div class="feed-controls">
+          <select id="sortSel" title="Sort">
+            <option value="new">Newest first</option>
+            <option value="old">Oldest first</option>
+            <option value="inv">Biggest investment</option>
+          </select>
+          <select id="statusSel" title="Status">
+            <option value="all">Any status</option>
+            <option value="announced">Announced</option>
+            <option value="approved">Approved</option>
+            <option value="under-construction">Under construction</option>
+            <option value="inaugurated">Inaugurated</option>
+            <option value="operational">Operational</option>
+            <option value="test">Tests</option>
+            <option value="trial">Trials</option>
+          </select>
+          <select id="stateSel" title="State"><option value="all">All states</option></select>
+          <span class="feed-count" id="feedCount"></span>
+        </div>
+        <div id="feedList"></div>
+      </div>
+      <div class="panelbody" id="panelProjects" style="display:none"><div id="projList"></div></div>
+      <div class="panelbody" id="panelStats" style="display:none"><div class="stats" id="statsBody"></div></div>
+      <div class="panelbody" id="panelMarks" style="display:none">
+        <div class="marks-head">
+          <button class="btn" id="btnAddMark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Add on map
+          </button>
+          <button class="btn" id="btnExportMarks">Export</button>
+          <button class="btn" id="btnImportMarks">Import</button>
+          <input type="file" id="importFile" accept=".json" style="display:none" />
+        </div>
+        <div id="marksList"></div>
+      </div>
+    </aside>
+
+    <main class="mapwrap">
+      <div id="map"></div>
+      <div class="loading" id="loading"><div><div class="spin"></div>Loading the atlas…</div></div>
+
+      <button class="toolbtn sidebar-toggle" id="btnSidebar" title="Toggle sidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+
+      <div class="map-ui basemaps">
+        <div class="seg" id="basemapSeg">
+          <button data-bm="streets" class="on">Streets</button>
+          <button data-bm="satellite">Satellite</button>
+          <button data-bm="terrain">Terrain</button>
+          <button data-bm="dark">Dark</button>
+        </div>
+        <button class="tgl" id="tglRail" title="Overlay railway & metro tracks (OpenRailwayMap)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="3" width="14" height="14" rx="2"/><path d="M5 11h14M9 21l-2 -4M15 21l2 -4M9 7h.01M15 7h.01"/></svg>
+          Rail
+        </button>
+        <button class="tgl" id="tgl3d" title="3D terrain (real elevation)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m3 17 5-10 4 7 3-4 6 7z"/></svg>
+          3D
+        </button>
+      </div>
+
+      <div class="tools">
+        <button class="toolbtn" id="toolDist" title="Measure distance (double-click to finish, Esc to cancel)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21.3 8.7 8.7 21.3a1 1 0 0 1-1.4 0l-4.6-4.6a1 1 0 0 1 0-1.4L15.3 2.7a1 1 0 0 1 1.4 0l4.6 4.6a1 1 0 0 1 0 1.4zM7.5 10.5l2 2M10.5 7.5l2 2M13.5 4.5l2 2"/></svg>
+        </button>
+        <button class="toolbtn" id="toolArea" title="Measure area (double-click to finish, Esc to cancel)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V6a2 2 0 0 1 2-2h2M4 16v2a2 2 0 0 0 2 2h2M20 8V6a2 2 0 0 0-2-2h-2M20 16v2a2 2 0 0 1-2 2h-2"/></svg>
+        </button>
+        <button class="toolbtn" id="toolMark" title="Drop a mark (click on map)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </button>
+        <button class="toolbtn" id="toolClear" title="Clear measurements">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </div>
+
+      <div class="measure-hint" id="measureHint"></div>
+
+      <div class="timeline" id="timeline">
+        <div class="tl-head">
+          <button class="playbtn" id="btnPlay" title="Play the timeline">
+            <svg id="playIco" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <span class="tl-title">Timeline</span>
+          <span class="tl-range" id="tlRange"></span>
+          <div class="tl-quick" id="tlQuick">
+            <button data-days="7">7d</button>
+            <button data-days="30">30d</button>
+            <button data-days="90">90d</button>
+            <button data-days="0" class="on">All</button>
+          </div>
+        </div>
+        <div class="histo" id="histo"></div>
+        <div class="tl-sliders">
+          <input type="range" id="tlFrom" min="0" max="100" value="0" step="1" />
+          <input type="range" id="tlTo" min="0" max="100" value="100" step="1" />
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <section class="detail" id="detail" aria-live="polite"></section>
+
+  <div class="modal-scrim" id="scrim"></div>
+  <div class="modal" id="helpModal">
+    <div class="modal-head"><h3>India Infra Atlas — help</h3>
+      <button class="iconbtn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <h4>What is this?</h4>
+      <p>A living map of India's infrastructure, technology, energy and defense news. Every story is geocoded and pinned where the project actually is — corridors (expressways, metro lines, rail) are drawn as routes, not just dots. The dataset updates itself daily via an automated pipeline that reads credible sources (PIB, ET, The Hindu, Business Standard and others — the same sources the big infra YouTube channels report from).</p>
+      <h4>Map</h4>
+      <p>Drag to pan, scroll to zoom, <kbd>right-drag</kbd> or <kbd>Ctrl</kbd>+drag to rotate & tilt. Switch <b>Streets / Satellite / Terrain / Dark</b> basemaps top-left. <b>Rail</b> overlays real railway and metro tracks (OpenRailwayMap). <b>3D</b> drapes the map over true elevation data — try it on Zojila or the Himalayan projects.</p>
+      <h4>Tools (right edge)</h4>
+      <p>📏 <b>Distance</b>: click points along a path, double-click to finish. ⛶ <b>Area</b>: click a polygon's corners, double-click to close. 📍 <b>Mark</b>: drop your own named pins (saved in your browser, exportable). 🗑 clears measurements. <kbd>Esc</kbd> cancels a tool.</p>
+      <h4>News</h4>
+      <p>Click any pin or corridor for full details — investment, capacity, status, benefits, sources, and every related update of the same project (clubbed together). Use the chips up top to filter categories, and the timeline at the bottom to scrub through history or press play to watch the country build itself.</p>
+      <h4>Keyboard</h4>
+      <p><kbd>/</kbd> search · <kbd>d</kbd> measure distance · <kbd>a</kbd> measure area · <kbd>t</kbd> timeline · <kbd>Esc</kbd> close/cancel</p>
+      <h4>Credits & disclaimers</h4>
+      <p>Basemaps © OpenStreetMap contributors via OpenFreeMap; satellite © Esri; terrain © OpenTopoMap; elevation: AWS Terrain Tiles; rail overlay © OpenRailwayMap; geocoding search by Nominatim. News summaries are auto-collected and may contain errors — always check the linked sources. This is a personal tracking tool, not an official record.</p>
+    </div>
+  </div>
+
+  <div class="modal" id="settingsModal">
+    <div class="modal-head"><h3>Settings</h3>
+      <button class="iconbtn" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="set-row"><div class="sl"><b>Cluster nearby pins</b><small>Group pins at low zoom for readability</small></div>
+        <label class="switch"><input type="checkbox" id="setCluster" checked /><span class="knob"></span></label></div>
+      <div class="set-row"><div class="sl"><b>Scale pins by investment</b><small>Bigger ₹ = bigger pin</small></div>
+        <label class="switch"><input type="checkbox" id="setPinScale" checked /><span class="knob"></span></label></div>
+      <div class="set-row"><div class="sl"><b>Show corridors</b><small>Draw expressways, metro and rail alignments as routes</small></div>
+        <label class="switch"><input type="checkbox" id="setCorridors" checked /><span class="knob"></span></label></div>
+      <div class="set-row"><div class="sl"><b>Animate pin for latest news</b><small>Pulse the most recent story</small></div>
+        <label class="switch"><input type="checkbox" id="setPulse" checked /><span class="knob"></span></label></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
