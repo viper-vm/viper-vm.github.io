@@ -1,5 +1,14 @@
 [
   {
+    "id": "infra-atlas",
+    "title": "India Infra Atlas",
+    "summary": "A living map of India's infrastructure, tech, energy & defense news — daily auto-updating pins and corridors on a full interactive map with 3D terrain, rail overlays, measuring tools and a timeline.",
+    "category": "Maps / Data",
+    "emoji": "🛰️",
+    "demo_url": "/demos/infra-atlas/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/infra-atlas"
+  },
+  {
     "id": "india-energy",
     "title": "India Energy Atlas",
     "summary": "Interactive maps of India's oil, gas, coal, solar & wind — reserves, production, import dependency, frontier exploration, field depths, costs and feasibility, with live charts.",
