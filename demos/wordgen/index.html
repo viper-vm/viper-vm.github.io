@@ -1,410 +1,217 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="paper">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>WordGen — Context-Aware Synonyms & Smart Rewrites</title>
-  <meta name="description" content="Intelligent writing assistant with context-aware synonym suggestions and AI-powered sentence rephrasing." />
+  <title>WordGen — Rewrite anything.</title>
+  <meta name="description" content="WordGen rewrites anything: paraphrase, fix grammar, change tone, craft better LLM prompts, restyle text as emails or tweets, and find context-aware synonyms. Free local engine, or bring your own API key." />
+  <script>
+    // Apply the saved theme before first paint to avoid a flash of the wrong palette.
+    (function () {
+      try {
+        var s = JSON.parse(localStorage.getItem('wordgen.settings.v2') || '{}');
+        var t = ['paper', 'ink', 'mist'].indexOf(s.theme) >= 0 ? s.theme : 'paper';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) { /* default theme stays */ }
+    })();
+  </script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23C4593B'/%3E%3Cstop offset='1' stop-color='%23E09A3E'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x='2' y='2' width='44' height='44' rx='12' fill='url(%23g)'/%3E%3Cpath d='M13 17l5.2 17L24 21.5 29.8 34 35 17' fill='none' stroke='%23FFFDF7' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
-  <script defer src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-  <!-- Header -->
-  <header class="header">
-    <div class="header-content">
-      <div class="header-left">
-        <div class="logo-group">
-          <div class="logo" aria-label="WordGen Logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-              <path d="M2 17l10 5 10-5"/>
-              <path d="M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <div>
-            <h1>WordGen</h1>
-            <p class="tagline">Context-aware synonyms & smart rewrites</p>
-          </div>
-        </div>
+
+  <header class="site-header">
+    <a class="brand" href="./" aria-label="WordGen home">
+      <svg class="logo-mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="wgGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#C4593B"/>
+            <stop offset="1" stop-color="#E09A3E"/>
+          </linearGradient>
+        </defs>
+        <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#wgGrad)"/>
+        <path d="M12 18l5 15.5L23 21l6 12.5L34 18" fill="none" stroke="#FFFDF7" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M34 18c1.6-3.4 3.8-5.8 7-7.4" fill="none" stroke="#FFFDF7" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="41.2" cy="10.4" r="1.6" fill="#FFFDF7"/>
+      </svg>
+      <span class="brand-text">
+        <span class="wordmark">WordGen</span>
+        <span class="tagline">Rewrite anything.</span>
+      </span>
+    </a>
+
+    <div class="header-actions">
+      <div class="theme-dots" role="group" aria-label="Theme">
+        <button type="button" class="theme-dot" data-theme-pick="paper" title="Paper theme" aria-pressed="false"><span class="sr-only">Paper theme</span></button>
+        <button type="button" class="theme-dot" data-theme-pick="ink" title="Ink theme" aria-pressed="false"><span class="sr-only">Ink theme</span></button>
+        <button type="button" class="theme-dot" data-theme-pick="mist" title="Mist theme" aria-pressed="false"><span class="sr-only">Mist theme</span></button>
       </div>
-      <div class="header-right">
-        <button id="settingsBtn" class="btn btn-secondary" aria-label="Settings">
-          <i data-lucide="settings"></i>
-          <span class="btn-text">Settings</span>
-        </button>
-        <button id="aboutBtn" class="btn btn-secondary" aria-label="About">
-          <i data-lucide="info"></i>
-          <span class="btn-text">About</span>
-        </button>
-        <button id="themeToggle" class="btn btn-icon" aria-label="Toggle theme">
-          <i data-lucide="moon"></i>
-        </button>
-      </div>
+
+      <button type="button" id="historyBtn" class="btn btn-ghost">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+        <span class="btn-label">History</span>
+      </button>
+
+      <button type="button" id="settingsBtn" class="btn btn-ghost">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h9"/><path d="M19 8h1"/><circle cx="16" cy="8" r="2.5"/><path d="M4 16h1"/><path d="M11 16h9"/><circle cx="8" cy="16" r="2.5"/></svg>
+        <span class="btn-label">Settings</span>
+      </button>
+
+      <a class="btn btn-ghost ext-link" href="https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/wordgen/extension" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/><path d="M12 8.5h8.5"/><path d="M8.9 14.2 4.7 6.9"/><path d="M15 14.2l-4.2 7.3"/></svg>
+        <span class="btn-label">Get the Chrome extension</span>
+      </a>
     </div>
   </header>
 
-  <!-- Main Grid -->
-  <main class="main-grid">
-    <!-- Left Panel: Editor -->
-    <section class="editor-panel" aria-label="Text Editor">
-      <div class="panel-header">
-        <h2>
-          <i data-lucide="edit-3"></i>
-          Editor
-        </h2>
-        <div class="editor-controls">
-          <button id="loadDemoBtn" class="btn btn-sm" title="Load sample text">
-            <i data-lucide="file-text"></i>
-            Load Sample
-          </button>
-          <button id="clearBtn" class="btn btn-sm" title="Clear editor">
-            <i data-lucide="trash-2"></i>
-            Clear
-          </button>
+  <main class="workspace">
+
+    <section class="editor-card" aria-label="Editor">
+      <div class="editor-top">
+        <span class="editor-title">Your text</span>
+        <div class="editor-tools">
+          <button type="button" id="sampleBtn" class="btn btn-mini">Load sample</button>
+          <button type="button" id="clearBtn" class="btn btn-mini">Clear</button>
         </div>
       </div>
-      <div class="editor-wrapper">
-        <div id="editor"
-             class="editor"
-             contenteditable="true"
-             spellcheck="false"
-             role="textbox"
-             aria-multiline="true"
-             aria-label="Text editor"
-             data-placeholder="Paste or type your text here. Double-click any word to see context-aware synonym suggestions...">
-        </div>
-        <div id="editorOverlay" class="editor-overlay"></div>
-      </div>
-      <div class="editor-footer">
-        <div class="stats">
-          <span id="wordCount">0 words</span>
-          <span class="separator">•</span>
-          <span id="charCount">0 characters</span>
-        </div>
+      <textarea id="editor" spellcheck="true" aria-label="Your text"
+        placeholder="Paste or type anything — a sentence, an email draft, a prompt idea…"></textarea>
+      <div class="editor-foot">
+        <span id="counts" class="counts">0 words · 0 characters</span>
+        <span class="kbd-hint" aria-hidden="true"><kbd>⌘</kbd><kbd>↵</kbd> to transform</span>
       </div>
     </section>
 
-    <!-- Right Panel: Suggestions -->
-    <section class="suggestions-panel" aria-label="Suggestions">
-      <div class="panel-header">
-        <h2>
-          <i data-lucide="lightbulb"></i>
-          Suggestions
-        </h2>
-      </div>
-
-      <!-- Empty State -->
-      <div id="emptyState" class="empty-state">
-        <i data-lucide="mouse-pointer-click"></i>
-        <h3>Select a word to begin</h3>
-        <p>Double-click or highlight any word in the editor to see context-aware synonym suggestions and rewrite options.</p>
-      </div>
-
-      <!-- Loading State -->
-      <div id="loadingState" class="loading-state hidden">
-        <div class="spinner"></div>
-        <p>Analyzing context...</p>
-      </div>
-
-      <!-- Suggestions Content -->
-      <div id="suggestionsContent" class="suggestions-content hidden">
-        <!-- Target Info -->
-        <div class="target-info">
-          <div class="target-word" id="targetWord"></div>
-          <div class="target-meta">
-            <span class="tag" id="targetPos"></span>
-            <span class="target-context" id="targetContext"></span>
-          </div>
-        </div>
-
-        <!-- Tabs -->
-        <div class="tabs" role="tablist">
-          <button class="tab active" role="tab" aria-selected="true" data-tab="synonyms">
-            <i data-lucide="layers"></i>
-            Synonyms
-            <span class="badge" id="synonymsCount">0</span>
-          </button>
-          <button class="tab" role="tab" aria-selected="false" data-tab="rephrase">
-            <i data-lucide="refresh-cw"></i>
-            Rephrase
-          </button>
-          <button class="tab" role="tab" aria-selected="false" data-tab="more">
-            <i data-lucide="more-horizontal"></i>
-            More
-            <span class="badge" id="moreCount">0</span>
-          </button>
-        </div>
-
-        <!-- Tab Panels -->
-        <div class="tab-content">
-          <!-- Synonyms Tab -->
-          <div id="synonymsPanel" class="tab-panel active" role="tabpanel">
-            <div class="suggestions-list" id="synonymsList"></div>
-          </div>
-
-          <!-- Rephrase Tab -->
-          <div id="rephrasePanel" class="tab-panel hidden" role="tabpanel">
-            <div class="rephrase-presets">
-              <button class="preset-btn" data-preset="shorter">
-                <i data-lucide="minimize-2"></i>
-                Shorter
-              </button>
-              <button class="preset-btn" data-preset="clearer">
-                <i data-lucide="zap"></i>
-                Clearer
-              </button>
-              <button class="preset-btn" data-preset="formal">
-                <i data-lucide="briefcase"></i>
-                More Formal
-              </button>
-              <button class="preset-btn" data-preset="casual">
-                <i data-lucide="coffee"></i>
-                More Casual
-              </button>
-            </div>
-            <div class="suggestions-list" id="rephraseList"></div>
-          </div>
-
-          <!-- More Tab -->
-          <div id="morePanel" class="tab-panel hidden" role="tabpanel">
-            <div class="filters">
-              <label class="filter-toggle">
-                <input type="checkbox" id="filterCommon" checked>
-                <span>Common words only</span>
-              </label>
-              <label class="filter-toggle">
-                <input type="checkbox" id="filterFormal">
-                <span>Formal register</span>
-              </label>
-              <label class="filter-toggle">
-                <input type="checkbox" id="filterCasual">
-                <span>Casual register</span>
-              </label>
-            </div>
-            <div class="suggestions-list" id="moreList"></div>
-          </div>
-        </div>
-      </div>
+    <section id="modePicker" class="mode-picker" aria-label="Choose a mode">
+      <!-- mode groups are rendered by js/main.js from the shared mode registry -->
     </section>
+
+    <section class="instruction-row" aria-label="Instruction and transform">
+      <input id="instruction" class="instruction-input" type="text" autocomplete="off"
+        placeholder="Optional: tell WordGen anything… e.g. “mention the deadline is Friday”" />
+      <button type="button" id="transformBtn" class="btn btn-primary" disabled>
+        Transform <span class="spark" aria-hidden="true">✦</span>
+      </button>
+    </section>
+
+    <div id="localCallout" class="callout" hidden>
+      <p>You’re on the free <strong>local engine</strong> — great for synonyms and quick rewrites.
+        Add a free or paid API key to unlock every mode.</p>
+      <div class="callout-actions">
+        <button type="button" id="calloutSettings" class="btn btn-small">Open Settings</button>
+        <button type="button" id="calloutDismiss" class="btn btn-mini">Dismiss</button>
+      </div>
+    </div>
+
+    <section id="results" class="results" aria-label="Results" aria-live="polite"></section>
+
   </main>
 
-  <!-- Settings Modal -->
-  <div id="settingsModal" class="modal" role="dialog" aria-labelledby="settingsTitle" aria-hidden="true">
-    <div class="modal-overlay"></div>
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="settingsTitle">
-          <i data-lucide="settings"></i>
-          Settings
-        </h2>
-        <button class="modal-close" aria-label="Close settings">
-          <i data-lucide="x"></i>
+  <div id="popover" class="popover" role="dialog" aria-label="Selection tools" hidden></div>
+
+  <div id="drawerBackdrop" class="scrim" hidden></div>
+  <aside id="historyDrawer" class="drawer" role="dialog" aria-modal="true" aria-label="History">
+    <div class="drawer-head">
+      <h2 class="drawer-title">History</h2>
+      <button type="button" id="historyClose" class="btn btn-icon" aria-label="Close history">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div class="drawer-tools">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="historySearch" type="search" placeholder="Search history…" aria-label="Search history" autocomplete="off" />
+      </div>
+      <button type="button" id="historyClear" class="btn btn-mini btn-danger">Clear all</button>
+    </div>
+    <div id="historyList" class="history-list"></div>
+  </aside>
+
+  <div id="settingsOverlay" class="scrim scrim-center" hidden>
+    <div id="settingsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="modal-head">
+        <h2 id="settingsTitle">Settings</h2>
+        <button type="button" id="settingsClose" class="btn btn-icon" aria-label="Close settings">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
+
       <div class="modal-body">
-        <!-- Provider Selection -->
-        <div class="setting-group">
-          <label class="setting-label">LLM Provider (Optional)</label>
-          <select id="providerSelect" class="input">
-            <option value="none">None (Local Only)</option>
-            <option value="openai">OpenAI-Compatible</option>
-            <option value="huggingface">Hugging Face Inference</option>
-            <option value="custom">Custom HTTP Endpoint</option>
+        <div class="field">
+          <label for="setProvider">Engine</label>
+          <select id="setProvider">
+            <option value="local">Local — free, runs in your browser</option>
+            <option value="anthropic">Claude (Anthropic)</option>
+            <option value="openai">OpenAI-compatible</option>
+            <option value="custom">Custom endpoint</option>
           </select>
-          <small class="setting-hint">Local mode uses built-in lexicon and embeddings. API keys are stored in browser only.</small>
+          <p id="providerHint" class="field-hint"></p>
         </div>
 
-        <!-- OpenAI Settings -->
-        <div id="openaiSettings" class="provider-settings hidden">
-          <div class="setting-group">
-            <label class="setting-label">API Endpoint</label>
-            <input type="url" id="openaiEndpoint" class="input" placeholder="https://api.openai.com/v1/chat/completions" />
-          </div>
-          <div class="setting-group">
-            <label class="setting-label">API Key</label>
-            <input type="password" id="openaiKey" class="input" placeholder="sk-..." />
-          </div>
-          <div class="setting-group">
-            <label class="setting-label">Model</label>
-            <input type="text" id="openaiModel" class="input" placeholder="gpt-3.5-turbo" />
+        <div class="field" id="rowKey" hidden>
+          <label for="setApiKey">API key</label>
+          <div class="key-wrap">
+            <input id="setApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="sk-…" />
+            <button type="button" id="keyToggle" class="btn btn-mini" aria-pressed="false">Show</button>
           </div>
         </div>
 
-        <!-- Hugging Face Settings -->
-        <div id="hfSettings" class="provider-settings hidden">
-          <div class="setting-group">
-            <label class="setting-label">API Key</label>
-            <input type="password" id="hfKey" class="input" placeholder="hf_..." />
-          </div>
-          <div class="setting-group">
-            <label class="setting-label">Model</label>
-            <input type="text" id="hfModel" class="input" placeholder="mistralai/Mistral-7B-Instruct-v0.2" />
-          </div>
-        </div>
-
-        <!-- Custom Settings -->
-        <div id="customSettings" class="provider-settings hidden">
-          <div class="setting-group">
-            <label class="setting-label">Endpoint URL</label>
-            <input type="url" id="customUrl" class="input" placeholder="https://your-api.com/generate" />
-          </div>
-          <div class="setting-group">
-            <label class="setting-label">Headers (JSON)</label>
-            <textarea id="customHeaders" class="input" rows="3" placeholder='{"Authorization": "Bearer token"}'></textarea>
-          </div>
-        </div>
-
-        <!-- Context Window -->
-        <div class="setting-group">
-          <label class="setting-label">
-            Context Window
-            <span class="setting-value" id="contextValue">300</span> chars
-          </label>
-          <input type="range" id="contextWindow" min="100" max="1000" step="50" value="300" class="slider" />
-        </div>
-
-        <!-- Style Defaults -->
-        <div class="setting-group">
-          <label class="setting-label">Default Formality</label>
-          <select id="defaultFormality" class="input">
-            <option value="casual">Casual</option>
-            <option value="neutral" selected>Neutral</option>
-            <option value="formal">Formal</option>
+        <div class="field" id="rowModelSelect" hidden>
+          <label for="setModelSelect">Model</label>
+          <select id="setModelSelect">
+            <option value="claude-opus-4-8">Claude Opus 4.8 — best quality</option>
+            <option value="claude-sonnet-5">Claude Sonnet 5 — balanced</option>
+            <option value="claude-haiku-4-5">Claude Haiku 4.5 — fastest</option>
           </select>
         </div>
 
-        <div class="setting-group">
-          <label class="setting-label">Default Brevity</label>
-          <select id="defaultBrevity" class="input">
-            <option value="shorter">Prefer Shorter</option>
-            <option value="keep" selected>Keep Length</option>
-            <option value="longer">Allow Longer</option>
-          </select>
+        <div class="field" id="rowModelText" hidden>
+          <label for="setModelText">Model</label>
+          <input id="setModelText" type="text" autocomplete="off" spellcheck="false" placeholder="gpt-4o-mini" />
         </div>
 
-        <!-- Domain -->
-        <div class="setting-group">
-          <label class="setting-label">Domain</label>
-          <select id="domain" class="input">
-            <option value="general" selected>General</option>
-            <option value="tech">Technical</option>
-            <option value="legal">Legal</option>
-            <option value="medical">Medical</option>
-          </select>
+        <div class="field" id="rowEndpoint" hidden>
+          <label for="setEndpoint">Endpoint URL</label>
+          <input id="setEndpoint" type="url" autocomplete="off" spellcheck="false" placeholder="https://api.openai.com/v1/chat/completions" />
         </div>
 
-        <!-- Privacy -->
-        <div class="setting-group">
-          <label class="setting-toggle">
-            <input type="checkbox" id="avoidJargon">
-            <span>Avoid jargon</span>
-          </label>
+        <div class="field" id="rowHeaders" hidden>
+          <label for="setHeaders">Headers (JSON)</label>
+          <textarea id="setHeaders" rows="3" spellcheck="false" placeholder='{"authorization": "Bearer …"}'></textarea>
         </div>
 
-        <div class="setting-group">
-          <label class="setting-label">
-            Max Characters to Send
-            <span class="setting-value" id="maxCharsValue">500</span>
-          </label>
-          <input type="range" id="maxChars" min="100" max="2000" step="100" value="500" class="slider" />
-          <small class="setting-hint">Limits data sent to external APIs for privacy.</small>
+        <div class="test-row">
+          <button type="button" id="testBtn" class="btn btn-small">Test connection</button>
+          <span id="testStatus" class="test-status" role="status"></span>
         </div>
+
+        <p class="privacy-note">Your key is stored only in this browser (localStorage) and sent only to
+          the provider you pick — there is no WordGen server in between. The local engine never
+          touches the network.</p>
       </div>
-      <div class="modal-footer">
-        <button id="saveSettings" class="btn btn-primary">
-          <i data-lucide="check"></i>
-          Save Settings
-        </button>
+
+      <div class="modal-foot">
+        <button type="button" id="settingsCancel" class="btn btn-small">Cancel</button>
+        <button type="button" id="settingsSave" class="btn btn-primary btn-small">Save</button>
       </div>
     </div>
   </div>
 
-  <!-- About Modal -->
-  <div id="aboutModal" class="modal" role="dialog" aria-labelledby="aboutTitle" aria-hidden="true">
-    <div class="modal-overlay"></div>
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="aboutTitle">
-          <i data-lucide="info"></i>
-          About WordGen
-        </h2>
-        <button class="modal-close" aria-label="Close about">
-          <i data-lucide="x"></i>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p><strong>WordGen</strong> is a context-aware writing assistant that provides intelligent synonym suggestions and sentence rephrasing.</p>
-
-        <h3>Features</h3>
-        <ul>
-          <li><strong>Context-Aware Synonyms:</strong> Get ranked synonym suggestions that fit your sentence context</li>
-          <li><strong>Smart Rephrasing:</strong> Rewrite sentences to be shorter, clearer, more formal, or more casual</li>
-          <li><strong>Offline First:</strong> Works entirely in your browser using built-in lexicon and embeddings</li>
-          <li><strong>Optional LLM:</strong> Enhance results with your own API key (OpenAI, Hugging Face, or custom)</li>
-          <li><strong>Privacy Focused:</strong> No data sent to servers unless you configure an API</li>
-        </ul>
-
-        <h3>How to Use</h3>
-        <ol>
-          <li>Paste or type text in the editor</li>
-          <li>Double-click or select any word</li>
-          <li>Browse synonym suggestions or rephrase options</li>
-          <li>Click "Apply" to replace</li>
-          <li>Use Ctrl+Z to undo changes</li>
-        </ol>
-
-        <h3>Keyboard Shortcuts</h3>
-        <ul>
-          <li><kbd>↑/↓</kbd> Navigate suggestions</li>
-          <li><kbd>Enter</kbd> Apply selected suggestion</li>
-          <li><kbd>Esc</kbd> Close suggestions</li>
-          <li><kbd>Ctrl+Z</kbd> Undo replacement</li>
-        </ul>
-
-        <div class="about-footer">
-          <a href="https://github.com/viper-vm" target="_blank" class="btn btn-secondary">
-            <i data-lucide="github"></i>
-            View Source
-          </a>
-          <a href="/demos/" class="btn btn-secondary">
-            <i data-lucide="arrow-left"></i>
-            All Demos
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Toast Container -->
-  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="footer-content">
-      <div class="footer-links">
-        <a href="/demos/" class="footer-link">
-          <i data-lucide="arrow-left"></i>
-          Live Demos
-        </a>
-        <a href="https://github.com/viper-vm" target="_blank" class="footer-link">
-          <i data-lucide="github"></i>
-          View Source
-        </a>
-        <button class="footer-link" disabled title="Coming soon">
-          <i data-lucide="puzzle"></i>
-          Chrome Extension (coming soon)
-        </button>
-      </div>
-      <div class="footer-credit">
-        Built with ❤️ by <a href="/">Vivek Modi</a>
-      </div>
-    </div>
+  <footer class="site-footer">
+    <a href="/demos/">All demos</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/wordgen" target="_blank" rel="noopener">GitHub</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/wordgen/extension" target="_blank" rel="noopener">Chrome extension</a>
   </footer>
 
-  <!-- Scripts -->
+  <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+
+  <noscript><p class="noscript-note">WordGen needs JavaScript to run.</p></noscript>
+
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

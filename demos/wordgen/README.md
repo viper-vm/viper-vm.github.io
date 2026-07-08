@@ -1,338 +1,98 @@
-# WordGen — Context-Aware Synonyms & Smart Rewrites
+# WordGen — Rewrite anything.
 
-A LanguageTool-style, context-aware synonym finder and sentence rephrasing tool built entirely for the browser. WordGen helps you find the perfect word replacement while preserving meaning and context.
+WordGen turns any text into the version you actually want: paraphrase it, fix the
+grammar, change the tone, expand or shorten it, reshape it into a better LLM prompt,
+restyle it as an email or a WhatsApp message, or swap a single word for a
+context-aware synonym.
 
-## Features
+It comes in two surfaces that share one core:
 
-✨ **Context-Aware Synonyms**: Get ranked synonym suggestions that fit your sentence context
-🔄 **Smart Rephrasing**: Rewrite sentences to be shorter, clearer, more formal, or more casual
-💻 **Offline First**: Works entirely in your browser using built-in lexicon and embeddings
-🤖 **Optional LLM Integration**: Enhance results with your own API key (OpenAI, Hugging Face, or custom)
-🔒 **Privacy Focused**: No data sent to servers unless you configure an API
-⌨️ **Keyboard Navigation**: Full keyboard support for power users
-🎨 **Dark Mode**: Easy on the eyes with automatic theme switching
-📱 **Responsive**: Works seamlessly on desktop and mobile
+- **Web app** — a single-page workspace at [`/demos/wordgen/`](https://viper-vm.github.io/demos/wordgen/).
+- **Chrome extension** — a sticky-note panel that pops out on any page. See
+  [`extension/README.md`](extension/README.md).
 
-## Quick Start
+Both work **for free, offline**, with a built-in local engine. Add your own API key
+(Claude, any OpenAI-compatible endpoint, or a custom one) to unlock the AI-powered
+modes — the key lives only in your browser and is sent only to the provider you pick.
 
-1. **Open WordGen**: Navigate to `https://viper-vm.github.io/demos/wordgen/`
-2. **Paste or type** text in the editor (or click "Load Sample" for demo text)
-3. **Double-click or select** any word to see synonym suggestions
-4. **Click "Apply"** to replace the word
-5. **Switch to "Rephrase" tab** to rewrite entire sentences
+## Modes
 
-## How It Works
+| Category | Modes |
+| --- | --- |
+| **Rewrite** | Paraphrase · Fix grammar · Make shorter · Expand · Simplify · More formal · More casual |
+| **Prompt** | Better prompt · Tech-savvy prompt · Simple prompt |
+| **Message** | Polished email · LinkedIn message · WhatsApp message · Instagram caption · To a friend · To a superior · X / Tweet |
+| **Words** | Synonyms (context-aware, single word) |
 
-### Local Mode (No API Required)
+You can also type a free-form instruction ("mention the deadline is Friday", "make it
+sound excited") with or without picking a mode.
 
-WordGen works out of the box using:
-- **Built-in Lexicon**: 60+ common words with curated synonyms from WordNet
-- **Word Embeddings**: Semantic similarity using compact word vectors
-- **N-gram Frequency Data**: Fluency scoring based on common English patterns
-- **Rule-based Rephrasing**: Basic sentence transformations (contractions, filler removal, etc.)
+## Using it
 
-### Enhanced Mode (With LLM API)
+1. Paste or type text in the editor (or **Load sample**).
+2. Pick a mode chip, or type an instruction, or both.
+3. Hit **Transform ✦** (or ⌘/Ctrl + Enter). You get a few options, each with a note on
+   the angle it took, plus **Copy**, **Replace**, and a word-level **diff** toggle.
+4. **Select a phrase** inside the editor to get a floating toolbar — transform just that
+   selection, or select a single word for instant synonyms.
+5. Everything you run is saved to **History** (last 100, stored locally).
 
-For better results, configure an LLM provider in Settings:
+## Bring your own key (optional)
 
-1. Click **Settings** in the header
-2. Choose a provider:
-   - **OpenAI-Compatible** (OpenAI, Azure OpenAI, etc.)
-   - **Hugging Face Inference**
-   - **Custom HTTP** endpoint
-3. Enter your API credentials (stored locally in browser only)
-4. Click **Save Settings**
+Open **Settings** and choose an engine:
 
-## Supported LLM Providers
+- **Local** — free, offline, no key. Best at synonyms and quick rule-based rewrites.
+- **Claude (Anthropic)** — best quality across every mode. Get a key at
+  [console.anthropic.com](https://console.anthropic.com). WordGen calls the Messages API
+  directly from your browser using the `anthropic-dangerous-direct-browser-access` header.
+  Models: Claude Opus 4.8 (best), Sonnet 5 (balanced), Haiku 4.5 (fastest).
+- **OpenAI-compatible** — set a model and endpoint. Works with OpenAI, Groq, Ollama,
+  Google's OpenAI-compatible endpoint, and similar. Uses JSON mode where supported.
+- **Custom endpoint** — POST JSON to your own URL. WordGen sends
+  `{action, mode, text, word, context, opts}` and expects `{options:[{text,note}]}`
+  (transforms) or `{candidates:[{word,register,note}]}` (synonyms) back.
 
-### OpenAI-Compatible
-
-```
-Endpoint: https://api.openai.com/v1/chat/completions
-API Key: sk-...
-Model: gpt-3.5-turbo (or gpt-4, etc.)
-```
-
-Works with:
-- OpenAI API
-- Azure OpenAI
-- LocalAI
-- Ollama (with OpenAI compatibility layer)
-- Any OpenAI-compatible endpoint
-
-### Hugging Face Inference
-
-```
-API Key: hf_...
-Model: mistralai/Mistral-7B-Instruct-v0.2
-```
-
-Recommended models:
-- `mistralai/Mistral-7B-Instruct-v0.2`
-- `meta-llama/Llama-2-7b-chat-hf`
-- `tiiuae/falcon-7b-instruct`
-
-### Custom HTTP
-
-Specify your own endpoint with custom headers. Expected request/response format:
-
-**Request:**
-```json
-{
-  "action": "synonyms|rephrase",
-  "word": "example",
-  "pos": "noun",
-  "context": "This is an example sentence.",
-  "settings": {...}
-}
-```
-
-**Response for Synonyms:**
-```json
-{
-  "candidates": [
-    {
-      "word": "sample",
-      "register": "neutral",
-      "commonness": "common",
-      "note": "General instance"
-    }
-  ]
-}
-```
-
-**Response for Rephrase:**
-```json
-{
-  "rewrites": [
-    {
-      "text": "This is a sample sentence.",
-      "note": "Shorter version"
-    }
-  ]
-}
-```
-
-## Settings
-
-### Context Window
-- **Default**: 300 characters
-- Controls how much surrounding text is analyzed for context
-- Larger values provide better context but may hit API limits
-
-### Style Defaults
-
-- **Formality**: Casual / Neutral / Formal
-- **Brevity**: Prefer Shorter / Keep Length / Allow Longer
-- **Domain**: General / Tech / Legal / Medical
-- **Avoid Jargon**: Boolean toggle
-
-### Privacy
-
-- **Max Characters to Send**: Limits data sent to external APIs (default: 500)
-- API keys are stored only in your browser's `localStorage`
-- No data is sent to any server unless you configure a provider
-
-## Keyboard Shortcuts
-
-| Key | Action |
-|-----|--------|
-| `↑` / `↓` | Navigate suggestions |
-| `Enter` | Apply selected suggestion |
-| `Esc` | Close suggestions panel |
-| `Ctrl+Z` | Undo replacement |
+Use **Test connection** to confirm a provider works before saving.
 
 ## Architecture
 
-### File Structure
-
 ```
-wordgen/
-├── index.html              # Main app page
-├── README.md              # This file
-├── css/
-│   └── styles.css         # Precompiled styles with dark mode
+demos/wordgen/
+├── index.html              # web app shell
+├── css/styles.css          # three themes: Paper, Ink, Mist
 ├── js/
-│   ├── main.js           # App initialization & orchestration
-│   ├── nlp.js            # Tokenization, POS tagging, sentence split
-│   ├── pipeline.js       # Candidate generation, ranking, rephrasing
-│   ├── providers.js      # LLM API adapters
-│   ├── ui.js             # UI components (editor, suggestions, modals)
-│   └── storage.js        # localStorage helpers
-├── assets/
-│   ├── lexicon.json      # WordNet-style synonym mappings
-│   ├── mini-embeddings.json  # Compact word vectors (8-dim)
-│   ├── ngram-freq.json   # Trigram frequency data
-│   └── demo-texts.json   # Sample paragraphs
-└── server/               # Optional Python backend (not used by Pages)
-    ├── main.py
-    ├── requirements.txt
-    └── README.md
+│   ├── main.js             # orchestration (modes, transform, history, settings, popover)
+│   └── ui.js               # DOM helpers, toasts, word diff, caret geometry
+├── core/                   # shared single source of truth (web + extension)
+│   ├── modes.js            # the mode registry + prompt builders
+│   ├── providers.js        # local / anthropic / openai / custom adapters
+│   ├── local-engine.js     # offline synonyms + rule-based rewrites
+│   └── history.js          # storage-agnostic history store
+├── assets/                 # lexicon, embeddings, n-gram, demo texts (JSON)
+├── extension/              # MV3 Chrome extension (see extension/README.md)
+└── server/                 # optional FastAPI stub — not used by the static site
 ```
 
-### NLP Pipeline
+The `core/` modules are the contract between the two surfaces. The extension keeps its own
+copy under `extension/core/`; run [`extension/sync-core.sh`](extension/sync-core.sh) after
+changing anything in `core/` or `assets/` to re-sync it.
 
-1. **Word Selection**: User double-clicks or highlights a word
-2. **Context Extraction**: Capture ±1 sentence for context
-3. **POS Tagging**: Identify part of speech using rule-based heuristics
-4. **Lemmatization**: Convert to base form
-5. **Candidate Generation**:
-   - Lexical synonyms from `lexicon.json`
-   - Embedding neighbors from `mini-embeddings.json`
-   - LLM suggestions (if provider configured)
-6. **Ranking**:
-   - **Semantic Score** (55%): Sentence embedding similarity
-   - **Fluency Score** (30%): N-gram probability
-   - **Style Score** (15%): Formality/brevity preferences
-7. **Inflection**: Match original word's form (plural, tense, capitalization)
-8. **Display**: Show top 5 in "Synonyms", extended list in "More"
+No build step, no npm, no runtime dependencies. Just static files.
 
-### Rephrase Presets
+## Privacy
 
-- **Shorter**: Remove fillers, use contractions
-- **Clearer**: Split complex sentences, simplify structure
-- **More Formal**: Expand contractions, use formal vocabulary
-- **More Casual**: Use contractions, simpler words
+- The local engine never touches the network.
+- API keys are stored only in your browser (`localStorage` for the web app,
+  `chrome.storage` for the extension) and are sent only to the provider you configure.
+- No analytics, no WordGen server in between.
 
-## Extending WordGen
+## Themes
 
-### Adding More Synonyms
-
-Edit `assets/lexicon.json`:
-
-```json
-{
-  "example_noun": {
-    "synonyms": ["sample", "instance", "illustration", "case"]
-  }
-}
-```
-
-### Using Larger Embeddings
-
-Replace `assets/mini-embeddings.json` with larger word vectors. Format:
-
-```json
-{
-  "word": [0.1, 0.2, ..., 0.8],  // 8-dimensional vector
-  "another": [0.3, 0.4, ..., 0.6]
-}
-```
-
-Recommended sources:
-- GloVe (dimensionality-reduced to 8D)
-- word2vec (compressed)
-- FastText
-
-### Tuning Ranking Weights
-
-In `js/pipeline.js`, adjust the scoring formula:
-
-```javascript
-const totalScore = (semanticScore * 0.55) + (fluencyScore * 0.30) + (styleScore * 0.15);
-```
-
-## Deployment to GitHub Pages
-
-1. **Copy the `wordgen/` folder** to your repo under `/demos/`
-2. **Ensure paths are relative** (already configured)
-3. **Update `/assets/data/demos.json`** with WordGen entry:
-
-```json
-{
-  "id": "wordgen",
-  "title": "WordGen",
-  "summary": "Context-aware synonyms & smart rewrites",
-  "category": "Writing",
-  "demo_url": "/demos/wordgen/"
-}
-```
-
-4. **Commit and push** to GitHub
-5. **Enable GitHub Pages** in repo settings (if not already enabled)
-6. **Access at**: `https://yourusername.github.io/demos/wordgen/`
-
-## Python Backend (Optional)
-
-A FastAPI backend stub is provided in `server/` for future deployment to a separate server. This is **not required** for the GitHub Pages deployment.
-
-To run locally:
-
-```bash
-cd server
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-Then configure WordGen to use `http://localhost:8000` as a Custom HTTP provider.
-
-## Browser Compatibility
-
-- ✅ Chrome/Edge 90+
-- ✅ Firefox 88+
-- ✅ Safari 14+
-- ✅ Mobile browsers (iOS Safari, Chrome Mobile)
-
-## Performance
-
-- **Initial Load**: < 2s (including all assets)
-- **Synonym Generation** (local): < 250ms
-- **Synonym Generation** (with LLM): 1-3s (network dependent)
-- **Total Bundle Size**: ~200 KB (gzipped)
-
-## Privacy & Security
-
-- **No Analytics**: WordGen does not track usage
-- **No External Requests** (local mode): Everything runs in your browser
-- **API Keys**: Stored only in `localStorage`, never transmitted except to your configured provider
-- **Open Source**: Inspect all code in this repo
-
-## Troubleshooting
-
-### Synonyms Not Loading
-
-- Check browser console for errors
-- Ensure `assets/*.json` files are accessible
-- Try refreshing the page
-
-### LLM Provider Not Working
-
-- Verify API credentials in Settings
-- Check API endpoint URL (must include full path)
-- Review browser network tab for failed requests
-- Ensure API key has sufficient credits/quota
-
-### Suggestions Not Relevant
-
-- Local mode has limited vocabulary (~100 words)
-- Configure an LLM provider for better results
-- Try selecting a more common word
-
-## Future Enhancements
-
-- 🔌 Chrome Extension (inject WordGen into any text field)
-- 📦 Larger built-in lexicon (1000+ words)
-- 🌐 Multilingual support
-- 📊 User preference learning
-- 🔊 Text-to-speech for suggestions
-- 📝 Grammar checking integration
-
-## Credits
-
-Built by **Vivek Modi** ([viper-vm](https://github.com/viper-vm))
-
-- NLP algorithms inspired by WordNet and spaCy
-- UI design influenced by Grammarly and LanguageTool
-- Embeddings concept from word2vec/GloVe research
-
-## License
-
-This project is part of Vivek Modi's personal portfolio and is available for educational purposes.
-
-## Feedback
-
-Found a bug or have a suggestion? [Open an issue](https://github.com/viper-vm/viper-vm.github.io/issues) or contact me at vivekvm8400@gmail.com.
+Three distinct looks, switchable live from the header dots and remembered per browser:
+**Paper** (warm, editorial, sticky-note yellow), **Ink** (flat dark, mint accent), and
+**Mist** (cool, airy, indigo).
 
 ---
 
-**WordGen** — Smarter writing, one word at a time. ✨
+Built by [Vivek Modi](https://github.com/viper-vm). Part of the
+[viper-vm.github.io](https://viper-vm.github.io) demo collection.

@@ -1,0 +1,17 @@
+/* WordGen host container. Deliberately minimal — every real style lives inside
+   the closed shadow root created by content/note.js, so page CSS cannot leak in.
+   This file only pins the host itself, with !important to beat aggressive page CSS. */
+
+.wordgen-root-host {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483646 !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  display: block !important;
+  transform: none !important;
+  filter: none !important;
+}

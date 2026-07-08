@@ -1,482 +1,311 @@
-/**
- * options.js
- * Settings page logic
- */
+/* WordGen options page. Settings live in chrome.storage.sync so they roam with
+ * the user's Google account; the API key can be opted out into
+ * chrome.storage.local. Provider test calls go through the background worker
+ * like every other provider call. */
 
-import { getSettings, updateSetting, DEFAULT_SETTINGS } from '../shared/storage-adapter.js';
+import { createHistory } from '../core/history.js';
 
-// DOM elements
-let numSuggestionsEl, triggerMethodEl, popupPositionEl, themeEl;
-let showPOSTagsEl, autoDismissEl;
-let enabledSitesEl, whitelistSection, blacklistSection;
-let whitelistInput, whitelistList, addWhitelistBtn;
-let blacklistInput, blacklistList, addBlacklistBtn;
-let providerEl, openaiSettings, huggingfaceSettings, customSettings;
-let openaiKeyEl, openaiModelEl;
-let huggingfaceKeyEl, huggingfaceModelEl;
-let customUrlEl, customHeadersEl;
-let wordsTodayEl, wordsTotalEl;
-let resetStatsBtn, exportSettingsBtn, importSettingsBtn, resetSettingsBtn;
-let importFileEl, toastEl;
+const SETTINGS_KEY = 'wordgen.settings.v2';
+const LOCAL_APIKEY_KEY = 'wordgen.apiKey.v2';
+const DEFAULT_OPENAI_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
-// Initialize
-document.addEventListener('DOMContentLoaded', async () => {
-  // Get DOM elements
-  initializeElements();
+const DEFAULTS = {
+  provider: 'local',
+  apiKey: '',
+  model: '',
+  endpoint: '',
+  headers: {},
+  theme: 'paper',
+  bubbleEnabled: true,
+  defaultTone: '',
+  syncKey: true,
+};
 
-  // Load current settings
-  await loadSettings();
+const $ = (id) => document.getElementById(id);
+const els = {
+  provider: $('provider'),
+  provLocal: $('provLocal'),
+  provKey: $('provKey'),
+  provAnthropic: $('provAnthropic'),
+  provOpenai: $('provOpenai'),
+  provCustom: $('provCustom'),
+  apiKey: $('apiKey'),
+  apiKeyLabel: $('apiKeyLabel'),
+  keyHint: $('keyHint'),
+  revealKey: $('revealKey'),
+  modelSelect: $('modelSelect'),
+  modelText: $('modelText'),
+  endpointOpenai: $('endpointOpenai'),
+  endpointCustom: $('endpointCustom'),
+  headers: $('headers'),
+  keySyncRow: $('keySyncRow'),
+  syncKey: $('syncKey'),
+  bubbleEnabled: $('bubbleEnabled'),
+  testBtn: $('testBtn'),
+  testStatus: $('testStatus'),
+  histCount: $('histCount'),
+  histStatus: $('histStatus'),
+  clearHist: $('clearHist'),
+  saveBtn: $('saveBtn'),
+  saveStatus: $('saveStatus'),
+};
 
-  // Setup event listeners
-  setupEventListeners();
-});
+const chromeLocalAdapter = {
+  async get(key) {
+    const obj = await chrome.storage.local.get(key);
+    return obj[key];
+  },
+  async set(key, value) {
+    await chrome.storage.local.set({ [key]: value });
+  },
+};
 
-/**
- * Initialize DOM element references
- */
-function initializeElements() {
-  // General settings
-  numSuggestionsEl = document.getElementById('num-suggestions');
-  triggerMethodEl = document.getElementById('trigger-method');
-  popupPositionEl = document.getElementById('popup-position');
-  themeEl = document.getElementById('theme');
-  showPOSTagsEl = document.getElementById('show-pos-tags');
-  autoDismissEl = document.getElementById('auto-dismiss');
+const history = createHistory(chromeLocalAdapter);
 
-  // Site control
-  enabledSitesEl = document.getElementById('enabled-sites');
-  whitelistSection = document.getElementById('whitelist-section');
-  blacklistSection = document.getElementById('blacklist-section');
-  whitelistInput = document.getElementById('whitelist-input');
-  whitelistList = document.getElementById('whitelist-list');
-  addWhitelistBtn = document.getElementById('add-whitelist');
-  blacklistInput = document.getElementById('blacklist-input');
-  blacklistList = document.getElementById('blacklist-list');
-  addBlacklistBtn = document.getElementById('add-blacklist');
+let loaded = { ...DEFAULTS };
+let chosenTheme = 'paper';
+let saveStatusTimer = 0;
 
-  // LLM provider
-  providerEl = document.getElementById('provider');
-  openaiSettings = document.getElementById('openai-settings');
-  huggingfaceSettings = document.getElementById('huggingface-settings');
-  customSettings = document.getElementById('custom-settings');
-  openaiKeyEl = document.getElementById('openai-key');
-  openaiModelEl = document.getElementById('openai-model');
-  huggingfaceKeyEl = document.getElementById('huggingface-key');
-  huggingfaceModelEl = document.getElementById('huggingface-model');
-  customUrlEl = document.getElementById('custom-url');
-  customHeadersEl = document.getElementById('custom-headers');
+// ------------------------------------------------------------------ load
 
-  // Statistics
-  wordsTodayEl = document.getElementById('words-today');
-  wordsTotalEl = document.getElementById('words-total');
-
-  // Data management
-  resetStatsBtn = document.getElementById('reset-stats');
-  exportSettingsBtn = document.getElementById('export-settings');
-  importSettingsBtn = document.getElementById('import-settings');
-  resetSettingsBtn = document.getElementById('reset-settings');
-  importFileEl = document.getElementById('import-file');
-
-  // Toast
-  toastEl = document.getElementById('toast');
-}
-
-/**
- * Load settings from storage
- */
 async function loadSettings() {
-  try {
-    const settings = await getSettings();
+  const synced = await chrome.storage.sync.get(SETTINGS_KEY);
+  loaded = { ...DEFAULTS, ...(synced[SETTINGS_KEY] || {}) };
+  if (loaded.syncKey === false) {
+    const local = await chrome.storage.local.get(LOCAL_APIKEY_KEY);
+    loaded.apiKey = local[LOCAL_APIKEY_KEY] || '';
+  }
 
-    // General settings
-    numSuggestionsEl.value = settings.numSuggestions || 5;
-    triggerMethodEl.value = settings.triggerMethod || 'dblclick';
-    popupPositionEl.value = settings.popupPosition || 'near-word';
-    themeEl.value = settings.theme || 'auto';
-    showPOSTagsEl.checked = settings.showPOSTags !== false;
-    autoDismissEl.checked = settings.autoDismissOnScroll !== false;
+  els.provider.value = loaded.provider || 'local';
+  els.apiKey.value = loaded.apiKey || '';
+  if (loaded.provider === 'anthropic' && loaded.model) els.modelSelect.value = loaded.model;
+  if (loaded.provider === 'openai') els.modelText.value = loaded.model || '';
+  els.endpointOpenai.value = loaded.provider === 'openai' ? loaded.endpoint || '' : '';
+  els.endpointCustom.value = loaded.provider === 'custom' ? loaded.endpoint || '' : '';
+  els.headers.value =
+    loaded.headers && Object.keys(loaded.headers).length
+      ? JSON.stringify(loaded.headers, null, 2)
+      : '';
+  els.syncKey.checked = loaded.syncKey !== false;
+  els.bubbleEnabled.checked = loaded.bubbleEnabled !== false;
 
-    // Site control
-    enabledSitesEl.value = settings.enabledSites || 'all';
-    updateSiteControlVisibility(settings.enabledSites);
-    renderWhitelist(settings.whitelist || []);
-    renderBlacklist(settings.blacklist || []);
+  applyTheme(loaded.theme || 'paper');
+  refreshProviderUI();
+}
 
-    // LLM provider
-    providerEl.value = settings.provider || 'none';
-    updateProviderVisibility(settings.provider);
+function applyTheme(theme) {
+  chosenTheme = ['paper', 'ink', 'mist'].includes(theme) ? theme : 'paper';
+  document.documentElement.setAttribute('data-theme', chosenTheme);
+  document.querySelectorAll('[data-theme-pick]').forEach((btn) => {
+    btn.setAttribute('aria-pressed', btn.dataset.themePick === chosenTheme ? 'true' : 'false');
+  });
+}
 
-    if (settings.apiKeys) {
-      openaiKeyEl.value = settings.apiKeys.openai || '';
-      huggingfaceKeyEl.value = settings.apiKeys.huggingface || '';
-    }
-
-    if (settings.models) {
-      openaiModelEl.value = settings.models.openai || 'gpt-3.5-turbo';
-      huggingfaceModelEl.value = settings.models.huggingface || 'mistralai/Mistral-7B-Instruct-v0.2';
-    }
-
-    if (settings.customAPI) {
-      customUrlEl.value = settings.customAPI.url || '';
-      customHeadersEl.value = JSON.stringify(settings.customAPI.headers || {}, null, 2);
-    }
-
-    // Statistics
-    wordsTodayEl.textContent = settings.stats?.wordsReplacedToday || 0;
-    wordsTotalEl.textContent = settings.stats?.wordsReplacedTotal || 0;
-  } catch (error) {
-    console.error('Error loading settings:', error);
-    showToast('Error loading settings', 'error');
+function refreshProviderUI() {
+  const p = els.provider.value;
+  els.provLocal.hidden = p !== 'local';
+  els.provKey.hidden = p !== 'anthropic' && p !== 'openai';
+  els.provAnthropic.hidden = p !== 'anthropic';
+  els.provOpenai.hidden = p !== 'openai';
+  els.provCustom.hidden = p !== 'custom';
+  els.keySyncRow.hidden = p !== 'anthropic' && p !== 'openai';
+  if (p === 'anthropic') {
+    els.apiKeyLabel.textContent = 'Anthropic API key';
+    els.apiKey.placeholder = 'sk-ant-…';
+    els.keyHint.textContent =
+      'Create a key at console.anthropic.com (Settings → API keys). Usage is billed to your Anthropic account.';
+  } else if (p === 'openai') {
+    els.apiKeyLabel.textContent = 'API key';
+    els.apiKey.placeholder = 'sk-…';
+    els.keyHint.textContent =
+      'The key for OpenAI, or for whichever compatible service the endpoint below points at.';
   }
 }
 
-/**
- * Setup event listeners
- */
-function setupEventListeners() {
-  // General settings - auto-save on change
-  numSuggestionsEl.addEventListener('change', () => {
-    updateSetting('numSuggestions', parseInt(numSuggestionsEl.value, 10));
-    showToast('Settings saved');
-  });
+// ------------------------------------------------------------------ gather + save
 
-  triggerMethodEl.addEventListener('change', () => {
-    updateSetting('triggerMethod', triggerMethodEl.value);
-    showToast('Settings saved');
-  });
+function gatherConfig() {
+  const p = els.provider.value;
+  const cfg = {
+    provider: p,
+    apiKey: p === 'anthropic' || p === 'openai' ? els.apiKey.value.trim() : '',
+    model: '',
+    endpoint: '',
+    headers: {},
+  };
+  if (p === 'anthropic') cfg.model = els.modelSelect.value;
+  if (p === 'openai') {
+    cfg.model = els.modelText.value.trim() || 'gpt-4o-mini';
+    cfg.endpoint = els.endpointOpenai.value.trim();
+  }
+  if (p === 'custom') {
+    cfg.endpoint = els.endpointCustom.value.trim();
+    const raw = els.headers.value.trim();
+    if (raw) {
+      const parsed = JSON.parse(raw); // caller catches and reports
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('Headers must be a JSON object, e.g. {"Authorization": "Bearer …"}.');
+      }
+      cfg.headers = parsed;
+    }
+  }
+  return cfg;
+}
 
-  popupPositionEl.addEventListener('change', () => {
-    updateSetting('popupPosition', popupPositionEl.value);
-    showToast('Settings saved');
-  });
+function endpointNeedingPermission(cfg) {
+  if (cfg.provider === 'custom' && cfg.endpoint) return cfg.endpoint;
+  if (cfg.provider === 'openai' && cfg.endpoint && cfg.endpoint !== DEFAULT_OPENAI_ENDPOINT) {
+    return cfg.endpoint;
+  }
+  return null;
+}
 
-  themeEl.addEventListener('change', () => {
-    updateSetting('theme', themeEl.value);
-    showToast('Settings saved');
-  });
+async function requestEndpointPermission(endpoint) {
+  const url = new URL(endpoint); // caller catches invalid URLs
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+    throw new Error('The endpoint must be an http(s) URL.');
+  }
+  try {
+    return await chrome.permissions.request({ origins: [url.origin + '/*'] });
+  } catch (err) {
+    console.error('WordGen: permission request failed', err);
+    return false;
+  }
+}
 
-  showPOSTagsEl.addEventListener('change', () => {
-    updateSetting('showPOSTags', showPOSTagsEl.checked);
-    showToast('Settings saved');
-  });
+function setStatus(el, text, kind) {
+  el.textContent = text;
+  el.className = 'status' + (kind ? ' ' + kind : '');
+}
 
-  autoDismissEl.addEventListener('change', () => {
-    updateSetting('autoDismissOnScroll', autoDismissEl.checked);
-    showToast('Settings saved');
-  });
+async function save() {
+  let cfg;
+  try {
+    cfg = gatherConfig();
+  } catch (err) {
+    setStatus(els.saveStatus, (err && err.message) || 'Invalid settings.', 'err');
+    return;
+  }
+  if (cfg.provider === 'custom' && !cfg.endpoint) {
+    setStatus(els.saveStatus, 'The custom provider needs an endpoint URL.', 'err');
+    return;
+  }
 
-  // Site control
-  enabledSitesEl.addEventListener('change', async () => {
-    await updateSetting('enabledSites', enabledSitesEl.value);
-    updateSiteControlVisibility(enabledSitesEl.value);
-    showToast('Settings saved');
-  });
-
-  addWhitelistBtn.addEventListener('click', () => addToWhitelist());
-  whitelistInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') addToWhitelist();
-  });
-
-  addBlacklistBtn.addEventListener('click', () => addToBlacklist());
-  blacklistInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') addToBlacklist();
-  });
-
-  // LLM Provider
-  providerEl.addEventListener('change', async () => {
-    await updateSetting('provider', providerEl.value);
-    updateProviderVisibility(providerEl.value);
-    showToast('Settings saved');
-  });
-
-  // API Keys and models - save on blur
-  openaiKeyEl.addEventListener('blur', async () => {
-    const settings = await getSettings();
-    const apiKeys = settings.apiKeys || {};
-    apiKeys.openai = openaiKeyEl.value;
-    await updateSetting('apiKeys', apiKeys);
-    showToast('API key saved');
-  });
-
-  openaiModelEl.addEventListener('blur', async () => {
-    const settings = await getSettings();
-    const models = settings.models || {};
-    models.openai = openaiModelEl.value;
-    await updateSetting('models', models);
-    showToast('Model saved');
-  });
-
-  huggingfaceKeyEl.addEventListener('blur', async () => {
-    const settings = await getSettings();
-    const apiKeys = settings.apiKeys || {};
-    apiKeys.huggingface = huggingfaceKeyEl.value;
-    await updateSetting('apiKeys', apiKeys);
-    showToast('API key saved');
-  });
-
-  huggingfaceModelEl.addEventListener('blur', async () => {
-    const settings = await getSettings();
-    const models = settings.models || {};
-    models.huggingface = huggingfaceModelEl.value;
-    await updateSetting('models', models);
-    showToast('Model saved');
-  });
-
-  customUrlEl.addEventListener('blur', async () => {
-    const settings = await getSettings();
-    const customAPI = settings.customAPI || {};
-    customAPI.url = customUrlEl.value;
-    await updateSetting('customAPI', customAPI);
-    showToast('API URL saved');
-  });
-
-  customHeadersEl.addEventListener('blur', async () => {
+  let permissionNote = '';
+  const endpoint = endpointNeedingPermission(cfg);
+  if (endpoint) {
+    let granted = false;
     try {
-      const headers = JSON.parse(customHeadersEl.value);
-      const settings = await getSettings();
-      const customAPI = settings.customAPI || {};
-      customAPI.headers = headers;
-      await updateSetting('customAPI', customAPI);
-      showToast('Headers saved');
-    } catch (error) {
-      showToast('Invalid JSON in headers', 'error');
+      granted = await requestEndpointPermission(endpoint);
+    } catch (err) {
+      setStatus(els.saveStatus, (err && err.message) || 'Invalid endpoint URL.', 'err');
+      return;
     }
-  });
+    if (!granted) {
+      permissionNote = ' Heads-up: host permission was declined, so requests to this endpoint will fail until you grant it.';
+    }
+  }
 
-  // Data management
-  resetStatsBtn.addEventListener('click', resetStatistics);
-  exportSettingsBtn.addEventListener('click', exportSettings);
-  importSettingsBtn.addEventListener('click', () => importFileEl.click());
-  importFileEl.addEventListener('change', importSettings);
-  resetSettingsBtn.addEventListener('click', resetToDefaults);
-}
+  const syncKey = els.keySyncRow.hidden ? true : els.syncKey.checked;
+  const settings = {
+    provider: cfg.provider,
+    apiKey: syncKey ? cfg.apiKey : '',
+    model: cfg.model,
+    endpoint: cfg.endpoint,
+    headers: cfg.headers,
+    theme: chosenTheme,
+    bubbleEnabled: els.bubbleEnabled.checked,
+    defaultTone: loaded.defaultTone || '',
+    syncKey,
+  };
 
-/**
- * Update site control visibility based on mode
- */
-function updateSiteControlVisibility(mode) {
-  whitelistSection.style.display = mode === 'whitelist' ? 'block' : 'none';
-  blacklistSection.style.display = mode === 'blacklist' ? 'block' : 'none';
-}
-
-/**
- * Update provider settings visibility
- */
-function updateProviderVisibility(provider) {
-  openaiSettings.style.display = provider === 'openai' ? 'block' : 'none';
-  huggingfaceSettings.style.display = provider === 'huggingface' ? 'block' : 'none';
-  customSettings.style.display = provider === 'custom' ? 'block' : 'none';
-}
-
-/**
- * Add site to whitelist
- */
-async function addToWhitelist() {
-  const hostname = whitelistInput.value.trim();
-  if (!hostname) return;
-
-  const settings = await getSettings();
-  const whitelist = settings.whitelist || [];
-
-  if (!whitelist.includes(hostname)) {
-    whitelist.push(hostname);
-    await updateSetting('whitelist', whitelist);
-    renderWhitelist(whitelist);
-    whitelistInput.value = '';
-    showToast('Site added to whitelist');
-  } else {
-    showToast('Site already in whitelist', 'error');
+  try {
+    await chrome.storage.sync.set({ [SETTINGS_KEY]: settings });
+    if (syncKey) {
+      await chrome.storage.local.remove(LOCAL_APIKEY_KEY);
+    } else {
+      await chrome.storage.local.set({ [LOCAL_APIKEY_KEY]: cfg.apiKey });
+    }
+    loaded = { ...settings, apiKey: cfg.apiKey };
+    setStatus(els.saveStatus, 'Saved.' + permissionNote, permissionNote ? 'err' : 'ok');
+    clearTimeout(saveStatusTimer);
+    if (!permissionNote) {
+      saveStatusTimer = setTimeout(() => setStatus(els.saveStatus, '', ''), 2500);
+    }
+  } catch (err) {
+    setStatus(els.saveStatus, 'Could not save: ' + ((err && err.message) || err), 'err');
   }
 }
 
-/**
- * Remove site from whitelist
- */
-async function removeFromWhitelist(hostname) {
-  const settings = await getSettings();
-  const whitelist = settings.whitelist || [];
-  const newWhitelist = whitelist.filter(h => h !== hostname);
-  await updateSetting('whitelist', newWhitelist);
-  renderWhitelist(newWhitelist);
-  showToast('Site removed from whitelist');
-}
+// ------------------------------------------------------------------ test connection
 
-/**
- * Render whitelist
- */
-function renderWhitelist(whitelist) {
-  whitelistList.innerHTML = '';
-
-  if (whitelist.length === 0) {
-    whitelistList.innerHTML = '<li style="color: var(--text-secondary); padding: 12px; text-align: center; border: none;">No whitelisted sites</li>';
+async function testConnection() {
+  let cfg;
+  try {
+    cfg = gatherConfig();
+  } catch (err) {
+    setStatus(els.testStatus, (err && err.message) || 'Invalid settings.', 'err');
     return;
   }
-
-  whitelist.forEach(hostname => {
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <span class="site-name">${hostname}</span>
-      <button class="remove-btn" data-hostname="${hostname}">Remove</button>
-    `;
-
-    li.querySelector('.remove-btn').addEventListener('click', (e) => {
-      removeFromWhitelist(e.target.dataset.hostname);
+  els.testBtn.disabled = true;
+  setStatus(els.testStatus, 'Testing…', '');
+  try {
+    const res = await chrome.runtime.sendMessage({
+      type: 'wordgen:run',
+      payload: { kind: 'test', providerConfig: cfg },
     });
-
-    whitelistList.appendChild(li);
-  });
-}
-
-/**
- * Add site to blacklist
- */
-async function addToBlacklist() {
-  const hostname = blacklistInput.value.trim();
-  if (!hostname) return;
-
-  const settings = await getSettings();
-  const blacklist = settings.blacklist || [];
-
-  if (!blacklist.includes(hostname)) {
-    blacklist.push(hostname);
-    await updateSetting('blacklist', blacklist);
-    renderBlacklist(blacklist);
-    blacklistInput.value = '';
-    showToast('Site added to blacklist');
-  } else {
-    showToast('Site already in blacklist', 'error');
+    if (res && res.ok && res.result && res.result.ok) {
+      setStatus(els.testStatus, 'Connected — the provider answered.', 'ok');
+    } else {
+      const reason =
+        (res && res.result && res.result.error) || (res && res.error) || 'No response.';
+      setStatus(els.testStatus, reason, 'err');
+    }
+  } catch (err) {
+    setStatus(els.testStatus, (err && err.message) || String(err), 'err');
+  } finally {
+    els.testBtn.disabled = false;
   }
 }
 
-/**
- * Remove site from blacklist
- */
-async function removeFromBlacklist(hostname) {
-  const settings = await getSettings();
-  const blacklist = settings.blacklist || [];
-  const newBlacklist = blacklist.filter(h => h !== hostname);
-  await updateSetting('blacklist', newBlacklist);
-  renderBlacklist(newBlacklist);
-  showToast('Site removed from blacklist');
-}
+// ------------------------------------------------------------------ history
 
-/**
- * Render blacklist
- */
-function renderBlacklist(blacklist) {
-  blacklistList.innerHTML = '';
-
-  if (blacklist.length === 0) {
-    blacklistList.innerHTML = '<li style="color: var(--text-secondary); padding: 12px; text-align: center; border: none;">No blacklisted sites</li>';
-    return;
-  }
-
-  blacklist.forEach(hostname => {
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <span class="site-name">${hostname}</span>
-      <button class="remove-btn" data-hostname="${hostname}">Remove</button>
-    `;
-
-    li.querySelector('.remove-btn').addEventListener('click', (e) => {
-      removeFromBlacklist(e.target.dataset.hostname);
-    });
-
-    blacklistList.appendChild(li);
-  });
-}
-
-/**
- * Reset statistics
- */
-async function resetStatistics() {
-  if (!confirm('Reset all statistics? This cannot be undone.')) return;
-
-  await updateSetting('stats', {
-    wordsReplacedToday: 0,
-    wordsReplacedTotal: 0,
-    lastResetDate: new Date().toISOString()
-  });
-
-  wordsTodayEl.textContent = '0';
-  wordsTotalEl.textContent = '0';
-  showToast('Statistics reset');
-}
-
-/**
- * Export settings to JSON file
- */
-async function exportSettings() {
+async function refreshHistoryCount() {
   try {
-    const settings = await getSettings();
-    const json = JSON.stringify(settings, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `wordgen-settings-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-
-    URL.revokeObjectURL(url);
-    showToast('Settings exported');
-  } catch (error) {
-    console.error('Export error:', error);
-    showToast('Export failed', 'error');
+    const entries = await history.list(100);
+    els.histCount.textContent = String(entries.length);
+  } catch (err) {
+    console.error('WordGen: history read failed', err);
+    els.histCount.textContent = '0';
   }
 }
 
-/**
- * Import settings from JSON file
- */
-async function importSettings(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
+async function clearHistory() {
+  if (!window.confirm('Delete all saved WordGen history on this device?')) return;
   try {
-    const text = await file.text();
-    const settings = JSON.parse(text);
-
-    // Save all settings
-    await chrome.storage.sync.set(settings);
-
-    // Reload the page to reflect new settings
-    await loadSettings();
-    showToast('Settings imported successfully');
-  } catch (error) {
-    console.error('Import error:', error);
-    showToast('Import failed - invalid file', 'error');
-  }
-
-  // Reset file input
-  importFileEl.value = '';
-}
-
-/**
- * Reset all settings to defaults
- */
-async function resetToDefaults() {
-  if (!confirm('Reset all settings to defaults? This cannot be undone.')) return;
-
-  try {
-    await chrome.storage.sync.clear();
-    await chrome.storage.sync.set(DEFAULT_SETTINGS);
-    await loadSettings();
-    showToast('Settings reset to defaults');
-  } catch (error) {
-    console.error('Reset error:', error);
-    showToast('Reset failed', 'error');
+    await history.clear();
+    await refreshHistoryCount();
+    setStatus(els.histStatus, 'History cleared.', 'ok');
+    setTimeout(() => setStatus(els.histStatus, '', ''), 2500);
+  } catch (err) {
+    setStatus(els.histStatus, 'Could not clear: ' + ((err && err.message) || err), 'err');
   }
 }
 
-/**
- * Show toast notification
- */
-function showToast(message, type = 'success') {
-  toastEl.textContent = message;
-  toastEl.className = `toast ${type} show`;
+// ------------------------------------------------------------------ wiring
 
-  setTimeout(() => {
-    toastEl.classList.remove('show');
-  }, 3000);
-}
+els.provider.addEventListener('change', refreshProviderUI);
+els.revealKey.addEventListener('click', () => {
+  const showing = els.apiKey.type === 'text';
+  els.apiKey.type = showing ? 'password' : 'text';
+  els.revealKey.textContent = showing ? 'Show' : 'Hide';
+});
+document.querySelectorAll('[data-theme-pick]').forEach((btn) => {
+  btn.addEventListener('click', () => applyTheme(btn.dataset.themePick));
+});
+els.testBtn.addEventListener('click', testConnection);
+els.saveBtn.addEventListener('click', save);
+els.clearHist.addEventListener('click', clearHistory);
+
+loadSettings();
+refreshHistoryCount();

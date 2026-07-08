@@ -1,263 +1,157 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="paper">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WordGen Settings</title>
-  <link rel="stylesheet" href="options.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WordGen settings</title>
+<link rel="stylesheet" href="options.css">
 </head>
 <body>
-  <div class="settings-container">
-    <!-- Header -->
-    <header class="settings-header">
-      <div class="header-content">
-        <div class="logo">
-          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="48" height="48" rx="12" fill="url(#gradient)"/>
-            <text x="24" y="32" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">W</text>
-            <defs>
-              <linearGradient id="gradient" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#3b82f6"/>
-                <stop offset="100%" stop-color="#8b5cf6"/>
-              </linearGradient>
-            </defs>
-          </svg>
-          <div>
-            <h1>WordGen Settings</h1>
-            <p>Configure your smart synonym finder</p>
-          </div>
-        </div>
+  <header class="page-head">
+    <span class="dot" aria-hidden="true"></span>
+    <h1>WordGen <span class="sub">settings</span></h1>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Provider</h2>
+      <p class="hint">WordGen works out of the box with the free local engine. Bring your own API
+        key to unlock every mode — the key stays in your browser and is only ever sent to the
+        provider you pick.</p>
+
+      <label class="field">
+        <span>Engine</span>
+        <select id="provider">
+          <option value="local">Local — free, no key needed</option>
+          <option value="anthropic">Claude (Anthropic)</option>
+          <option value="openai">OpenAI-compatible</option>
+          <option value="custom">Custom endpoint</option>
+        </select>
+      </label>
+
+      <div class="prov" id="provLocal">
+        <p class="hint">Runs entirely in your browser using a built-in lexicon and word
+          embeddings. Great for synonyms, grammar touch-ups and quick rewrites; the AI-heavy modes
+          (prompts, emails, expand) need a provider above.</p>
       </div>
-    </header>
 
-    <!-- Main Content -->
-    <main class="settings-main">
-      <!-- General Settings -->
-      <section class="settings-section">
-        <h2>General Settings</h2>
-
-        <div class="setting-item">
-          <div class="setting-info">
-            <label for="num-suggestions">Number of Suggestions</label>
-            <p class="setting-description">How many synonym suggestions to display</p>
-          </div>
-          <select id="num-suggestions" class="setting-control">
-            <option value="3">3 suggestions</option>
-            <option value="5">5 suggestions</option>
-            <option value="7">7 suggestions</option>
-            <option value="10">10 suggestions</option>
-          </select>
-        </div>
-
-        <div class="setting-item">
-          <div class="setting-info">
-            <label for="trigger-method">Trigger Method</label>
-            <p class="setting-description">How to activate synonym lookup</p>
-          </div>
-          <select id="trigger-method" class="setting-control">
-            <option value="dblclick">Double-click</option>
-            <option value="ctrl-click">Ctrl + Click</option>
-            <option value="context-menu-only">Context Menu Only</option>
-          </select>
-        </div>
-
-        <div class="setting-item">
-          <div class="setting-info">
-            <label for="popup-position">Popup Position</label>
-            <p class="setting-description">Where to display the synonym widget</p>
-          </div>
-          <select id="popup-position" class="setting-control">
-            <option value="near-word">Near word</option>
-            <option value="fixed-bottom-right">Fixed bottom-right</option>
-          </select>
-        </div>
-
-        <div class="setting-item">
-          <div class="setting-info">
-            <label for="theme">Theme</label>
-            <p class="setting-description">Widget color scheme</p>
-          </div>
-          <select id="theme" class="setting-control">
-            <option value="auto">Auto (follow system)</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </div>
-
-        <div class="setting-item">
-          <div class="setting-info">
-            <label for="show-pos-tags">Show Part of Speech Tags</label>
-            <p class="setting-description">Display grammatical information (noun, verb, etc.)</p>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="show-pos-tags">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
-        <div class="setting-item">
-          <div class="setting-info">
-            <label for="auto-dismiss">Auto-dismiss on Scroll</label>
-            <p class="setting-description">Hide widget when scrolling the page</p>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="auto-dismiss">
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-      </section>
-
-      <!-- Site Control -->
-      <section class="settings-section">
-        <h2>Site Control</h2>
-
-        <div class="setting-item">
-          <div class="setting-info">
-            <label for="enabled-sites">Enable Extension On</label>
-            <p class="setting-description">Control where WordGen is active</p>
-          </div>
-          <select id="enabled-sites" class="setting-control">
-            <option value="all">All websites</option>
-            <option value="whitelist">Only whitelisted sites</option>
-            <option value="blacklist">All except blacklisted sites</option>
-          </select>
-        </div>
-
-        <div id="whitelist-section" class="list-section" style="display: none;">
-          <h3>Whitelisted Sites</h3>
-          <div class="list-controls">
-            <input type="text" id="whitelist-input" placeholder="example.com" class="list-input">
-            <button id="add-whitelist" class="btn btn-primary">Add</button>
-          </div>
-          <ul id="whitelist-list" class="site-list"></ul>
-        </div>
-
-        <div id="blacklist-section" class="list-section" style="display: none;">
-          <h3>Blacklisted Sites</h3>
-          <div class="list-controls">
-            <input type="text" id="blacklist-input" placeholder="example.com" class="list-input">
-            <button id="add-blacklist" class="btn btn-primary">Add</button>
-          </div>
-          <ul id="blacklist-list" class="site-list"></ul>
-        </div>
-      </section>
-
-      <!-- LLM Provider (Advanced) -->
-      <section class="settings-section">
-        <h2>LLM Provider (Optional)</h2>
-        <p class="section-description">Enhance suggestions with AI. Not required for basic functionality.</p>
-
-        <div class="setting-item">
-          <div class="setting-info">
-            <label for="provider">AI Provider</label>
-            <p class="setting-description">Optional AI enhancement for context-aware suggestions</p>
-          </div>
-          <select id="provider" class="setting-control">
-            <option value="none">None (offline only)</option>
-            <option value="openai">OpenAI</option>
-            <option value="huggingface">Hugging Face</option>
-            <option value="custom">Custom API</option>
-          </select>
-        </div>
-
-        <!-- OpenAI Settings -->
-        <div id="openai-settings" class="provider-settings" style="display: none;">
-          <div class="setting-item">
-            <div class="setting-info">
-              <label for="openai-key">API Key</label>
-            </div>
-            <input type="password" id="openai-key" class="setting-control" placeholder="sk-...">
-          </div>
-          <div class="setting-item">
-            <div class="setting-info">
-              <label for="openai-model">Model</label>
-            </div>
-            <input type="text" id="openai-model" class="setting-control" placeholder="gpt-3.5-turbo">
-          </div>
-        </div>
-
-        <!-- Hugging Face Settings -->
-        <div id="huggingface-settings" class="provider-settings" style="display: none;">
-          <div class="setting-item">
-            <div class="setting-info">
-              <label for="huggingface-key">API Key</label>
-            </div>
-            <input type="password" id="huggingface-key" class="setting-control" placeholder="hf_...">
-          </div>
-          <div class="setting-item">
-            <div class="setting-info">
-              <label for="huggingface-model">Model</label>
-            </div>
-            <input type="text" id="huggingface-model" class="setting-control" placeholder="mistralai/Mistral-7B-Instruct-v0.2">
-          </div>
-        </div>
-
-        <!-- Custom Settings -->
-        <div id="custom-settings" class="provider-settings" style="display: none;">
-          <div class="setting-item">
-            <div class="setting-info">
-              <label for="custom-url">API URL</label>
-            </div>
-            <input type="text" id="custom-url" class="setting-control" placeholder="https://api.example.com/v1/chat">
-          </div>
-          <div class="setting-item">
-            <div class="setting-info">
-              <label for="custom-headers">Headers (JSON)</label>
-            </div>
-            <textarea id="custom-headers" class="setting-control" rows="3" placeholder='{"Authorization": "Bearer YOUR_TOKEN"}'></textarea>
-          </div>
-        </div>
-      </section>
-
-      <!-- Statistics -->
-      <section class="settings-section">
-        <h2>Statistics</h2>
-
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-value" id="words-today">0</div>
-            <div class="stat-label">Words Replaced Today</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="words-total">0</div>
-            <div class="stat-label">Total Words Replaced</div>
-          </div>
-        </div>
-
-        <button id="reset-stats" class="btn btn-secondary">Reset Statistics</button>
-      </section>
-
-      <!-- Data Management -->
-      <section class="settings-section">
-        <h2>Data Management</h2>
-
-        <div class="button-group">
-          <button id="export-settings" class="btn btn-secondary">Export Settings</button>
-          <button id="import-settings" class="btn btn-secondary">Import Settings</button>
-          <button id="reset-settings" class="btn btn-danger">Reset to Defaults</button>
-        </div>
-        <input type="file" id="import-file" accept=".json" style="display: none;">
-      </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="settings-footer">
-      <div class="footer-content">
-        <p>WordGen v1.0.0 • Built with ❤️ for better writing</p>
-        <div class="footer-links">
-          <a href="https://viper-vm.github.io/demos/wordgen/" target="_blank">Documentation</a>
-          <span>•</span>
-          <a href="https://github.com/viper-vm" target="_blank">GitHub</a>
-          <span>•</span>
-          <a href="https://viper-vm.github.io/" target="_blank">Portfolio</a>
-        </div>
+      <div class="prov" id="provKey" hidden>
+        <label class="field">
+          <span id="apiKeyLabel">API key</span>
+          <span class="keyrow">
+            <input id="apiKey" type="password" autocomplete="off" spellcheck="false"
+                   placeholder="sk-…">
+            <button type="button" class="btn ghost small" id="revealKey"
+                    aria-label="Show or hide the API key">Show</button>
+          </span>
+        </label>
+        <p class="hint" id="keyHint"></p>
       </div>
-    </footer>
-  </div>
 
-  <!-- Toast notification -->
-  <div id="toast" class="toast"></div>
+      <div class="prov" id="provAnthropic" hidden>
+        <label class="field">
+          <span>Model</span>
+          <select id="modelSelect">
+            <option value="claude-opus-4-8">claude-opus-4-8 (best)</option>
+            <option value="claude-sonnet-5">claude-sonnet-5 (balanced)</option>
+            <option value="claude-haiku-4-5">claude-haiku-4-5 (fastest)</option>
+          </select>
+        </label>
+      </div>
 
-  <script src="options.js" type="module"></script>
+      <div class="prov" id="provOpenai" hidden>
+        <label class="field">
+          <span>Model</span>
+          <input id="modelText" type="text" spellcheck="false" placeholder="gpt-4o-mini">
+        </label>
+        <label class="field">
+          <span>Endpoint</span>
+          <input id="endpointOpenai" type="url" spellcheck="false"
+                 placeholder="https://api.openai.com/v1/chat/completions">
+        </label>
+        <p class="hint">Any OpenAI-compatible chat-completions endpoint works: Groq, Ollama
+          (http://localhost:11434/v1/chat/completions), Gemini's compatibility endpoint, and more.
+          Leave the endpoint blank to use OpenAI itself.</p>
+      </div>
+
+      <div class="prov" id="provCustom" hidden>
+        <label class="field">
+          <span>Endpoint URL</span>
+          <input id="endpointCustom" type="url" spellcheck="false"
+                 placeholder="https://your-server.example/wordgen">
+        </label>
+        <label class="field">
+          <span>Headers (JSON)</span>
+          <textarea id="headers" rows="3" spellcheck="false"
+                    placeholder='{"Authorization": "Bearer …"}'></textarea>
+        </label>
+        <p class="hint">WordGen POSTs JSON like
+          <code>{"action":"transform","mode":"paraphrase","text":"…","opts":{}}</code> and expects
+          <code>{"options":[{"text":"…","note":"…"}]}</code> back (or
+          <code>{"candidates":[…]}</code> for synonyms). Saving asks Chrome for permission to reach
+          this host.</p>
+      </div>
+
+      <div class="keynote" id="keySyncRow" hidden>
+        <label class="check">
+          <input type="checkbox" id="syncKey" checked>
+          <span>Sync my API key across my Chrome profiles</span>
+        </label>
+        <p class="hint">When on, the key is stored in your browser profile and synced via your
+          Google account, so it follows you between machines. Untick to keep it on this device
+          only.</p>
+      </div>
+
+      <div class="row">
+        <button type="button" class="btn ghost" id="testBtn">Test connection</button>
+        <span class="status" id="testStatus" role="status"></span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Appearance</h2>
+      <div class="swatches" role="radiogroup" aria-label="Theme">
+        <button type="button" class="swatch" data-theme-pick="paper" aria-pressed="true">
+          <span class="sw-preview sw-paper"><span class="sw-dot"></span></span>
+          <span class="sw-name">Paper</span>
+        </button>
+        <button type="button" class="swatch" data-theme-pick="ink" aria-pressed="false">
+          <span class="sw-preview sw-ink"><span class="sw-dot"></span></span>
+          <span class="sw-name">Ink</span>
+        </button>
+        <button type="button" class="swatch" data-theme-pick="mist" aria-pressed="false">
+          <span class="sw-preview sw-mist"><span class="sw-dot"></span></span>
+          <span class="sw-name">Mist</span>
+        </button>
+      </div>
+      <label class="check">
+        <input type="checkbox" id="bubbleEnabled" checked>
+        <span>Show the selection bubble when I select text on a page</span>
+      </label>
+      <p class="hint">The bubble is a small round “W” that appears near selected text — click it to
+        open the note prefilled, or to jump straight to synonyms for a single word.</p>
+    </section>
+
+    <section class="card">
+      <h2>History</h2>
+      <p class="hint"><span id="histCount">0</span> saved transforms on this device (the newest 100
+        are kept). History never leaves your browser.</p>
+      <div class="row">
+        <button type="button" class="btn ghost danger" id="clearHist">Clear history</button>
+        <span class="status" id="histStatus" role="status"></span>
+      </div>
+    </section>
+
+    <div class="savebar">
+      <button type="button" class="btn primary" id="saveBtn">Save settings</button>
+      <span class="status" id="saveStatus" role="status"></span>
+    </div>
+
+    <p class="privacy">Privacy: WordGen has no server. Your text is sent only to the provider you
+      configure (or nowhere at all with the local engine), and your key is stored only in Chrome's
+      extension storage.</p>
+  </main>
+
+  <script type="module" src="options.js"></script>
 </body>
 </html>

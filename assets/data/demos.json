@@ -28,7 +28,7 @@
   {
     "id": "wordgen",
     "title": "WordGen",
-    "summary": "Context-aware synonym suggestions and AI-powered sentence rephrasing with optional LLM integration — web app + Chrome extension.",
+    "summary": "Rewrite anything: paraphrase, fix grammar, change tone, turn rough notes into a better LLM prompt, restyle text as an email, LinkedIn/WhatsApp/Instagram post or tweet, and swap single words for context-aware synonyms. Free offline engine or bring your own API key (Claude, OpenAI-compatible, custom). Ships with a sticky-note Chrome extension.",
     "category": "Writing / NLP",
     "emoji": "✍️",
     "demo_url": "/demos/wordgen/",
