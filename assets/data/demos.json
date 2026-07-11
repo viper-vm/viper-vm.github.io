@@ -18,6 +18,24 @@
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/ghostpile"
   },
   {
+    "id": "tabfish",
+    "title": "Tabfish",
+    "summary": "The fishing game you play by not playing it. Cast your lure, then switch tabs and work — it sinks in real time toward rarer, deeper fish, even while the tab is closed. Your tab title becomes a live depth ticker and flips to FISH ON when one bites. Set the hook before it escapes.",
+    "category": "Game",
+    "emoji": "🎣",
+    "demo_url": "/demos/tabfish/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/tabfish"
+  },
+  {
+    "id": "askew",
+    "title": "Askew",
+    "summary": "Tap the exact center of 20 shapes in 45 seconds. Askew separates your precision from your bias and reveals the hidden direction your aim always drifts — the 'which way does your brain secretly lean' number. Left-leaner or right-leaner? Share your scatter plot.",
+    "category": "Game",
+    "emoji": "◎",
+    "demo_url": "/demos/askew/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/askew"
+  },
+  {
     "id": "infra-atlas",
     "title": "India Infra Atlas",
     "summary": "A living map of India's infrastructure, tech, energy & defense news — daily auto-updating pins and corridors on a full interactive map with 3D terrain, rail overlays, measuring tools and a timeline.",

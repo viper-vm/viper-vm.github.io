@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d4e7a"/><stop offset="0.35" stop-color="#12324f"/>
+      <stop offset="0.7" stop-color="#0a1a2c"/><stop offset="1" stop-color="#05040c"/>
+    </linearGradient>
+    <linearGradient id="wm" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#37c0ff"/><stop offset="1" stop-color="#4dd97a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#sea)"/>
+  <!-- fishing line -->
+  <line x1="600" y1="0" x2="600" y2="300" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-dasharray="5 8"/>
+  <circle cx="600" cy="300" r="7" fill="#ffd93d"/>
+  <!-- depth ticks -->
+  <g fill="rgba(255,255,255,.35)" font-size="20" font-weight="700" font-family="ui-monospace,Menlo,monospace">
+    <text x="60" y="200">0m ── sunlit</text>
+    <text x="60" y="330">900m ── midnight</text>
+    <text x="60" y="470">2000m ── the abyss</text>
+    <text x="60" y="560">3800m ── hadal deep 🐉</text>
+  </g>
+  <!-- descending fish silhouettes -->
+  <text x="920" y="215" font-size="40" opacity=".9">🐟</text>
+  <text x="1000" y="340" font-size="46" opacity=".9">🦑</text>
+  <text x="930" y="470" font-size="52" opacity=".95">🐡</text>
+  <text x="1010" y="565" font-size="58">🐉</text>
+  <!-- title -->
+  <text x="60" y="105" font-size="72" font-weight="800" fill="#e9f1fb">🎣 <tspan fill="url(#wm)">TABFISH</tspan></text>
+  <rect x="0" y="566" width="760" height="64" fill="#05040c" opacity=".55"/>
+  <text x="60" y="118" font-size="0"> </text>
+  <text x="60" y="150" font-size="30" font-weight="600" fill="#8ea3ba">The fishing game you play by <tspan font-weight="800" fill="#e9f1fb">not</tspan> playing it.</text>
+</svg>

@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Tabfish 🎣</title>
+<meta name="description" content="A fishing game that lives in your browser tab and rewards you for ignoring it. Cast your lure, switch tabs and work — it sinks in real time toward rarer, deeper fish. Come back when it bites." />
+<link rel="canonical" href="https://viper-vm.github.io/demos/tabfish/" />
+<meta property="og:title" content="Tabfish — the fishing game you play by not playing it" />
+<meta property="og:description" content="Cast your lure, then go do your actual work. It sinks in real time while you're away — the longer you ignore it, the deeper it goes and the rarer the catch. Watch your tab bar for a bite." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/tabfish/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/tabfish/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#0a1420" />
+<link id="favicon" rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230a1420"/><text y=".9em" x="12" font-size="70">🎣</text></svg>' />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0a1420; --panel:#0f1d2c; --panel2:#152538; --line:rgba(255,255,255,.09);
+    --ink:#e9f1fb; --mut:#8ea3ba; --acc:#37c0ff; --gold:#ffd93d; --ok:#4dd97a; --no:#ff6b6b;
+  }
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--ink);min-height:100dvh;
+    font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;
+    padding:calc(14px + env(safe-area-inset-top)) 14px calc(30px + env(safe-area-inset-bottom))}
+  .wrap{max-width:520px;margin:0 auto}
+  header{text-align:center;margin-bottom:12px}
+  .logo{font-size:clamp(30px,8vw,42px);font-weight:800;letter-spacing:-.02em;line-height:1}
+  .logo b{background:linear-gradient(100deg,#37c0ff,#4dd97a);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .tag{color:var(--mut);font-size:13.5px;margin-top:6px;line-height:1.45}
+
+  .scene{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line);height:300px;margin:14px 0;
+    transition:background 1.2s ease;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .line{position:absolute;top:0;left:50%;width:2px;transform:translateX(-50%);
+    background:repeating-linear-gradient(180deg,rgba(255,255,255,.5) 0 5px,transparent 5px 12px);transition:height .5s ease}
+  .zone{font-size:12px;letter-spacing:.18em;font-weight:800;text-transform:uppercase;opacity:.9;z-index:2}
+  .depth{font-size:clamp(44px,13vw,64px);font-weight:800;line-height:1;z-index:2;font-variant-numeric:tabular-nums;text-shadow:0 2px 20px rgba(0,0,0,.5)}
+  .depth small{font-size:.4em;font-weight:700;opacity:.7}
+  .scenemsg{font-size:14px;color:rgba(255,255,255,.85);margin-top:8px;z-index:2;max-width:80%;line-height:1.4}
+  .fishbig{font-size:66px;z-index:2;animation:wiggle .5s ease-in-out infinite alternate}
+  @keyframes wiggle{from{transform:rotate(-9deg) scale(1)}to{transform:rotate(9deg) scale(1.08)}}
+  .biting .depth,.biting .zone{display:none}
+  .lurehook{font-size:26px;z-index:2}
+
+  .act{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:18px;letter-spacing:.02em;
+    border-radius:15px;padding:16px;transition:transform .07s ease, opacity .2s;color:#04121e}
+  .act:active{transform:scale(.98)}
+  .act.cast{background:var(--acc);box-shadow:0 6px 24px -8px var(--acc)}
+  .act.hook{background:var(--gold);box-shadow:0 6px 28px -6px var(--gold);animation:hookpulse 1s ease-in-out infinite}
+  @keyframes hookpulse{50%{filter:brightness(1.15)}}
+  .act.reelin{background:var(--ok)}
+  .hint{color:var(--mut);font-size:12.5px;text-align:center;margin-top:9px;line-height:1.4}
+  .hint b{color:var(--ink)}
+
+  .statsRow{display:flex;gap:8px;margin:16px 0 10px}
+  .stat{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:10px 6px;text-align:center}
+  .stat .v{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:10.5px;letter-spacing:.08em;color:var(--mut);font-weight:700;margin-top:2px;text-transform:uppercase}
+
+  .logwrap{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px}
+  .logwrap h3{font-size:11px;letter-spacing:.14em;color:var(--mut);font-weight:800;margin-bottom:10px;display:flex;justify-content:space-between}
+  .catchgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px}
+  .catch{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center;position:relative;animation:pop .3s ease}
+  @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  .catch .e{font-size:26px;line-height:1}
+  .catch .n{font-size:10px;font-weight:700;margin-top:3px;line-height:1.1}
+  .catch .k{font-size:10px;color:var(--mut);margin-top:1px}
+  .catch .band{position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
+  .logempty{color:var(--mut);font-size:13px;text-align:center;padding:16px 0}
+
+  .shareRow{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+  .sbtn{border:0;cursor:pointer;font:inherit;font-weight:800;border-radius:13px;padding:12px;font-size:14px;transition:transform .07s}
+  .sbtn:active{transform:scale(.97)}
+  .sbtn.c{background:var(--ok);color:#08130c}
+  .sbtn.s{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px}
+  .foot a{color:var(--mut);text-decoration:none;border-bottom:1px solid var(--line)}
+
+  /* reel overlay */
+  .ov{position:fixed;inset:0;z-index:20;background:rgba(6,14,22,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .18s}
+  .ov.show{opacity:1;pointer-events:auto}
+  .reelsheet{width:min(440px,100%);text-align:center;background:var(--panel);border:1px solid rgba(255,255,255,.12);
+    border-radius:22px;padding:24px 22px;box-shadow:0 30px 80px -20px rgba(0,0,0,.85)}
+  .reelsheet .fe{font-size:70px;animation:wiggle .4s ease-in-out infinite alternate}
+  .reelsheet h2{font-size:22px;font-weight:800;margin:6px 0 2px}
+  .reelsheet .z{font-size:13px;font-weight:700;margin-bottom:16px}
+  .bar{position:relative;height:34px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:14px 0}
+  .greenzone{position:absolute;top:0;bottom:0;background:linear-gradient(180deg,rgba(77,217,122,.35),rgba(77,217,122,.15));border-left:2px solid var(--ok);border-right:2px solid var(--ok)}
+  .marker{position:absolute;top:-3px;bottom:-3px;width:5px;background:#fff;border-radius:3px;box-shadow:0 0 10px #fff}
+  .strike{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:20px;border-radius:14px;padding:16px;background:var(--gold);color:#04121e}
+  .strike:active{transform:scale(.98)}
+
+  /* rules + result sheets */
+  .sheet{background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:20px;width:min(460px,100%);
+    max-height:calc(100dvh - 40px);overflow-y:auto;box-shadow:0 30px 80px -20px rgba(0,0,0,.8)}
+  .sheet h2{font-size:23px;font-weight:800;text-align:center}
+  .rules{text-align:left;font-size:14px;line-height:1.55;margin-top:8px}
+  .rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:15px 0 6px;font-weight:800}
+  .rules ol,.rules ul{margin:0 0 4px 18px}.rules li{margin-bottom:7px}
+  .rules b{color:var(--acc)} .rules .zc{font-weight:800}
+  .okbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:16px;border-radius:14px;padding:14px;background:var(--acc);color:#04121e;margin-top:14px}
+  .catchpop{font-size:64px;margin:4px 0}
+  .catchname{font-size:24px;font-weight:800}
+  .catchmeta{color:var(--mut);font-size:14px;margin:4px 0 2px}
+
+  .helpBtn{position:fixed;top:calc(12px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;
+    border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer;line-height:1}
+  .helpBtn:active{transform:scale(.94)}
+  #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);
+    background:#17293b;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;
+    opacity:0;transition:all .24s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
+<div class="wrap">
+  <header>
+    <div class="logo">🎣 <b>TABFISH</b></div>
+    <p class="tag">The fishing game you play by <b>not</b> playing it. Cast, then go work — your lure sinks in real time. The longer you ignore it, the deeper &amp; rarer it gets.</p>
+  </header>
+
+  <div class="scene" id="scene">
+    <div class="line" id="line"></div>
+    <div class="zone" id="zoneLbl"></div>
+    <div class="depth" id="depthLbl"><span id="depthNum">0</span><small>m</small></div>
+    <div class="scenemsg" id="sceneMsg"></div>
+  </div>
+
+  <button class="act cast" id="actBtn">CAST YOUR LINE</button>
+  <p class="hint" id="hint">Tap to drop your lure, then switch tabs and get on with your day.</p>
+
+  <div class="statsRow">
+    <div class="stat"><div class="v" id="stCatch">0</div><div class="l">caught</div></div>
+    <div class="stat"><div class="v" id="stDeep">0m</div><div class="l">deepest</div></div>
+    <div class="stat"><div class="v" id="stBig">—</div><div class="l">biggest</div></div>
+  </div>
+
+  <div class="logwrap">
+    <h3><span>🪣 YOUR BUCKET</span><span id="logCount"></span></h3>
+    <div class="catchgrid" id="catchGrid"><div class="logempty">No fish yet. Cast your line and be patient.</div></div>
+    <div class="shareRow" id="shareRow" style="display:none">
+      <button class="sbtn c" id="copyBtn">COPY CATCH</button>
+      <button class="sbtn s" id="shareBtn">Share…</button>
+    </div>
+  </div>
+
+  <p class="foot">an idle game about patience · built by <a href="https://viper-vm.github.io" target="_blank" rel="noreferrer">Vivek Modi</a></p>
+</div>
+
+<!-- reel overlay -->
+<div class="ov" id="ovReel"><div class="reelsheet">
+  <div class="fe" id="reelEmoji">🐟</div>
+  <h2 id="reelName">Fish on!</h2>
+  <div class="z" id="reelZone"></div>
+  <div class="bar"><div class="greenzone" id="greenzone"></div><div class="marker" id="marker"></div></div>
+  <button class="strike" id="strikeBtn">SET THE HOOK!</button>
+  <p class="hint">Tap when the line crosses the green. Deeper fish fight harder.</p>
+</div></div>
+
+<!-- catch result overlay -->
+<div class="ov" id="ovCatch"><div class="reelsheet">
+  <div class="catchpop" id="catchEmoji">🐟</div>
+  <div class="catchname" id="catchName"></div>
+  <div class="catchmeta" id="catchMeta"></div>
+  <div class="z" id="catchZone" style="margin-bottom:10px"></div>
+  <button class="okbtn" id="catchOk">NICE — CAST AGAIN</button>
+</div></div>
+
+<!-- rules overlay -->
+<div class="ov" id="ovRules"><div class="sheet">
+  <h2>How to play 🎣</h2>
+  <div class="rules">
+    <h4>THE IDEA</h4>
+    <p>Tabfish rewards you for <b>ignoring it</b>. Cast your lure and go do your real work in other tabs — the lure keeps sinking in <b>real time</b>, even while this tab is in the background or closed.</p>
+    <h4>HOW TO FISH</h4>
+    <ol>
+      <li>Tap <b>CAST YOUR LINE</b>. Your lure starts sinking.</li>
+      <li>Switch tabs and work. Your tab title becomes a live depth ticker — <b>🎣 610m ⋯ Tabfish</b>.</li>
+      <li>The deeper it sinks, the <b>rarer and bigger</b> the fish that bite — but deep bites take patience.</li>
+      <li>When a fish bites, your tab title flips to <b>❗ FISH ON ❗</b> and the icon turns red. Come back and tap <b>SET THE HOOK</b> within the window, or it gets away.</li>
+      <li>Time your strike as the line crosses the <b>green zone</b> to land it. Deeper fish have a smaller zone.</li>
+    </ol>
+    <h4>THE DEPTHS</h4>
+    <ul>
+      <li><span class="zc" style="color:#4da3ff">Sunlit</span> 0–300m — little common fish</li>
+      <li><span class="zc" style="color:#3ddad0">Twilight</span> 300–900m — squid &amp; mackerel</li>
+      <li><span class="zc" style="color:#8f7bff">Midnight</span> 900–2000m — lanternfish, viperfish</li>
+      <li><span class="zc" style="color:#c77bff">The Abyss</span> 2000–3800m — anglerfish, gulper eels</li>
+      <li><span class="zc" style="color:#ffd93d">Hadal Deep</span> 3800m+ — legendary monsters</li>
+    </ul>
+    <p style="color:var(--mut);font-size:13px;margin-top:12px">Leave it overnight and you'll wake up in the abyss. Everything is saved locally — no account, no backend.</p>
+  </div>
+  <button class="okbtn" id="rulesClose">GOT IT</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>/*TABFISH*/
+'use strict';
+const LS=(function(){let ok=false;const mem={};
+  try{localStorage.setItem('__t_t','1');localStorage.removeItem('__t_t');ok=true;}catch(e){}
+  return{get(k){try{return ok?localStorage.getItem(k):(k in mem?mem[k]:null)}catch(e){return k in mem?mem[k]:null}},
+         set(k,v){v=String(v);mem[k]=v;try{if(ok)localStorage.setItem(k,v)}catch(e){}}};})();
+const $=id=>document.getElementById(id);
+const now=()=>Date.now();
+
+/* ---- zones / fish ---- */
+const ZONES=[
+  {name:'Sunlit Zone', color:'#4da3ff', bg:['#1d4e7a','#0a1a2c'], min:0,    species:[['Anchovy','🐟'],['Sardine','🐠'],['Pufferfish','🐡']], kg:[0.1,2]},
+  {name:'Twilight Zone',color:'#3ddad0', bg:['#124b52','#08131c'], min:300,  species:[['Mackerel','🐟'],['Reef Squid','🦑'],['Octopus','🐙']], kg:[1,7]},
+  {name:'Midnight Zone',color:'#8f7bff', bg:['#2a2668','#080a18'], min:900,  species:[['Lanternfish','🏮'],['Viperfish','🐍'],['Ribbon Eel','🎏']], kg:[3,18]},
+  {name:'The Abyss',    color:'#c77bff', bg:['#301842','#06040c'], min:2000, species:[['Anglerfish','🐡'],['Gulper Eel','🐍'],['Frilled Shark','🦈']], kg:[12,70]},
+  {name:'Hadal Deep',   color:'#ffd93d', bg:['#2a2410','#050505'], min:3800, species:[['Dragonfish','🐉'],['Colossal Squid','🦑'],['Coelacanth','🐟'],['The Nameless','👁️']], kg:[45,320]},
+];
+function zoneIdx(d){let z=0;for(let i=0;i<ZONES.length;i++)if(d>=ZONES[i].min)z=i;return z;}
+function genFish(depth){
+  let zi=zoneIdx(depth);const r=Math.random();
+  if(r<0.08&&zi<ZONES.length-1)zi++;else if(r<0.32&&zi>0)zi--;
+  const Z=ZONES[zi];const sp=Z.species[Math.floor(Math.random()*Z.species.length)];
+  const kg=+(Z.kg[0]+Math.random()*(Z.kg[1]-Z.kg[0])).toFixed(1);
+  return{name:sp[0],emoji:sp[1],zone:Z.name,color:Z.color,kg,zi};
+}
+
+/* ---- timing model ---- */
+const WINDOW=60000;                 // ms to react after a bite
+const depthAt=ms=>Math.max(0,Math.round(130*Math.sqrt(Math.max(0,ms)/60000)));
+function depthNow(){return S.phase==='idle'?0:depthAt(now()-S.castAt);}
+function scheduleBite(from){
+  const d=depthAt(from-S.castAt);
+  const delay=20000+Math.random()*(15000+Math.min(d,2600)/2600*130000); // 20s..~165s, longer when deep
+  S.biteAt=from+delay;S.fish=null;S.phase='sinking';
+}
+
+/* ---- state ---- */
+let S;
+function fresh(){return{phase:'idle',castAt:0,biteAt:0,fish:null,
+  log:[],stats:{casts:0,catches:0,escapes:0,deepest:0,biggest:{kg:0,name:''}}};}
+function load(){try{const r=LS.get('tabfish');S=r?JSON.parse(r):fresh();}catch(e){S=fresh();}
+  if(!S.stats)S.stats={casts:0,catches:0,escapes:0,deepest:0,biggest:{kg:0,name:''}};if(!S.log)S.log=[];}
+function save(){LS.set('tabfish',JSON.stringify(S));}
+
+/* ---- resolve: fast-forward pending bite (also on load after long absence) ---- */
+function resolve(){
+  if(S.phase==='sinking'&&now()>=S.biteAt){
+    S.fish=genFish(depthNow());S.phase='biting';   // window measured from S.biteAt
+  }
+  if(S.phase==='biting'&&now()>S.biteAt+WINDOW){
+    // got away while we weren't looking
+    const got=S.fish;S.stats.escapes++;
+    const stole=Math.random()<0.5;
+    if(stole){S.phase='idle';S.castAt=0;S.biteAt=0;S.fish=null;
+      toast('🪝 A '+got.name+' stole your bait at '+ (got?depthNow():0) +'m! Recast.');}
+    else{toast('🐟 A '+got.name+' got away — line still down.');scheduleBite(now());}
+    save();
+  }
+}
+
+/* ---- tick / render ---- */
+let reelActive=false;
+function tick(){
+  resolve();
+  render();
+  updateTitle();
+}
+function render(){
+  const scene=$('scene');
+  if(reelActive)return; // don't fight the overlay
+  if(S.phase==='biting'&&S.fish){
+    scene.classList.add('biting');
+    const Z=ZONES[S.fish.zi];scene.style.background='linear-gradient(180deg,'+Z.bg[0]+','+Z.bg[1]+')';
+    $('line').style.height='40%';
+    scene.querySelector('.fishbig')?.remove();
+    let f=document.createElement('div');f.className='fishbig';f.textContent=S.fish.emoji;
+    $('sceneMsg').before(f);
+    $('sceneMsg').innerHTML='<b style="color:var(--gold)">❗ FISH ON ❗</b><br>Something big is tugging at '+depthNow()+'m';
+    $('actBtn').className='act hook';$('actBtn').textContent='SET THE HOOK!';
+    $('hint').innerHTML='Reel it in before it escapes!';
+  }else{
+    scene.classList.remove('biting');
+    scene.querySelector('.fishbig')?.remove();
+    const d=depthNow();const zi=zoneIdx(d);const Z=ZONES[zi];
+    scene.style.background='linear-gradient(180deg,'+Z.bg[0]+','+Z.bg[1]+')';
+    $('depthNum').textContent=d;
+    $('zoneLbl').textContent=Z.name;$('zoneLbl').style.color=Z.color;
+    if(S.phase==='sinking'){
+      $('line').style.height=Math.min(75,25+d/70)+'%';
+      $('sceneMsg').textContent='Line is down. Go do something else — it keeps sinking.';
+      $('actBtn').className='act cast';$('actBtn').textContent='REEL UP EMPTY';
+      $('hint').innerHTML='Deeper = rarer. Watch your <b>tab title</b> for a bite.';
+    }else{ // idle
+      $('line').style.height='12%';
+      $('sceneMsg').textContent='';
+      $('actBtn').className='act cast';$('actBtn').textContent='CAST YOUR LINE';
+      $('hint').textContent='Tap to drop your lure, then switch tabs and get on with your day.';
+    }
+  }
+  // stats + log
+  $('stCatch').textContent=S.stats.catches;
+  $('stDeep').textContent=S.stats.deepest+'m';
+  $('stBig').textContent=S.stats.biggest.kg?S.stats.biggest.kg+'kg':'—';
+  renderLog();
+}
+function renderLog(){
+  const g=$('catchGrid');
+  if(!S.log.length){g.innerHTML='<div class="logempty">No fish yet. Cast your line and be patient.</div>';$('shareRow').style.display='none';$('logCount').textContent='';return;}
+  $('shareRow').style.display='grid';$('logCount').textContent=S.log.length+' logged';
+  g.innerHTML='';
+  S.log.slice().reverse().slice(0,24).forEach(c=>{
+    const el=document.createElement('div');el.className='catch';
+    el.innerHTML='<div class="band" style="background:'+c.color+'"></div><div class="e">'+c.emoji+'</div><div class="n">'+c.name+'</div><div class="k">'+c.kg+'kg · '+c.depth+'m</div>';
+    g.appendChild(el);
+  });
+}
+
+/* ---- tab title + favicon ---- */
+let blink=false;
+function updateTitle(){
+  if(S.phase==='biting'){blink=!blink;document.title=blink?'❗ FISH ON ❗':'🐟 FISH ON 🐟';setFav(true);}
+  else if(S.phase==='sinking'){document.title='🎣 '+depthNow()+'m ⋯ Tabfish';setFav(false);}
+  else{document.title='Tabfish 🎣';setFav(false);}
+}
+let favState=null;
+function setFav(bite){
+  if(favState===bite)return;favState=bite;
+  const svg=bite
+    ?'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%23ff2d55"/><text y=".92em" x="22" font-size="72">❗</text></svg>'
+    :'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230a1420"/><text y=".9em" x="12" font-size="70">🎣</text></svg>';
+  $('favicon').href='data:image/svg+xml,'+svg;
+}
+
+/* ---- actions ---- */
+function onAct(){
+  if(S.phase==='biting'){openReel();return;}
+  if(S.phase==='idle'){S.phase='sinking';S.castAt=now();S.stats.casts++;scheduleBite(now());save();toast('🎣 Line cast — now go ignore it.');render();updateTitle();return;}
+  if(S.phase==='sinking'){ // reel up empty
+    S.phase='idle';S.castAt=0;S.biteAt=0;S.fish=null;save();render();updateTitle();toast('Reeled up an empty hook.');}
+}
+
+/* ---- reel minigame ---- */
+let rafId=0,markerPos=0,dir=1,greenHalf=0.2,reelSpeed=1,reelStart=0,fishForReel=null;
+function openReel(){
+  fishForReel=S.fish;if(!fishForReel)return;
+  reelActive=true;
+  $('reelEmoji').textContent=fishForReel.emoji;$('reelName').textContent=fishForReel.name+' — '+fishForReel.kg+'kg';
+  $('reelZone').textContent=fishForReel.zone;$('reelZone').style.color=fishForReel.color;
+  const halfByTier=[0.24,0.19,0.15,0.11,0.08],spdByTier=[1.0,1.25,1.5,1.8,2.2];
+  greenHalf=halfByTier[fishForReel.zi];reelSpeed=spdByTier[fishForReel.zi];
+  const gz=$('greenzone');gz.style.left=((0.5-greenHalf)*100)+'%';gz.style.width=(greenHalf*2*100)+'%';
+  markerPos=0;dir=1;reelStart=performance.now();
+  openOv($('ovReel'));
+  cancelAnimationFrame(rafId);let last=performance.now();
+  const step=t=>{const dt=(t-last)/1000;last=t;markerPos+=dir*reelSpeed*dt;
+    if(markerPos>=1){markerPos=1;dir=-1;}if(markerPos<=0){markerPos=0;dir=1;}
+    $('marker').style.left=(markerPos*100)+'%';
+    if(t-reelStart>7000){strike(true);return;}   // dithered too long -> auto miss
+    rafId=requestAnimationFrame(step);};
+  rafId=requestAnimationFrame(step);
+}
+function strike(timeout){
+  cancelAnimationFrame(rafId);
+  const off=Math.abs(markerPos-0.5);const hit=off<=greenHalf;
+  closeOv($('ovReel'));reelActive=false;
+  if(hit&&!timeout){land(fishForReel,off<greenHalf/3);}
+  else{ // missed the strike
+    S.stats.escapes++;S.phase='idle';S.castAt=0;S.biteAt=0;S.fish=null;save();
+    toast(timeout?'😴 You hesitated — it slipped the hook.':'💨 Missed! The '+fishForReel.name+' threw the hook.');
+    render();updateTitle();
+  }
+}
+function land(fish,perfect){
+  const depth=depthNow();
+  let kg=fish.kg;if(perfect)kg=+(kg*1.15).toFixed(1);
+  const entry={name:fish.name,emoji:fish.emoji,zone:fish.zone,color:fish.color,zi:fish.zi,kg,depth,at:now()};
+  S.log.push(entry);S.stats.catches++;
+  if(depth>S.stats.deepest)S.stats.deepest=depth;
+  if(kg>S.stats.biggest.kg)S.stats.biggest={kg,name:fish.name};
+  S.phase='idle';S.castAt=0;S.biteAt=0;S.fish=null;save();
+  $('catchEmoji').textContent=fish.emoji;
+  $('catchName').textContent=(perfect?'PERFECT! ':'')+fish.name;
+  $('catchMeta').textContent=kg+' kg · hooked at '+depth+'m';
+  $('catchZone').textContent=fish.zone;$('catchZone').style.color=fish.color;
+  openOv($('ovCatch'));render();updateTitle();
+}
+
+/* ---- share ---- */
+function rarest(){if(!S.log.length)return null;return S.log.slice().sort((a,b)=>(b.zi-a.zi)||(b.kg-a.kg))[0];}
+function shareText(){
+  const r=rarest();
+  return '🎣 Tabfish — '+S.stats.catches+' caught\n'+
+    (r?'🏆 '+r.emoji+' '+r.name+' · '+r.kg+'kg @ '+r.depth+'m\n':'')+
+    '🌊 deepest '+S.stats.deepest+'m\nviper-vm.github.io/demos/tabfish';
+}
+
+/* ---- overlays / toast ---- */
+function openOv(o){o.classList.add('show');}function closeOv(o){o.classList.remove('show');}
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ---- wire ---- */
+$('actBtn').onclick=onAct;
+$('strikeBtn').onclick=()=>strike(false);
+$('catchOk').onclick=()=>closeOv($('ovCatch'));
+$('rulesBtn').onclick=()=>openOv($('ovRules'));
+$('rulesClose').onclick=()=>closeOv($('ovRules'));
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))closeOv($('ovRules'));});
+$('copyBtn').onclick=async()=>{const t=shareText();
+  try{await navigator.clipboard.writeText(t);}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(_){}ta.remove();}
+  toast('Copied your best catch');};
+$('shareBtn').onclick=async()=>{const t=shareText();if(navigator.share){try{await navigator.share({text:t});}catch(e){}}else{$('copyBtn').click();}};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
+
+/* ---- debug ---- */
+window.__tabfish={
+  state:()=>({phase:S.phase,depth:depthNow(),fish:S.fish,catches:S.stats.catches,deepest:S.stats.deepest,log:S.log.length}),
+  cast:()=>onAct(),
+  bump:(min)=>{if(S.castAt)S.castAt-=min*60000;tick();return depthNow();},
+  forceBite:()=>{if(S.phase==='sinking'){S.biteAt=now()-1;tick();}return S.fish;},
+  testLand:(perfect)=>{if(reelActive){cancelAnimationFrame(rafId);reelActive=false;closeOv($('ovReel'));}if(S.fish){land(S.fish,!!perfect);}return window.__tabfish.state();},
+  reset:()=>{S=fresh();save();render();updateTitle();}
+};
+
+/* ---- boot ---- */
+load();resolve();render();updateTitle();
+setInterval(tick,1000);
+</script>
+</body>
+</html>

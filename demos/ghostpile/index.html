@@ -122,6 +122,7 @@
       Survive, and your flight is frozen into the link forever.</p>
     <button class="btn" id="playBtn">PLAY</button>
     <p class="mini" id="altCave"></p>
+    <p class="mini" style="margin-top:10px"><a id="rulesLink" style="color:#8f7bff;cursor:pointer;text-decoration:none;border-bottom:1px solid rgba(143,123,255,.4)">▸ how it works</a></p>
     <p class="credit">built by <a href="https://viper-vm.github.io" target="_blank" rel="noreferrer">Vivek Modi</a> · no backend — the URL is the level</p>
   </div>
 </div>
@@ -144,6 +145,20 @@
       <button class="btn sec" id="replayBtn" style="grid-column:1/-1">⚔️ Play the new pile yourself</button>
     </div>
     <p class="mini">Anyone who threads your link joins the pile — and mints a harder one.</p>
+  </div>
+</div>
+
+<!-- Rules -->
+<div class="ov hide" id="ovRules">
+  <div class="panel">
+    <div class="logo" style="font-size:32px">👻 How to play</div>
+    <div style="text-align:left;font-size:14px;line-height:1.6;color:#b9c3d6;margin-top:12px">
+      <p style="margin-bottom:11px"><b style="color:#fff">Fly.</b> Hold anywhere on screen — or press <b style="color:#fff">Space</b> — to rise, and release to fall. Thread the winding cave from start to finish without touching a wall.</p>
+      <p style="margin-bottom:11px"><b style="color:#fff">Dodge the ghosts.</b> Every player who beat this exact link before you is frozen inside the cave as a solid, named, colored ribbon. Brush a wall <b style="color:#fff">or a ribbon</b> and you're dead — but retry is instant.</p>
+      <p style="margin-bottom:11px"><b style="color:#fff">Become a wall.</b> Survive to the finish and your own flight path is baked into the link. The challenge you send back is now <b style="color:#fff">strictly harder</b> than the one you got — because your run is the next player's obstacle.</p>
+      <p style="margin-bottom:11px"><b style="color:#fff">Grow the pile.</b> Each winner adds one ghost. A pile with nine tangled ribbons is nearly unthreadable — and that's the whole brag. No accounts, no server: the entire pile lives inside the URL.</p>
+    </div>
+    <button class="btn" id="rulesCloseBtn" style="margin-top:8px">GOT IT</button>
   </div>
 </div>
 
@@ -525,6 +540,9 @@ window.addEventListener('contextmenu',e=>{if(e.target===cv)e.preventDefault()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing'){state='paused';hold=false}});
 
 $('playBtn').onclick=()=>{ensureAC();$('ovLand').classList.add('hide');arm()};
+$('rulesLink').onclick=()=>$('ovRules').classList.remove('hide');
+$('rulesCloseBtn').onclick=()=>$('ovRules').classList.add('hide');
+$('ovRules').addEventListener('pointerdown',e=>{if(e.target===$('ovRules'))$('ovRules').classList.add('hide');});
 $('sndBtn').onclick=()=>{sndOn=!sndOn;LS.set('gp_sound',sndOn?'1':'0');ensureAC();updateHUD();toast(sndOn?'Sound on':'Sound off')};
 $('nameIn').addEventListener('input',()=>{const el=$('nameIn');el.value=el.value.toUpperCase().replace(/[^A-Z0-9]/g,'');refreshMinted();
   if(minted&&!minted._full){const mc=$('mapWin');renderMap(mc,minted,minted.ghosts.length-1)}});

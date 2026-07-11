@@ -133,10 +133,30 @@
   .rule{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:center;font-size:15px;margin:12px 0}
   .rule .k{color:var(--mut);font-size:11px;letter-spacing:.14em;font-weight:800;display:block;margin-bottom:4px}
   .rule b{color:var(--acc);font-weight:800}
-  .review{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:10px 0}
-  .rcard{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:7px;text-align:center;width:70px}
-  .rcard canvas{width:48px;height:48px}
-  .rcard .rr{font-size:15px;margin-top:2px}
+  .whyLead{color:var(--mut);font-size:13px;text-align:center;margin:2px 0 8px;line-height:1.45}
+  .review{display:flex;flex-direction:column;gap:8px;margin:8px 0 10px}
+  .rrow{display:flex;align-items:center;gap:10px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+  .rrow canvas{width:44px;height:44px;flex:0 0 auto;background:rgba(255,255,255,.03);border-radius:9px}
+  .rrow .why{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+  .pill{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:99px;font-weight:700;font-size:11.5px;border:1px solid var(--line);white-space:nowrap}
+  .pill.y{color:var(--ok);border-color:rgba(77,217,122,.4);background:rgba(77,217,122,.1)}
+  .pill.n{color:var(--mut);background:var(--bg)}
+  .why .op{color:var(--mut);font-weight:800;font-size:10.5px;letter-spacing:.05em}
+  .why .arw{color:var(--mut);font-weight:800}
+  .vbadge{font-weight:800;font-size:11px;padding:3px 8px;border-radius:8px;letter-spacing:.03em}
+  .vbadge.a{color:var(--ok);background:rgba(77,217,122,.14)}
+  .vbadge.r{color:var(--no);background:rgba(255,93,93,.14)}
+  .rrow .you{flex:0 0 auto;font-size:16px;width:20px;text-align:center}
+
+  .helpBtn{position:fixed;top:calc(12px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;
+    border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer;line-height:1}
+  .helpBtn:active{transform:scale(.94)}
+  .rules{text-align:left;font-size:14px;line-height:1.55;color:var(--ink)}
+  .rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:16px 0 6px;font-weight:800}
+  .rules ol,.rules ul{margin:0 0 4px 18px}
+  .rules li{margin-bottom:7px}
+  .rules b{color:var(--acc)}
+  .rules .ex{color:var(--mut);font-style:italic}
   .meta{display:flex;justify-content:center;gap:16px;color:var(--mut);font-size:13px;font-weight:700;margin:8px 0 2px}
   .meta b{color:var(--ink)}
   .count{color:var(--mut);font-size:12.5px;text-align:center;margin-top:14px}
@@ -152,6 +172,7 @@
 </style>
 </head>
 <body>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
 <div class="wrap">
   <header>
     <div class="logo">🔷 <b>SORTA</b></div>
@@ -203,12 +224,40 @@
     <div class="score" id="resScore"></div>
     <div class="grid" id="resGrid"></div>
     <div class="rule"><span class="k">THE MACHINE'S RULE</span><span id="resRule"></span></div>
+    <p class="whyLead">A shape is <b style="color:var(--ok)">accepted</b> only if it matches the rule. Here's exactly how each exam shape scored:</p>
     <div class="review" id="resReview"></div>
     <div class="meta"><span>🔬 <b id="resProbes">0</b> probes</span><span>🔥 streak <b id="resStreak">0</b></span></div>
     <button class="copyBtn" id="copyBtn">COPY RESULT</button>
     <button class="shareBtn" id="shareBtn">Share…</button>
     <button class="ghostBtn" id="practiceBtn">🎲 play a random practice puzzle</button>
     <p class="count" id="countdown"></p>
+  </div>
+</div>
+
+<!-- Rules overlay -->
+<div class="ov" id="ovRules">
+  <div class="sheet">
+    <h2>How to play 🔷</h2>
+    <div class="rules">
+      <h4>THE GOAL</h4>
+      <p>A machine has <b>one secret rule</b> about shapes today — the same rule for everyone. Figure out what it accepts, then ace the exam.</p>
+      <h4>HOW A ROUND WORKS</h4>
+      <ol>
+        <li>Build a shape with the four dials — <b>form, color, fill, size</b>.</li>
+        <li>Press <b>FEED THE MACHINE</b>. It stamps the shape <b style="color:var(--ok)">ACCEPT</b> or <b style="color:var(--no)">REJECT</b> and drops it into a pile.</li>
+        <li>Compare the piles to deduce the rule. You get up to <b>12 probes</b> — fewer used = better bragging.</li>
+        <li>Hit <b>TAKE THE EXAM</b> and predict accept/reject for <b>5 shapes</b> (same 5 for everyone).</li>
+        <li>Score <b>X / 5</b>. The rule is revealed and you can share your emoji grid.</li>
+      </ol>
+      <h4>WHAT THE RULES LOOK LIKE</h4>
+      <ul>
+        <li>A single property — <span class="ex">blue · triangles · striped · big</span></li>
+        <li>A category — <span class="ex">warm-colored · cool-colored · patterned · many-sided · round</span></li>
+        <li>A combo of two, joined by <b>AND</b>, <b>OR</b> or <b>NOT</b> — <span class="ex">"striped OR triangles", "NOT patterned", "cool-colored AND big"</span></li>
+      </ul>
+      <p style="color:var(--mut);font-size:13px;margin-top:12px">New puzzle every day at midnight UTC. Want more? Tap <b>random practice puzzle</b> on the results screen.</p>
+    </div>
+    <button class="submitBtn" id="rulesClose" style="background:var(--acc)">GOT IT</button>
   </div>
 </div>
 
@@ -478,9 +527,25 @@ function showResults(fromReload){
   $('resGrid').textContent=correct.map(c=>c?'🟩':'🟥').join('');
   $('resRule').innerHTML='ACCEPTS: <b>'+desc(puzzle.rule)+'</b>';
   const rv=$('resReview');rv.innerHTML='';
-  puzzle.exam.forEach((sh,i)=>{const card=document.createElement('div');card.className='rcard';
-    card.appendChild(shapeCanvas(sh,48));
-    const rr=document.createElement('div');rr.className='rr';rr.textContent=correct[i]?'✅':'❌';card.appendChild(rr);rv.appendChild(card);});
+  const rule=puzzle.rule, parts=(rule.op==='ATOM'||rule.op==='NOT')?[rule.a]:[rule.a,rule.b];
+  puzzle.exam.forEach((sh,i)=>{
+    const row=document.createElement('div');row.className='rrow';
+    row.appendChild(shapeCanvas(sh,44));
+    const why=document.createElement('div');why.className='why';
+    if(rule.op==='NOT'){const o=document.createElement('span');o.className='op';o.textContent='NOT';why.appendChild(o);}
+    parts.forEach((p,k)=>{
+      if(k>0){const o=document.createElement('span');o.className='op';o.textContent=rule.op;why.appendChild(o);}
+      const has=p.t(sh);const pill=document.createElement('span');pill.className='pill '+(has?'y':'n');
+      pill.textContent=(has?'✓ ':'✗ ')+p.label;why.appendChild(pill);
+    });
+    const arw=document.createElement('span');arw.className='arw';arw.textContent='→';why.appendChild(arw);
+    const verd=ev(rule,sh);const vb=document.createElement('span');vb.className='vbadge '+(verd?'a':'r');
+    vb.textContent=verd?'ACCEPT':'REJECT';why.appendChild(vb);
+    row.appendChild(why);
+    const you=document.createElement('span');you.className='you';you.textContent=correct[i]?'✅':'❌';
+    you.title=correct[i]?'you predicted this correctly':'you got this one wrong';row.appendChild(you);
+    rv.appendChild(row);
+  });
   $('resProbes').textContent=probes.length;
   $('resStreak').textContent=practice?'—':curStreak();
   openOv($('ovResult'));tickCountdown();
@@ -516,6 +581,9 @@ $('copyBtn').onclick=async()=>{const t=shareText();
   toast('Copied — go start an argument');};
 $('shareBtn').onclick=async()=>{const t=shareText();if(navigator.share){try{await navigator.share({text:t});}catch(e){}}else{$('copyBtn').click();}};
 $('practiceBtn').onclick=()=>{closeOv($('ovResult'));setup((Math.floor(Math.random()*4294967295))>>>0||7,true);toast('New random puzzle — probe away');};
+$('rulesBtn').onclick=()=>openOv($('ovRules'));
+$('rulesClose').onclick=()=>closeOv($('ovRules'));
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))closeOv($('ovRules'));});
 
 /* ---------- debug hooks ---------- */
 window.__sorta={
