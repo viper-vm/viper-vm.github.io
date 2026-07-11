@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8f7bff" stop-opacity=".16"/>
+      <stop offset=".5" stop-color="#4da3ff" stop-opacity=".06"/>
+      <stop offset="1" stop-color="#5dff8a" stop-opacity=".14"/>
+    </linearGradient>
+    <linearGradient id="wm" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8f7bff"/>
+      <stop offset=".45" stop-color="#4da3ff"/>
+      <stop offset="1" stop-color="#5dff8a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="#0b0f16"/>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <path d="M0 0 H1200 V150 Q900 210 600 150 Q300 90 0 150 Z" fill="#131a26"/>
+  <path d="M0 630 H1200 V500 Q900 560 600 500 Q300 440 0 500 Z" fill="#131a26"/>
+  <g fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".92">
+    <path d="M0 330 Q300 210 600 330 T1200 330" stroke="#ff5d5d"/>
+    <path d="M0 350 Q300 250 600 350 T1200 350" stroke="#ffb020"/>
+    <path d="M0 315 Q300 430 600 315 T1200 315" stroke="#5dff8a"/>
+    <path d="M0 300 Q300 400 600 300 T1200 300" stroke="#4da3ff"/>
+    <path d="M0 360 Q300 470 600 300 T1200 340" stroke="#8f7bff"/>
+    <path d="M0 285 Q300 190 600 360 T1200 300" stroke="#ff6bd6"/>
+  </g>
+  <text x="60" y="150" font-size="82" font-weight="800" fill="#e8edf7">👻 <tspan fill="url(#wm)">GHOSTPILE</tspan></text>
+  <text x="64" y="205" font-size="34" font-weight="600" fill="#93a0b8">Every winner becomes a wall.</text>
+  <rect x="0" y="548" width="1200" height="82" fill="#0b0f16" opacity=".72"/>
+  <text x="64" y="598" font-size="30" font-weight="700" fill="#c8ff4d" font-family="ui-monospace,Menlo,monospace">Hold to fly · thread the cave · become a ghost in the link</text>
+</svg>

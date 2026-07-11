@@ -1,5 +1,14 @@
 [
   {
+    "id": "ghostpile",
+    "title": "Ghostpile",
+    "summary": "A dodge-run chain letter. Hold to fly, release to fall, thread the cave — and every player who beats the link is frozen inside it as a solid wall, so each share makes the level harder. No backend: the whole pile of ghosts is encoded in the URL. Works on touch and keyboard.",
+    "category": "Game",
+    "emoji": "👻",
+    "demo_url": "/demos/ghostpile/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/ghostpile"
+  },
+  {
     "id": "infra-atlas",
     "title": "India Infra Atlas",
     "summary": "A living map of India's infrastructure, tech, energy & defense news — daily auto-updating pins and corridors on a full interactive map with 3D terrain, rail overlays, measuring tools and a timeline.",

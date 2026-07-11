@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Ghostpile — every winner becomes a wall</title>
+<meta name="description" content="A dodge-run chain letter. Thread the cave, become a ghost in the link, send it on — every winner makes the level harder. No backend, the URL is the level." />
+<link rel="canonical" href="https://viper-vm.github.io/demos/ghostpile/" />
+<meta property="og:title" content="Ghostpile — every winner becomes a wall" />
+<meta property="og:description" content="Hold to rise, release to fall. Beat the link and your flight path is frozen inside it as a solid wall for the next player. A chain-letter game with no backend — the URL is the level." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/ghostpile/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/ghostpile/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#0b0f16" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">👻</text></svg>' />
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { height:100%; overflow:hidden; background:#0b0f16; touch-action:none; overscroll-behavior:none; }
+  body {
+    font-family: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color:#e8edf7; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #cv { position:fixed; inset:0; width:100%; height:100%; display:block; }
+
+  /* HUD */
+  #hud {
+    position:fixed; top:0; left:0; right:0; display:flex; align-items:center; gap:10px;
+    padding: calc(10px + env(safe-area-inset-top)) 14px 8px; pointer-events:none; z-index:5;
+  }
+  #bar { flex:1; height:6px; border-radius:99px; background:rgba(255,255,255,.09); overflow:hidden; }
+  #bar i { display:block; height:100%; width:0%; border-radius:99px; background:var(--acc,#5dff8a); transition:width .08s linear; }
+  #hudinfo { font-size:12px; font-weight:700; letter-spacing:.04em; color:#93a0b8; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  #sndBtn { pointer-events:auto; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); color:#93a0b8;
+    width:32px; height:32px; border-radius:10px; font-size:15px; cursor:pointer; line-height:1; }
+
+  /* Overlays */
+  .ov {
+    position:fixed; inset:0; z-index:10; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(120% 100% at 50% 0%, rgba(11,15,22,.86), rgba(11,15,22,.96));
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    opacity:1; transition:opacity .22s ease; padding: 18px;
+  }
+  .ov.hide { opacity:0; pointer-events:none; }
+  .panel { width:min(480px, 100%); max-height: calc(100dvh - 24px); overflow-y:auto; text-align:center; }
+  .logo { font-size: clamp(38px, 9vw, 56px); font-weight:800; letter-spacing:-.02em; }
+  .logo .gp { background:linear-gradient(100deg,#8f7bff,#4da3ff 45%,#5dff8a); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .tag { color:#93a0b8; font-size:15px; margin:6px 0 18px; line-height:1.45; }
+  .pilebox {
+    background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.09); border-radius:16px;
+    padding:14px 16px; margin:0 0 16px;
+  }
+  .pilebox h2 { font-size:13px; letter-spacing:.14em; color:#93a0b8; font-weight:700; margin-bottom:8px; }
+  .pilebox .big { font-size:20px; font-weight:800; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-top:10px; }
+  .chip { font-size:12px; font-weight:800; letter-spacing:.06em; padding:4px 9px; border-radius:99px;
+    background:rgba(255,255,255,.05); border:1px solid currentColor; }
+  #mapLand, #mapWin { width:100%; height:110px; border-radius:12px; margin-top:12px; background:#080b11; }
+  .howto { color:#b9c3d6; font-size:14.5px; line-height:1.7; margin-bottom:20px; }
+  .howto b { color:#fff; }
+  .btn {
+    display:inline-block; border:0; cursor:pointer; font:inherit; font-weight:800; letter-spacing:.03em;
+    border-radius:16px; padding:16px 26px; font-size:18px; color:#0b0f16;
+    background:var(--acc,#5dff8a); width:100%;
+    box-shadow:0 6px 30px -6px var(--acc,#5dff8a);
+    transition:transform .08s ease;
+  }
+  .btn:active { transform:scale(.97); }
+  .btn.sec { background:rgba(255,255,255,.07); color:#e8edf7; box-shadow:none; border:1px solid rgba(255,255,255,.12); font-size:15px; padding:13px 20px; }
+  .btnrow { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+  .mini { margin-top:14px; font-size:13px; color:#6c7891; }
+  .mini a { color:#8f7bff; text-decoration:none; cursor:pointer; }
+  .credit { margin-top:22px; font-size:12px; color:#49536a; }
+  .credit a { color:#6c7891; text-decoration:none; }
+
+  /* Win overlay bits */
+  h1.won { font-size: clamp(30px, 7vw, 44px); font-weight:800; letter-spacing:-.01em; }
+  .wonsub { color:#93a0b8; font-size:14.5px; margin:8px 0 14px; line-height:1.55; }
+  #nameIn {
+    width:130px; text-align:center; font:inherit; font-size:26px; font-weight:800; letter-spacing:.35em; text-transform:uppercase;
+    color:#fff; background:rgba(255,255,255,.06); border:2px solid var(--acc,#5dff8a); border-radius:14px; padding:10px 0 10px .35em;
+    outline:none; caret-color:var(--acc,#5dff8a);
+  }
+  .namewrap { margin:6px 0 4px; }
+  .namewrap label { display:block; font-size:11px; letter-spacing:.16em; color:#6c7891; font-weight:700; margin-bottom:8px; }
+  #shareTxt {
+    text-align:left; font-size:12.5px; line-height:1.55; color:#b9c3d6; background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px 12px; margin:12px 0 2px;
+    word-break:break-all; white-space:pre-wrap; font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  #toast {
+    position:fixed; left:50%; bottom:calc(26px + env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px);
+    background:#161d2a; border:1px solid rgba(255,255,255,.14); color:#e8edf7; font-size:14px; font-weight:600;
+    padding:10px 18px; border-radius:99px; opacity:0; transition:all .25s ease; z-index:50; pointer-events:none; white-space:nowrap;
+  }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud" aria-hidden="true">
+  <div id="bar"><i></i></div>
+  <div id="hudinfo"></div>
+  <button id="sndBtn" aria-label="Toggle sound">🔇</button>
+</div>
+
+<!-- Landing -->
+<div class="ov" id="ovLand">
+  <div class="panel">
+    <div class="logo">👻 <span class="gp">GHOSTPILE</span></div>
+    <p class="tag">A dodge-run chain letter. Every winner becomes a wall.</p>
+    <div class="pilebox" id="pileBox" hidden>
+      <h2 id="pileTitle">PILE #1</h2>
+      <div class="big" id="pileStats"></div>
+      <div class="chips" id="pileChips"></div>
+      <canvas id="mapLand"></canvas>
+    </div>
+    <p class="howto"><b>Hold</b> anywhere to rise · <b>release</b> to fall.<br/>
+      Thread the cave without touching walls — <b>or ghosts</b>.<br/>
+      Survive, and your flight is frozen into the link forever.</p>
+    <button class="btn" id="playBtn">PLAY</button>
+    <p class="mini" id="altCave"></p>
+    <p class="credit">built by <a href="https://viper-vm.github.io" target="_blank" rel="noreferrer">Vivek Modi</a> · no backend — the URL is the level</p>
+  </div>
+</div>
+
+<!-- Win -->
+<div class="ov hide" id="ovWin">
+  <div class="panel">
+    <h1 class="won">THREADED&nbsp;IT&nbsp;🧵</h1>
+    <p class="wonsub" id="wonSub"></p>
+    <div class="namewrap">
+      <label for="nameIn">YOUR GHOST TAG (3 LETTERS)</label>
+      <input id="nameIn" maxlength="3" autocomplete="off" spellcheck="false" inputmode="latin" />
+    </div>
+    <canvas id="mapWin"></canvas>
+    <div id="shareTxt"></div>
+    <div class="btnrow">
+      <button class="btn" id="copyBtn" style="grid-column:1/-1">COPY CHALLENGE LINK</button>
+      <button class="btn sec" id="shareBtn">Share…</button>
+      <button class="btn sec" id="cardBtn">Save card</button>
+      <button class="btn sec" id="replayBtn" style="grid-column:1/-1">⚔️ Play the new pile yourself</button>
+    </div>
+    <p class="mini">Anyone who threads your link joins the pile — and mints a harder one.</p>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>/*GP*/
+'use strict';
+/* ============================== SAFE STORAGE ==============================
+   In-app webviews (Instagram/WhatsApp) and cookie-blocked browsers throw the
+   moment window.localStorage is touched. A viral link MUST survive that, so all
+   persistence goes through this wrapper with an in-memory fallback. */
+const LS=(function(){
+  let ok=false;const mem={};
+  try{const k='__gp_t';window.localStorage.setItem(k,'1');window.localStorage.removeItem(k);ok=true;}catch(e){ok=false;}
+  return {
+    get(k){try{return ok?window.localStorage.getItem(k):(k in mem?mem[k]:null);}catch(e){return k in mem?mem[k]:null;}},
+    set(k,v){v=String(v);mem[k]=v;try{if(ok)window.localStorage.setItem(k,v);}catch(e){}},
+  };
+})();
+/* ============================== CONSTANTS ============================== */
+const H = 640;                 // logical world height
+const WORLD_LEN = 7200;        // run length in world units (~25s)
+const SPEED = 285;             // horizontal speed u/s
+const GRAV = 1400, THRUST = -1800;   // gentle accelerations = floaty, forgiving flight
+const VMAX = 420;              // low terminal speed caps overshoot when you flip direction
+const PLAYER_R = 9;
+const PXF = 0.26;              // player x as fraction of viewport
+const GRACE_X = 430;           // ghost ribbons intangible before this x (shared start funnel)
+const RIBBON_KILL = 10;        // ribbon collision radius vs player center
+const CAVE_STEP = 8;
+const MAX_GHOSTS = 16;
+const QX = 3, QY = 2;          // codec quantization
+const PAL = ['#ff5d5d','#ffb020','#ffe14d','#5dff8a','#3ddad0','#4da3ff','#8f7bff','#ff6bd6','#c8ff4d','#ff8f4d','#4dfff0','#b0c4ff'];
+const EMO = ['🟥','🟧','🟨','🟩','🟦','🟦','🟪','🟪','🟩','🟧','🟦','⬜'];
+const BASE_URL = location.origin + location.pathname;
+
+/* ============================== UTILS ============================== */
+const clamp = (v,a,b)=>v<a?a:v>b?b:v;
+const lerp = (a,b,t)=>a+(b-a)*t;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function djb2(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return(h>>>0).toString(36)}
+function todaySeed(){const d=new Date();return(Math.imul(d.getUTCFullYear()*372+(d.getUTCMonth()+1)*31+d.getUTCDate(),2654435761)>>>0)||1}
+
+/* ============================== CODEC ==============================
+   pile = { seed:uint32, deaths:int, ghosts:[{name:'ABC', pts:[{x,y}...]}] }
+   binary: [ver=1][seed:4 LE][deaths varint][nGhosts varint]
+           per ghost: [name:3 ascii][nPts varint][qx0 varint][zz(qy0) varint]
+                      per extra pt: [dqx varint][zz(dqy) varint]
+           [xor checksum byte]                                              */
+function wV(a,n){n>>>=0;while(n>127){a.push((n&127)|128);n>>>=7}a.push(n)}
+function rV(st){let n=0,s=0,b;do{b=st.b[st.i++];if(b===undefined)throw 0;n|=(b&127)<<s;s+=7}while(b&128);return n>>>0}
+const zz=n=>((n<<1)^(n>>31))>>>0, uzz=n=>(n>>>1)^-(n&1);
+function b64e(bytes){let s='';for(let i=0;i<bytes.length;i+=0x2000)s+=String.fromCharCode.apply(null,bytes.slice(i,i+0x2000));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function b64d(str){const s=atob(str.replace(/-/g,'+').replace(/_/g,'/'));const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return b}
+
+function encodePile(p){
+  const a=[1, p.seed&255,(p.seed>>>8)&255,(p.seed>>>16)&255,(p.seed>>>24)&255];
+  wV(a,p.deaths); wV(a,p.ghosts.length);
+  for(const g of p.ghosts){
+    const nm=(g.name+'   ').slice(0,3).toUpperCase();
+    for(let i=0;i<3;i++)a.push(nm.charCodeAt(i)&127);
+    wV(a,g.pts.length);
+    let px=0,py=0;
+    for(let i=0;i<g.pts.length;i++){
+      const qx=Math.round(g.pts[i].x/QX), qy=Math.round(g.pts[i].y/QY);
+      if(i===0){wV(a,qx);wV(a,zz(qy))}else{wV(a,qx-px);wV(a,zz(qy-py))}
+      px=qx;py=qy;
+    }
+  }
+  let x=0;for(const b of a)x^=b;a.push(x);
+  return b64e(a);
+}
+function decodePile(str){
+  try{
+    const b=b64d(str);
+    if(b.length<7)return null;
+    let x=0;for(let i=0;i<b.length-1;i++)x^=b[i];
+    if(x!==b[b.length-1])return null;                 // truncated / corrupted link
+    const st={b,i:0};
+    if(rV(st)!==1)return null;
+    const seed=(b[1]|(b[2]<<8)|(b[3]<<16)|(b[4]<<24))>>>0; st.i=5;
+    const deaths=rV(st), n=rV(st);
+    if(n>24)return null;
+    const ghosts=[];
+    for(let g=0;g<n;g++){
+      let name='';for(let k=0;k<3;k++)name+=String.fromCharCode(rVByte(st));
+      name=name.replace(/[^A-Z0-9]/g,'').slice(0,3)||'???';
+      const m=rV(st); if(m<2||m>500)return null;
+      const pts=[]; let qx=0,qy=0;
+      for(let i=0;i<m;i++){
+        if(i===0){qx=rV(st);qy=uzz(rV(st))}else{qx+=rV(st);qy+=uzz(rV(st))}
+        pts.push({x:qx*QX,y:qy*QY});
+      }
+      ghosts.push({name,pts});
+    }
+    return {seed:seed||1,deaths,ghosts};
+  }catch(e){return null}
+}
+function rVByte(st){const b=st.b[st.i++];if(b===undefined)throw 0;return b}
+
+/* ============================== RDP simplify ============================== */
+function rdp(pts,eps){
+  if(pts.length<3)return pts.slice();
+  const keep=new Uint8Array(pts.length);keep[0]=keep[pts.length-1]=1;
+  const stack=[[0,pts.length-1]];
+  while(stack.length){
+    const [a,b]=stack.pop();
+    let mx=-1,mi=-1;
+    const ax=pts[a].x,ay=pts[a].y,dx=pts[b].x-ax,dy=pts[b].y-ay;
+    const len=Math.hypot(dx,dy)||1e-9;
+    for(let i=a+1;i<b;i++){
+      const d=Math.abs(dx*(ay-pts[i].y)-(ax-pts[i].x)*dy)/len;
+      if(d>mx){mx=d;mi=i}
+    }
+    if(mx>eps){keep[mi]=1;stack.push([a,mi],[mi,b])}
+  }
+  const out=[];for(let i=0;i<pts.length;i++)if(keep[i])out.push({x:pts[i].x,y:pts[i].y});
+  return out;
+}
+function simplifyPath(pts){
+  let eps=3, out=rdp(pts,eps);
+  while(out.length>140){eps*=1.4;out=rdp(pts,eps)}
+  return out;
+}
+
+/* ============================== CAVE ============================== */
+let topA,botA;
+function buildCave(seed){
+  const rnd=mulberry32(seed);
+  const comps=[];const bA=[95,58,32],bF=[1/430,1/187,1/97];
+  for(let i=0;i<3;i++)comps.push({a:bA[i]*(0.8+0.4*rnd()),f:bF[i]*(0.85+0.3*rnd()),p:rnd()*Math.PI*2});
+  const gN={f:(1/300)*(0.8+0.4*rnd()),p:rnd()*Math.PI*2};
+  const N=Math.ceil(WORLD_LEN/CAVE_STEP)+3;
+  topA=new Float32Array(N);botA=new Float32Array(N);
+  for(let i=0;i<N;i++){
+    const x=i*CAVE_STEP, t=clamp(x/WORLD_LEN,0,1);
+    const env=0.32+0.68*t;
+    let c=H/2;for(const s of comps)c+=env*s.a*Math.sin(x*s.f+s.p);
+    c=H/2+(c-H/2)*clamp(x/500,0,1);                       // straight entrance
+    let gap=(380-150*t)+24*env*Math.sin(x*gN.f+gN.p);
+    gap=Math.max(212,gap);
+    if(x<GRACE_X)gap=lerp(400,gap,x/GRACE_X);             // wide start funnel
+    let tp=c-gap/2, bt=c+gap/2;
+    if(tp<26){bt+=26-tp;tp=26}
+    if(bt>H-26){tp-=bt-(H-26);bt=H-26}
+    topA[i]=tp;botA[i]=bt;
+  }
+}
+function caveTop(x){const f=clamp(x,0,WORLD_LEN)/CAVE_STEP,i=f|0;return lerp(topA[i],topA[i+1],f-i)}
+function caveBot(x){const f=clamp(x,0,WORLD_LEN)/CAVE_STEP,i=f|0;return lerp(botA[i],botA[i+1],f-i)}
+function caveCenter(x){return(caveTop(x)+caveBot(x))/2}
+
+/* ============================== RIBBONS ============================== */
+let ribbons=[];            // [{name,color,pts,labels:[{x,y}]}]
+let buckets=new Map();     // xBucket -> [{gi,ax,ay,bx,by}]
+const BUCK=128;
+function buildRibbons(ghosts){
+  ribbons=[];buckets=new Map();
+  ghosts.forEach((g,gi)=>{
+    const color=PAL[gi%12];
+    const labels=[];
+    for(let lx=700;lx<WORLD_LEN-300;lx+=1350)labels.push({x:lx,y:interpY(g.pts,lx)});
+    ribbons.push({name:g.name,color,pts:g.pts,labels});
+    for(let i=0;i<g.pts.length-1;i++){
+      const s={gi,ax:g.pts[i].x,ay:g.pts[i].y,bx:g.pts[i+1].x,by:g.pts[i+1].y};
+      if(s.bx<GRACE_X)continue;
+      const b0=Math.floor(Math.min(s.ax,s.bx)/BUCK),b1=Math.floor(Math.max(s.ax,s.bx)/BUCK);
+      for(let b=b0;b<=b1;b++){if(!buckets.has(b))buckets.set(b,[]);buckets.get(b).push(s)}
+    }
+  });
+}
+function interpY(pts,x){
+  if(!pts.length)return H/2;
+  if(x<=pts[0].x)return pts[0].y;
+  if(x>=pts[pts.length-1].x)return pts[pts.length-1].y;
+  let lo=0,hi=pts.length-1;
+  while(hi-lo>1){const m=(lo+hi)>>1;if(pts[m].x<=x)lo=m;else hi=m}
+  const a=pts[lo],b=pts[hi];
+  return b.x===a.x?a.y:lerp(a.y,b.y,(x-a.x)/(b.x-a.x));
+}
+function segDist(px,py,ax,ay,bx,by){
+  const dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy||1e-9;
+  let t=((px-ax)*dx+(py-ay)*dy)/l2;t=clamp(t,0,1);
+  return Math.hypot(px-(ax+t*dx),py-(ay+t*dy));
+}
+function ribbonHit(px,py){
+  if(px<=GRACE_X)return null;
+  const b=Math.floor(px/BUCK);
+  for(let k=b-1;k<=b+1;k++){
+    const arr=buckets.get(k);if(!arr)continue;
+    for(const s of arr){
+      if(px<Math.min(s.ax,s.bx)-RIBBON_KILL||px>Math.max(s.ax,s.bx)+RIBBON_KILL)continue;
+      if(segDist(px,py,s.ax,s.ay,s.bx,s.by)<RIBBON_KILL)return s.gi;
+    }
+  }
+  return null;
+}
+
+/* ============================== AUDIO / HAPTICS ============================== */
+let ac=null, sndOn=LS.get('gp_sound')==='1';
+function ensureAC(){if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==='suspended')ac.resume()}
+function beep(f0,f1,dur,type,vol){
+  if(!sndOn||!ac)return;
+  try{
+    const o=ac.createOscillator(),g=ac.createGain(),t=ac.currentTime;
+    o.type=type;o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(Math.max(f1,1),t+dur);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(g).connect(ac.destination);o.start(t);o.stop(t+dur+.02);
+  }catch(e){}
+}
+const sfxDie=()=>{beep(320,40,.28,'sawtooth',.14)};
+const sfxWin=()=>{beep(440,440,.09,'triangle',.12);setTimeout(()=>beep(554,554,.09,'triangle',.12),90);setTimeout(()=>beep(659,880,.22,'triangle',.14),180)};
+const sfxGo =()=>{beep(220,330,.08,'triangle',.08)};
+const buzz=p=>{try{if(navigator.vibrate)navigator.vibrate(p)}catch(e){}};
+
+/* ============================== CANVAS ============================== */
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+let S=1, vwW=1000, cssW=0, cssH=0, dpr=1;
+function resize(){
+  dpr=Math.min(window.devicePixelRatio||1,2.5);
+  cssW=window.innerWidth;cssH=window.innerHeight;
+  cv.width=Math.round(cssW*dpr);cv.height=Math.round(cssH*dpr);
+  S=cv.height/H; vwW=cv.width/S;
+}
+window.addEventListener('resize',resize);resize();
+
+/* ============================== STATE ============================== */
+let pile={seed:todaySeed(),deaths:0,ghosts:[]};
+let pileKey='', atts=0;
+let state='landing';   // landing | armed | playing | dead | won | paused
+let dist=0,y=H/2,vy=0,hold=false,pts=[];
+let deathAt=0, deathMsg='', deathBy=-1;
+let shakeT=0, tPrev=performance.now();
+let particles=[], dust=[];
+let ghostDotY=[];
+let minted=null, mintedURL='';
+let auto=false, autoOff=0, autoPh=0;
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let myColor=PAL[0];
+
+for(let i=0;i<42;i++)dust.push({x:Math.random()*2000,y:Math.random()*H,z:.25+Math.random()*.6,r:.8+Math.random()*1.7});
+
+const $=id=>document.getElementById(id);
+const toastEl=$('toast');let toastT=null;
+function toast(msg){toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove('show'),2200)}
+
+/* ============================== INIT FROM HASH ============================== */
+function initPile(){
+  const raw=location.hash.slice(1);
+  let p=raw?decodePile(raw):null;
+  let badLink=raw&&!p;
+  if(!p)p={seed:todaySeed(),deaths:0,ghosts:[]};
+  if(badLink)toast('⚠️ This pile link was cut off — ask for it again. Fresh cave loaded.');
+  pile=p;
+  pileKey=djb2(raw||('t'+p.seed));
+  atts=+(LS.get('gp_a_'+pileKey)||0);
+  buildCave(pile.seed);
+  buildRibbons(pile.ghosts);
+  myColor=PAL[pile.ghosts.length%12];
+  document.documentElement.style.setProperty('--acc',myColor);
+  ghostDotY=pile.ghosts.map(g=>H/2);
+  renderLanding();
+}
+window.addEventListener('hashchange',()=>location.reload());
+
+function renderLanding(){
+  const n=pile.ghosts.length;
+  const box=$('pileBox');
+  if(n>0||pile.deaths>0){
+    box.hidden=false;
+    $('pileTitle').textContent='PILE #'+Math.max(n,1)+' · CAVE '+(pile.seed%4096).toString(16).toUpperCase();
+    $('pileStats').textContent=n+(n===1?' ghost':' ghosts')+' · 💀 '+pile.deaths+' death'+(pile.deaths===1?'':'s');
+    const chips=$('pileChips');chips.innerHTML='';
+    pile.ghosts.forEach((g,i)=>{
+      const c=document.createElement('span');c.className='chip';c.style.color=PAL[i%12];c.textContent=g.name;chips.appendChild(c);
+    });
+    const mc=$('mapLand');fitMapCanvas(mc);renderMap(mc,pile,null);
+    $('playBtn').textContent=n>0?'THREAD IT':'PLAY';
+    $('altCave').innerHTML='or <a id="altA">play today’s fresh cave</a>';
+  }else{
+    box.hidden=true;
+    $('playBtn').textContent='PLAY';
+    $('altCave').innerHTML='<a id="altA">↻ shuffle to a random cave</a> · piles grow when you share your win';
+  }
+  const a=document.getElementById('altA');
+  if(a)a.onclick=()=>{
+    const fresh=pile.ghosts.length>0?{seed:todaySeed(),deaths:0,ghosts:[]}:{seed:(Math.random()*4294967295)>>>0||1,deaths:0,ghosts:[]};
+    location.hash=encodePile(fresh);
+  };
+  updateHUD();
+}
+function updateHUD(){
+  const n=pile.ghosts.length;
+  $('hudinfo').textContent=(n>0?'PILE #'+n+' · ':'')+'💀 '+(pile.deaths+atts);
+  $('sndBtn').textContent=sndOn?'🔊':'🔇';
+}
+
+/* ============================== GAME FLOW ============================== */
+function arm(){state='armed';dist=0;y=H/2;vy=0;hold=false;pts=[];deathBy=-1}
+function startRun(){state='playing';sfxGo();pts=[{x:0,y}]}
+function die(gi){
+  state='dead';deathAt=performance.now();hold=false;
+  atts++;LS.set('gp_a_'+pileKey,atts);
+  deathBy=gi==null?-1:gi;
+  if(gi!=null){
+    const nm=pile.ghosts[gi].name;
+    const m=[nm+"'s ghost got you",'You clipped '+nm,nm+' claims another','Tangled in '+nm+"'s ribbon"];
+    deathMsg=m[(Math.random()*m.length)|0];
+  }else{
+    const m=['The cave got you','Kissed the wall','Rock: 1 — you: 0','The cave is patient'];
+    deathMsg=m[(Math.random()*m.length)|0];
+  }
+  burst(dist,y,myColor,26);shakeT=reduceMotion?0:1;buzz(40);sfxDie();
+  updateHUD();
+}
+function win(){
+  // keep x strictly monotonic and capped: the final frame can overshoot WORLD_LEN,
+  // and a backwards step would corrupt the unsigned-delta encoding
+  const last=pts[pts.length-1];
+  if(last.x>WORLD_LEN)last.x=WORLD_LEN;else pts.push({x:WORLD_LEN,y});
+  state='won';hold=false;auto=false;
+  buzz([20,30,60]);sfxWin();burst(dist,y,myColor,40);
+  const simp=simplifyPath(pts);
+  const full=pile.ghosts.length>=MAX_GHOSTS;
+  minted={
+    seed:pile.seed,
+    deaths:pile.deaths+atts,
+    ghosts:full?pile.ghosts:[...pile.ghosts,{name:getName(),pts:simp}]
+  };
+  minted._myPts=simp; minted._full=full;
+  refreshMinted();
+  $('wonSub').innerHTML=(full
+    ? 'This pile is <b>FULL</b> ('+MAX_GHOSTS+' ghosts) — a legendary artifact. Share it as-is.'
+    : 'You are <b style="color:'+myColor+'">ghost #'+minted.ghosts.length+'</b> of this pile.'+
+      (atts>0?' It took you '+(atts)+' death'+(atts===1?'':'s')+'.':' Flawless — zero deaths.'))+
+    '<br/>Your flight is now a wall inside the link.';
+  $('ovWin').classList.remove('hide');
+  const ni=$('nameIn');ni.value=getName();
+  const paintWinMap=()=>{const mc=$('mapWin');fitMapCanvas(mc);renderMap(mc,minted,minted._full?null:minted.ghosts.length-1)};
+  setTimeout(paintWinMap,50);setTimeout(paintWinMap,400);
+}
+function getName(){
+  const v=($('nameIn').value||LS.get('gp_name')||'YOU').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  return (v||'YOU').slice(0,3);
+}
+function refreshMinted(){
+  if(!minted)return;
+  if(!minted._full)minted.ghosts[minted.ghosts.length-1].name=getName();
+  LS.set('gp_name',getName());
+  mintedURL=BASE_URL+'#'+encodePile(minted);
+  $('shareTxt').textContent=shareText();
+  window.__gpMintedURL=mintedURL;
+}
+function shareText(){
+  const n=minted.ghosts.length;
+  let chips=minted.ghosts.map((g,i)=>EMO[i%12]+g.name).slice(0,8).join(' ');
+  if(n>8)chips+=' +'+(n-8);
+  return '👻 GHOSTPILE — pile #'+n+'\n'+chips+'  💀'+minted.deaths+'\nEvery winner becomes a wall. Thread it:\n'+mintedURL;
+}
+
+/* ============================== INPUT ============================== */
+function press(){
+  ensureAC();
+  if(state==='armed'){startRun();hold=true}
+  else if(state==='playing')hold=true;
+  else if(state==='dead'&&performance.now()-deathAt>350){arm();startRun();hold=true}
+  else if(state==='paused'){state='playing';hold=true}
+}
+function release(){hold=false}
+cv.addEventListener('pointerdown',e=>{e.preventDefault();press()});
+window.addEventListener('pointerup',release);
+window.addEventListener('pointercancel',release);
+window.addEventListener('keydown',e=>{
+  if(e.repeat)return;
+  if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();if(state!=='landing'&&state!=='won')press()}
+});
+window.addEventListener('keyup',e=>{if(e.code==='Space'||e.code==='ArrowUp')release()});
+window.addEventListener('contextmenu',e=>{if(e.target===cv)e.preventDefault()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='playing'){state='paused';hold=false}});
+
+$('playBtn').onclick=()=>{ensureAC();$('ovLand').classList.add('hide');arm()};
+$('sndBtn').onclick=()=>{sndOn=!sndOn;LS.set('gp_sound',sndOn?'1':'0');ensureAC();updateHUD();toast(sndOn?'Sound on':'Sound off')};
+$('nameIn').addEventListener('input',()=>{const el=$('nameIn');el.value=el.value.toUpperCase().replace(/[^A-Z0-9]/g,'');refreshMinted();
+  if(minted&&!minted._full){const mc=$('mapWin');renderMap(mc,minted,minted.ghosts.length-1)}});
+$('copyBtn').onclick=async()=>{
+  refreshMinted();
+  try{await navigator.clipboard.writeText(shareText())}
+  catch(e){const t=document.createElement('textarea');t.value=shareText();document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(_){}t.remove()}
+  toast('Copied — send it to someone you like (or don’t)');
+};
+$('shareBtn').onclick=async()=>{
+  refreshMinted();
+  if(navigator.share){try{await navigator.share({text:shareText()})}catch(e){}}
+  else $('copyBtn').click();
+};
+$('cardBtn').onclick=()=>{
+  refreshMinted();
+  const url=buildCardDataURL();
+  const a=document.createElement('a');a.href=url;a.download='ghostpile-'+minted.ghosts.length+'.png';a.click();
+  toast('Card saved');
+};
+$('replayBtn').onclick=()=>{refreshMinted();location.hash=mintedURL.split('#')[1]};
+
+/* ============================== PARTICLES ============================== */
+function burst(x,yy,col,n){
+  if(particles.length>500)particles.splice(0,particles.length-500);
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,v=90+Math.random()*380;
+    particles.push({x,y:yy,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:.5+Math.random()*.55,t:0,col,r:1.4+Math.random()*2.4});
+  }
+}
+function stepParticles(dt){
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];p.t+=dt;
+    if(p.t>p.l){particles.splice(i,1);continue}
+    p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=700*dt;p.vx*=(1-1.6*dt);
+  }
+}
+
+/* ============================== UPDATE ============================== */
+function step(dt){
+  if(state!=='playing')return;
+  if(auto){
+    const look=dist+170, m=42;
+    const target=clamp(caveCenter(look)+autoOff+Math.sin(dist/310+autoPh)*46,caveTop(look)+m,caveBot(look)-m);
+    hold=(y+vy*0.28)>target;   // predictive: account for momentum
+  }
+  vy=clamp(vy+(hold?THRUST:GRAV)*dt,-VMAX,VMAX);
+  const nd=dist+SPEED*dt, ny=y+vy*dt;
+  for(const t of[.5,1]){
+    const sx=lerp(dist,nd,t), sy=lerp(y,ny,t);
+    if(sy-PLAYER_R+1<caveTop(sx)||sy+PLAYER_R-1>caveBot(sx)){dist=sx;y=sy;die(null);return}
+    const gi=ribbonHit(sx,sy);
+    if(gi!=null){dist=sx;y=sy;die(gi);return}
+  }
+  dist=nd;y=ny;
+  pts.push({x:dist,y});
+  if(hold&&Math.random()<.75)particles.push({x:dist-4,y:y+8,vx:-60-Math.random()*60,vy:80+Math.random()*90,l:.3,t:0,col:myColor,r:1.2+Math.random()*1.4});
+  if(dist>=WORLD_LEN)win();
+}
+
+/* ============================== DRAW ============================== */
+function draw(){
+  const camX=dist-vwW*PXF;
+  const shX=shakeT>0?(Math.random()*2-1)*7*shakeT:0;
+  const shY=shakeT>0?(Math.random()*2-1)*7*shakeT:0;
+  ctx.setTransform(S,0,0,S,(-camX+shX)*S,shY*S);
+  // bg
+  ctx.fillStyle='#0b0f16';ctx.fillRect(camX,0,vwW,H);
+  const grd=ctx.createLinearGradient(0,0,0,H);
+  grd.addColorStop(0,'rgba(143,123,255,.05)');grd.addColorStop(.5,'rgba(77,163,255,.02)');grd.addColorStop(1,'rgba(93,255,138,.04)');
+  ctx.fillStyle=grd;ctx.fillRect(camX,0,vwW,H);
+  // dust (parallax)
+  ctx.fillStyle='rgba(185,200,230,.24)';
+  for(const d of dust){
+    let dx=(d.x-camX*d.z)%2000;if(dx<0)dx+=2000;
+    ctx.beginPath();ctx.arc(camX+dx*(vwW/2000),d.y,d.r,0,7);ctx.fill();
+  }
+  drawCave(camX);
+  drawFinish();
+  drawRibbons(camX);
+  drawGhostDots();
+  drawTrail();
+  drawPlayer();
+  drawParticlesC();
+  drawTexts(camX);
+}
+function drawCave(camX){
+  const x0=Math.max(0,camX-24), x1=camX+vwW+24;
+  ctx.fillStyle='#131a26';
+  ctx.beginPath();ctx.moveTo(x0,0);
+  for(let x=x0;x<=x1;x+=CAVE_STEP)ctx.lineTo(x,caveTop(x));
+  ctx.lineTo(x1,0);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(x0,H);
+  for(let x=x0;x<=x1;x+=CAVE_STEP)ctx.lineTo(x,caveBot(x));
+  ctx.lineTo(x1,H);ctx.closePath();ctx.fill();
+  // glowing edges
+  ctx.lineWidth=2.2;ctx.strokeStyle='rgba(120,150,210,.55)';
+  ctx.beginPath();for(let x=x0;x<=x1;x+=CAVE_STEP){const yv=caveTop(x);x===x0?ctx.moveTo(x,yv):ctx.lineTo(x,yv)}ctx.stroke();
+  ctx.beginPath();for(let x=x0;x<=x1;x+=CAVE_STEP){const yv=caveBot(x);x===x0?ctx.moveTo(x,yv):ctx.lineTo(x,yv)}ctx.stroke();
+  if(camX<0){ctx.fillStyle='#131a26';ctx.fillRect(camX-10,0,10-camX,caveTop(0));ctx.fillRect(camX-10,caveBot(0),10-camX,H-caveBot(0))}
+}
+function drawFinish(){
+  const x=WORLD_LEN;
+  ctx.save();ctx.setLineDash([10,10]);ctx.lineWidth=3;ctx.strokeStyle='rgba(255,255,255,.5)';
+  ctx.beginPath();ctx.moveTo(x,caveTop(x));ctx.lineTo(x,caveBot(x));ctx.stroke();ctx.restore();
+  ctx.font='800 20px system-ui';ctx.fillStyle='rgba(255,255,255,.75)';ctx.fillText('FIN',x+12,caveCenter(x));
+}
+function drawRibbons(camX){
+  for(let gi=0;gi<ribbons.length;gi++){
+    const r=ribbons[gi];
+    ctx.lineJoin='round';ctx.lineCap='round';
+    ctx.strokeStyle=r.color;
+    // pass 1: faint ghost-of-a-ghost inside the grace zone (intangible there)
+    let cut=0;
+    while(cut<r.pts.length&&r.pts[cut].x<GRACE_X)cut++;
+    if(cut>0&&camX<GRACE_X){
+      ctx.beginPath();
+      for(let i=0;i<=Math.min(cut,r.pts.length-1);i++){
+        const p=r.pts[i];i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y);
+      }
+      ctx.save();ctx.globalAlpha=.22;ctx.lineWidth=5;ctx.stroke();ctx.restore();
+    }
+    // pass 2: the deadly part
+    if(cut<r.pts.length){
+      ctx.beginPath();
+      const start=Math.max(0,cut-1);
+      for(let i=start;i<r.pts.length;i++){
+        const p=r.pts[i];i===start?ctx.moveTo(Math.max(p.x,GRACE_X),p.y):ctx.lineTo(p.x,p.y);
+      }
+      ctx.save();ctx.globalAlpha=.9;ctx.lineWidth=5;ctx.shadowColor=r.color;ctx.shadowBlur=10;ctx.stroke();ctx.restore();
+    }
+    ctx.font='800 12px ui-monospace, Menlo, monospace';
+    ctx.fillStyle=r.color;ctx.globalAlpha=.85;
+    for(const l of r.labels)ctx.fillText(r.name,l.x-10,l.y-12);
+    ctx.globalAlpha=1;
+  }
+}
+function drawGhostDots(){
+  if(state!=='playing'&&state!=='dead'&&state!=='armed')return;
+  for(let gi=0;gi<ribbons.length;gi++){
+    const gy=interpY(ribbons[gi].pts,dist);
+    ghostDotY[gi]=gy;
+    ctx.beginPath();ctx.fillStyle=ribbons[gi].color;ctx.globalAlpha=.95;
+    ctx.arc(dist,gy,5,0,7);ctx.fill();ctx.globalAlpha=1;
+  }
+}
+function drawTrail(){
+  const n=pts.length;if(n<2)return;
+  const from=Math.max(0,n-72);
+  ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=myColor;
+  for(let i=from;i<n-1;i++){
+    ctx.globalAlpha=.5*(i-from)/(n-from);
+    ctx.lineWidth=3.4;
+    ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[i+1].x,pts[i+1].y);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+}
+function drawPlayer(){
+  if(state==='won')return;
+  ctx.save();
+  ctx.shadowColor=myColor;ctx.shadowBlur=16;
+  ctx.fillStyle=myColor;
+  ctx.beginPath();ctx.arc(dist,y,PLAYER_R,0,7);ctx.fill();
+  ctx.shadowBlur=0;ctx.fillStyle='rgba(11,15,22,.85)';
+  const tilt=clamp(vy/VMAX,-1,1)*3.5;
+  ctx.beginPath();ctx.arc(dist+3,y+tilt,3.2,0,7);ctx.fill();
+  ctx.restore();
+}
+function drawParticlesC(){
+  for(const p of particles){
+    ctx.globalAlpha=1-p.t/p.l;ctx.fillStyle=p.col;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+function drawTexts(camX){
+  ctx.textAlign='center';
+  if(state==='armed'){
+    const pulse=.55+.45*Math.sin(performance.now()/300);
+    ctx.font='800 26px system-ui';ctx.fillStyle='rgba(255,255,255,'+(0.35+0.5*pulse)+')';
+    ctx.fillText('HOLD TO FLY',camX+vwW/2,H/2-90);
+    ctx.font='600 15px system-ui';ctx.fillStyle='rgba(147,160,184,.9)';
+    ctx.fillText(ribbons.length?ribbons.length+' ghost'+(ribbons.length===1?'':'s')+' haunt this cave — don’t touch the ribbons':'An empty cave. Set the first ghost.',camX+vwW/2,H/2-62);
+  }
+  if(state==='dead'){
+    ctx.font='800 30px system-ui';ctx.fillStyle=deathBy>=0?PAL[deathBy%12]:'#ff5d5d';
+    ctx.fillText('💀 '+deathMsg,camX+vwW/2,H/2-70);
+    ctx.font='600 15px system-ui';ctx.fillStyle='rgba(200,210,230,.85)';
+    ctx.fillText('attempt '+(atts+1)+' — press to retry',camX+vwW/2,H/2-42);
+  }
+  if(state==='paused'){
+    ctx.font='800 26px system-ui';ctx.fillStyle='rgba(255,255,255,.85)';
+    ctx.fillText('PAUSED — press to resume',camX+vwW/2,H/2-60);
+  }
+  ctx.textAlign='left';
+}
+
+/* ============================== MINI MAP / SHARE CARD ============================== */
+function fitMapCanvas(c){
+  const r=c.getBoundingClientRect();
+  const pw=c.parentElement?c.parentElement.getBoundingClientRect().width:0;
+  const w=r.width||pw||460, h=r.height||110;
+  c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);
+}
+function renderMap(c,p,highlightGi){
+  const g=c.getContext('2d'),W=c.width,Hp=c.height;
+  if(!W||!Hp)return;
+  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,W,Hp);
+  g.fillStyle='#080b11';g.fillRect(0,0,W,Hp);
+  const pad=W*.02, sx=(W-pad*2)/WORLD_LEN, sy=(Hp-8)/H, oy=4;
+  // cave silhouette (assumes buildCave already ran for p.seed — true everywhere we call this)
+  g.fillStyle='#141b28';
+  g.beginPath();g.moveTo(pad,oy);
+  for(let x=0;x<=WORLD_LEN;x+=CAVE_STEP*4)g.lineTo(pad+x*sx,oy+caveTop(x)*sy);
+  g.lineTo(pad+WORLD_LEN*sx,oy);g.closePath();g.fill();
+  g.beginPath();g.moveTo(pad,oy+H*sy);
+  for(let x=0;x<=WORLD_LEN;x+=CAVE_STEP*4)g.lineTo(pad+x*sx,oy+caveBot(x)*sy);
+  g.lineTo(pad+WORLD_LEN*sx,oy+H*sy);g.closePath();g.fill();
+  p.ghosts.forEach((gh,i)=>{
+    g.strokeStyle=PAL[i%12];g.lineWidth=Math.max(1.4,W/700)*(i===highlightGi?2:1);
+    g.globalAlpha=i===highlightGi?1:.8;
+    g.beginPath();
+    gh.pts.forEach((pt,k)=>{const X=pad+pt.x*sx,Y=oy+pt.y*sy;k?g.lineTo(X,Y):g.moveTo(X,Y)});
+    g.stroke();g.globalAlpha=1;
+  });
+  g.setLineDash([4,4]);g.strokeStyle='rgba(255,255,255,.4)';g.lineWidth=1;
+  g.beginPath();g.moveTo(pad+WORLD_LEN*sx,oy);g.lineTo(pad+WORLD_LEN*sx,oy+H*sy);g.stroke();g.setLineDash([]);
+}
+function buildCardDataURL(p){
+  p=p||minted;
+  const c=document.createElement('canvas');c.width=1200;c.height=630;
+  const g=c.getContext('2d');
+  g.fillStyle='#0b0f16';g.fillRect(0,0,1200,630);
+  const gr=g.createLinearGradient(0,0,1200,630);
+  gr.addColorStop(0,'rgba(143,123,255,.10)');gr.addColorStop(1,'rgba(93,255,138,.07)');
+  g.fillStyle=gr;g.fillRect(0,0,1200,630);
+  g.fillStyle='#e8edf7';g.font='800 58px system-ui';g.fillText('👻 GHOSTPILE',70,105);
+  const n=p.ghosts.length;
+  g.font='700 30px system-ui';g.fillStyle='#93a0b8';
+  g.fillText('PILE #'+Math.max(n,1)+'  ·  '+n+' ghost'+(n===1?'':'s')+'  ·  💀 '+p.deaths+' deaths  ·  thread it.',70,160);
+  const mc=document.createElement('canvas');mc.width=1060;mc.height=330;
+  renderMap(mc,p,p===minted&&!p._full?n-1:null);
+  g.drawImage(mc,70,210);
+  g.font='700 26px ui-monospace, Menlo, monospace';g.fillStyle='#6c7891';
+  g.fillText('every winner becomes a wall — '+BASE_URL.replace(/^https?:\/\//,''),70,595);
+  return c.toDataURL('image/png');
+}
+
+/* ============================== HUD / LOOP ============================== */
+const barEl=document.querySelector('#bar i');
+function loop(now){
+  requestAnimationFrame(loop);   // re-queue FIRST so a thrown error can never freeze the game
+  let dt=(now-tPrev)/1000;tPrev=now;
+  dt=Math.min(dt,.033);
+  if(shakeT>0)shakeT=Math.max(0,shakeT-dt*3.2);
+  try{
+    step(dt);
+    stepParticles(dt);
+    draw();
+    barEl.style.width=clamp(dist/WORLD_LEN*100,0,100)+'%';
+  }catch(e){/* never let a single frame kill the loop */}
+}
+
+/* ============================== DEV HELPERS ============================== */
+window.__gpAuto=on=>{auto=!!on;if(on){autoOff=(Math.random()*2-1)*55;autoPh=Math.random()*6;
+  if(state==='landing'){$('ovLand').classList.add('hide');arm()}
+  if(state==='armed')startRun();
+  window.__gpAutoTick=setInterval(()=>{if(auto&&state==='dead')press();if(!auto||state==='won')clearInterval(window.__gpAutoTick)},400);
+}};
+window.__gpState=()=>({state,dist:Math.round(dist),y:Math.round(y),atts,ghosts:pile.ghosts.length,deaths:pile.deaths,url:mintedURL});
+window.__gpCard=()=>buildCardDataURL(pile);
+window.__gpSim=(maxFrames)=>{ // synchronous headless run for testing: auto-flies, auto-retries, stops on win
+  auto=true;autoOff=(Math.random()*2-1)*55;autoPh=Math.random()*6;
+  if(state==='landing'){$('ovLand').classList.add('hide');arm()}
+  if(state==='armed'||state==='dead'){arm();startRun()}
+  let i=0,deathsThisSim=0;
+  for(;i<(maxFrames||60000)&&state!=='won';i++){
+    if(state==='dead'){deathsThisSim++;arm();startRun();autoOff=(Math.random()*2-1)*55;autoPh=Math.random()*6}
+    step(1/60);stepParticles(1/60);
+  }
+  auto=false;hold=false;draw();
+  return Object.assign(window.__gpState(),{frames:i,deathsThisSim});
+};
+window.__gpSelfTest=()=>{
+  const fake=[];for(let x=0;x<=WORLD_LEN;x+=6)fake.push({x,y:H/2+120*Math.sin(x/400)+40*Math.sin(x/97)});
+  const s1=simplifyPath(fake);
+  const p={seed:123456789,deaths:42,ghosts:[{name:'VIV',pts:s1},{name:'KAT',pts:s1.map(p=>({x:p.x,y:clamp(p.y+30,0,H)}))}]};
+  const enc=encodePile(p),dec=decodePile(enc);
+  if(!dec)return{ok:false,why:'decode failed'};
+  let maxDev=0;
+  for(let x=0;x<=WORLD_LEN;x+=50)maxDev=Math.max(maxDev,Math.abs(interpY(dec.ghosts[0].pts,x)-interpY(fake,x)));
+  const trunc=decodePile(enc.slice(0,enc.length-9));
+  return{ok:dec.seed===p.seed&&dec.deaths===42&&dec.ghosts.length===2&&dec.ghosts[0].name==='VIV'&&maxDev<7&&trunc===null,
+    seed:dec.seed,deaths:dec.deaths,ghosts:dec.ghosts.length,pts:dec.ghosts[0].pts.length,rawPts:fake.length,
+    urlChars:enc.length,maxDev:+maxDev.toFixed(2),truncDetected:trunc===null};
+};
+
+/* ============================== BOOT ============================== */
+initPile();
+requestAnimationFrame(t=>{tPrev=t;requestAnimationFrame(loop)});
+</script>
+</body>
+</html>
