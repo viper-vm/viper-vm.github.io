@@ -1,5 +1,14 @@
 [
   {
+    "id": "sorta",
+    "title": "Sorta",
+    "summary": "A daily deduction game. A machine has one secret rule about shapes (color, form, fill, size). Feed it probe shapes, watch what it accepts, crack the rule — then ace the 5-shape exam everyone on Earth takes today. New puzzle daily, Wordle-style emoji-grid share. No backend.",
+    "category": "Game",
+    "emoji": "🔷",
+    "demo_url": "/demos/sorta/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/sorta"
+  },
+  {
     "id": "ghostpile",
     "title": "Ghostpile",
     "summary": "A dodge-run chain letter. Hold to fly, release to fall, thread the cave — and every player who beats the link is frozen inside it as a solid wall, so each share makes the level harder. No backend: the whole pile of ghosts is encoded in the URL. Works on touch and keyboard.",

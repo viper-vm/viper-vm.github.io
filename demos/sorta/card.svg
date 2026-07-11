@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
+  <defs>
+    <linearGradient id="wm" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4da3ff"/><stop offset="1" stop-color="#a77bff"/>
+    </linearGradient>
+    <pattern id="stripe" width="14" height="14" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+      <rect width="14" height="14" fill="#ffd93d" opacity=".18"/>
+      <rect width="7" height="14" fill="#ffd93d"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="#0e1017"/>
+  <rect width="1200" height="630" fill="url(#wm)" opacity=".07"/>
+
+  <!-- title -->
+  <text x="60" y="130" font-size="76" font-weight="800" fill="#eef2fb">🔷 <tspan fill="url(#wm)">SORTA</tspan></text>
+  <text x="64" y="182" font-size="32" font-weight="600" fill="#96a0b5">Crack the machine's secret rule.</text>
+
+  <!-- accepted row -->
+  <text x="64" y="290" font-size="20" font-weight="800" letter-spacing="3" fill="#4dd97a">✓ IT ACCEPTED</text>
+  <g transform="translate(64,310)">
+    <circle cx="45" cy="45" r="42" fill="#4da3ff"/>
+    <polygon points="175,8 205,82 145,82" fill="none" stroke="#4dd97a" stroke-width="7"/>
+    <polygon points="300,3 312,33 345,33 318,53 329,86 300,66 271,86 282,53 255,33 288,33" fill="#a77bff"/>
+    <rect x="410" y="8" width="80" height="80" rx="6" fill="url(#stripe)"/>
+    <rect x="410" y="8" width="80" height="80" rx="6" fill="none" stroke="#ffd93d" stroke-width="2" opacity=".5"/>
+  </g>
+
+  <!-- rejected row -->
+  <text x="64" y="440" font-size="20" font-weight="800" letter-spacing="3" fill="#ff5d5d">✕ IT REJECTED</text>
+  <g transform="translate(64,460)">
+    <circle cx="45" cy="45" r="42" fill="#ff5d5d"/>
+    <rect x="130" y="8" width="80" height="80" rx="6" fill="#ff9f43"/>
+    <polygon points="300,5 340,38 325,86 275,86 260,38" fill="#ffd93d"/>
+  </g>
+
+  <!-- big verdict stamps on the right -->
+  <text x="1060" y="360" font-size="130" font-weight="900" fill="#4dd97a" opacity=".9" text-anchor="middle">✓</text>
+  <text x="1060" y="510" font-size="110" font-weight="900" fill="#ff5d5d" opacity=".8" text-anchor="middle">✕</text>
+
+  <rect x="0" y="556" width="1200" height="74" fill="#0e1017" opacity=".85"/>
+  <text x="64" y="602" font-size="27" font-weight="700" fill="#4da3ff" font-family="ui-monospace,Menlo,monospace">One rule. Same exam for everyone. New puzzle daily.</text>
+</svg>
