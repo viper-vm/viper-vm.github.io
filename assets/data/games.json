@@ -126,6 +126,15 @@
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/callback"
   },
   {
+    "id": "scroll-golf",
+    "title": "Scroll Golf",
+    "summary": "Golf where the whole page is the course and your scroll-flick is the swing. Putt the viewport thousands of pixels down and drop it softly into the cup, fighting a gentle wind. A daily seeded 9-hole course with an emoji scorecard.",
+    "category": "Daily Game",
+    "emoji": "⛳",
+    "demo_url": "/demos/scroll-golf/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/scroll-golf"
+  },
+  {
     "id": "wordle",
     "title": "Wordle Clone",
     "summary": "A fully playable Wordle clone with daily words and statistics.",

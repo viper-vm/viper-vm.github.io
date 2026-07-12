@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Scroll Golf ⛳ — the page is the course</title>
+<meta name="description" content="Golf where the whole page is the course and your scroll-flick is the swing. Putt the viewport down thousands of pixels and drop it softly into the cup. A daily 9-hole course." />
+<link rel="canonical" href="https://viper-vm.github.io/demos/scroll-golf/" />
+<meta property="og:title" content="Scroll Golf — the page is the course" />
+<meta property="og:description" content="Golf where your scroll-flick is the swing. Putt the viewport thousands of pixels down and drop it softly into the cup, fighting a gentle wind. A daily seeded 9-hole course." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/scroll-golf/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/scroll-golf/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#0a1410" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230a1410"/><text y=".9em" x="20" font-size="60">⛳</text></svg>' />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0a1410;--panel:#12201a;--panel2:#1a2c23;--line:rgba(255,255,255,.1);--ink:#eaf6ef;--mut:#8fb5a3;--acc:#6fe39a;--flag:#ff5d5d}
+  html,body{height:100%;overflow:hidden;background:var(--bg);touch-action:none;overscroll-behavior:none}
+  body{color:var(--ink);font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  #cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+  #hud{position:fixed;top:calc(10px + env(safe-area-inset-top));left:0;right:0;display:flex;justify-content:center;gap:16px;z-index:5;pointer-events:none;font-weight:800;font-size:14px}
+  #hud .k{color:var(--mut)}#hud b{color:var(--ink)}
+  .helpBtn{position:fixed;top:calc(9px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer}
+  #hint{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;z-index:5;pointer-events:none;color:var(--mut);font-size:14px;font-weight:600}
+  .ov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px 16px;background:rgba(6,12,9,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+  .ov.show{opacity:1;pointer-events:auto}
+  .sheet{width:min(430px,100%);background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;margin:auto 0;box-shadow:0 30px 80px -20px rgba(0,0,0,.85);text-align:center}
+  .logo{font-size:clamp(30px,8vw,42px);font-weight:800}.logo b{color:var(--acc)}
+  .sub{color:var(--mut);font-size:13px;font-weight:700;margin-top:4px}.sub .n{color:var(--acc)}
+  .lead{color:var(--mut);font-size:14.5px;margin:12px 0 18px;line-height:1.5}.lead b{color:var(--ink)}
+  .btn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:17px;border-radius:15px;padding:15px;color:#052015;background:var(--acc);box-shadow:0 6px 24px -8px var(--acc)}
+  .sbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:14px;border-radius:14px;padding:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:9px}
+  .card{font-family:ui-monospace,Menlo,monospace;font-size:15px;line-height:1.6;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0;text-align:left;white-space:pre-wrap}
+  .big{font-size:42px;font-weight:800;margin:6px 0}
+  .rules{text-align:left;font-size:14px;line-height:1.55}.rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:14px 0 6px;font-weight:800}.rules ol{margin:0 0 4px 18px}.rules li{margin-bottom:7px}.rules b{color:var(--acc)}
+  #toast{position:fixed;left:50%;bottom:calc(72px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);background:#1a2c23;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;opacity:0;transition:all .24s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud"><span class="k">hole <b id="holeN">1</b>/9</span><span class="k">par <b id="parN">3</b></span><span class="k">strokes <b id="strk">0</b></span><span class="k">total <b id="tot">0</b></span></div>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
+<div id="hint">flick up to putt down · drop it softly in the cup</div>
+
+<div class="ov show" id="ovStart"><div class="sheet">
+  <div class="logo">⛳ <b>SCROLL GOLF</b></div>
+  <div class="sub"><span id="puzId"></span></div>
+  <p class="lead"><b>Flick</b> (or scroll) to putt the viewport down the course. The cup is buried thousands of pixels below — arrive <b>slowly</b> and you drop right in; hit it too fast and you rattle out. Mind the <b>wind</b>. 9 holes.</p>
+  <button class="btn" id="startBtn">TEE OFF</button>
+</div></div>
+
+<div class="ov" id="ovHole"><div class="sheet">
+  <h2 id="holeTitle" style="font-size:26px;font-weight:800"></h2>
+  <p class="lead" id="holeLead"></p>
+  <button class="btn" id="nextBtn">Next hole →</button>
+</div></div>
+
+<div class="ov" id="ovDone"><div class="sheet">
+  <h2 style="font-size:24px;font-weight:800">Round complete ⛳</h2>
+  <div class="big" id="doneScore"></div>
+  <div class="card" id="scoreCard"></div>
+  <button class="btn" id="copyBtn">COPY SCORECARD</button>
+  <button class="sbtn" id="shareBtn">Share…</button>
+  <p class="sub" id="countdown" style="margin-top:12px"></p>
+</div></div>
+
+<div class="ov" id="ovRules"><div class="sheet">
+  <h2 style="font-size:23px;font-weight:800">How to play ⛳</h2>
+  <div class="rules">
+    <h4>THE SWING</h4>
+    <ol>
+      <li><b>Flick up</b> (drag or scroll) to putt the viewport <b>down</b> the course toward the cup. A bigger flick = a harder putt.</li>
+      <li>Each flick counts as a <b>stroke</b>. Overshoot and you'll have to flick back up.</li>
+      <li>To sink it, the viewport has to reach the cup <b>slowly</b> — arrive too fast and it rattles straight over.</li>
+      <li>A gentle <b>wind</b> drifts you off line, so you can't just coast — keep correcting.</li>
+    </ol>
+    <p style="color:var(--mut);font-size:13px;margin-top:10px">Same 9-hole course for everyone each day. Share your emoji scorecard.</p>
+  </div>
+  <button class="btn" id="rulesClose" style="margin-top:12px">GOT IT</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>/*SCROLLGOLF*/
+'use strict';
+const LS=(function(){let ok=false;const mem={};try{localStorage.setItem('__sg','1');localStorage.removeItem('__sg');ok=true;}catch(e){}
+  return{get(k){try{return ok?localStorage.getItem(k):(k in mem?mem[k]:null)}catch(e){return k in mem?mem[k]:null}},set(k,v){v=String(v);mem[k]=v;try{if(ok)localStorage.setItem(k,v)}catch(e){}}};})();
+const $=id=>document.getElementById(id);const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function utcDay(){const n=new Date();return Math.floor(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate())/864e5);}
+const EPOCH=Math.floor(Date.UTC(2026,6,1)/864e5);
+
+const cv=$('cv'),ctx=cv.getContext('2d');
+let dpr=1,W=0,H=0;
+function resize(){dpr=Math.min(devicePixelRatio||1,2.5);W=innerWidth||360;H=innerHeight||640;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
+addEventListener('resize',resize);
+
+const BALL_Y=()=>H*0.34;               // ball's fixed screen position
+const CUP_HALF=90;                     // cup band half-height in world units
+const CATCH=520;                       // max |vel| (units/s) to drop in
+let holes=[],hole=0,strokes=[],posY=0,vel=0,wind=0,cupY=0,par=3,sunk=false,sinkFx=0;
+
+function buildCourse(){
+  const r=mulberry32((utcDay()*2654435761)>>>0||1);
+  holes=[];for(let i=0;i<9;i++){const depth=Math.round(6000+r()*30000);const w=(r()<0.5?-1:1)*(60+r()*220);holes.push({depth,wind:w,par:depth<12000?2:depth<24000?3:4});}
+}
+function loadHole(i){
+  const h=holes[i];hole=i;posY=0;vel=0;wind=h.wind;cupY=h.depth;par=h.par;sunk=false;sinkFx=0;
+  $('holeN').textContent=i+1;$('parN').textContent=par;$('strk').textContent='0';$('tot').textContent=totalStrokes();
+  strokes[i]=0;
+}
+function totalStrokes(){return strokes.reduce((a,b)=>a+(b||0),0);}
+
+/* ---- input: flick + wheel, self-simulated for device fairness ---- */
+let dragging=false,lastY=0,lastT=0,dragVel=0,strokeOpen=false;
+cv.addEventListener('pointerdown',e=>{if(sunk)return;e.preventDefault();dragging=true;lastY=e.clientY;lastT=performance.now();dragVel=0;$('hint').style.opacity=0;});
+cv.addEventListener('pointermove',e=>{if(!dragging||sunk)return;const t=performance.now();const dy=e.clientY-lastY;const dt=Math.max(1,t-lastT);
+  posY-=dy;                              // drag up (dy negative) -> posY increases (go down course)
+  dragVel=-dy/dt*1000;                   // units/s
+  lastY=e.clientY;lastT=t;});
+addEventListener('pointerup',()=>{if(!dragging)return;dragging=false;if(sunk)return;
+  if(Math.abs(dragVel)>60){vel=dragVel;countStroke();}});
+addEventListener('wheel',e=>{if(sunk)return;e.preventDefault();vel+=e.deltaY*2.2;
+  if(!strokeOpen){strokeOpen=true;countStroke();clearTimeout(window.__wt);}
+  clearTimeout(window.__wt);window.__wt=setTimeout(()=>{strokeOpen=false;},350);},{passive:false});
+function countStroke(){strokes[hole]=(strokes[hole]||0)+1;$('strk').textContent=strokes[hole];$('tot').textContent=totalStrokes();}
+
+/* ---- sim ---- */
+let lastF=0;
+function loop(t){const dt=lastF?clamp((t-lastF)/1000,0.001,0.033):0.016;lastF=t;
+  if(!sunk&&!dragging){
+    const prevY=posY;
+    posY+=vel*dt;vel*=Math.pow(0.14,dt);        // friction
+    posY+=wind*dt;                               // wind drift
+    // sink check: crossing/inside cup with low speed
+    const speed=Math.abs(vel)+Math.abs(wind);
+    if(Math.abs(posY-cupY)<CUP_HALF && speed<CATCH){sink();}
+    if(posY<-400)posY=-400,vel=Math.abs(vel)*0.3;  // soft ceiling at the tee
+  }
+  if(sinkFx>0)sinkFx-=dt;
+  draw();requestAnimationFrame(loop);
+}
+function sink(){sunk=true;vel=0;sinkFx=1;
+  try{if(navigator.vibrate)navigator.vibrate([15,30,15]);}catch(e){}
+  setTimeout(()=>showHole(),700);
+}
+
+/* ---- draw ---- */
+function draw(){
+  const by=BALL_Y();
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0c1a13');g.addColorStop(1,'#09120d');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // depth markers
+  ctx.fillStyle='rgba(255,255,255,.06)';ctx.font='12px ui-monospace,Menlo,monospace';
+  const first=Math.floor((posY-by)/1000)*1000;
+  for(let d=first;d<posY+H;d+=1000){const sy=by+(d-posY);if(sy<-20||sy>H+20)continue;ctx.fillRect(0,sy,W,1);ctx.fillText((d/1000|0)+'k',10,sy-4);}
+  // tee
+  {const sy=by+(0-posY);if(sy>-40&&sy<H+40){ctx.fillStyle='rgba(111,227,154,.5)';ctx.fillRect(0,sy-2,W,4);if(sy>60){ctx.fillStyle='#6fe39a';ctx.font='700 13px system-ui';ctx.textAlign='center';ctx.fillText('⛳ TEE',W/2,sy-8);ctx.textAlign='left';}}}
+  // cup band + flag
+  {const sy=by+(cupY-posY);
+   ctx.fillStyle='rgba(111,227,154,'+(0.1+ (sinkFx>0?0.25:0))+')';ctx.fillRect(0,sy-CUP_HALF,W,CUP_HALF*2);
+   ctx.strokeStyle='rgba(111,227,154,.5)';ctx.setLineDash([8,8]);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,sy-CUP_HALF);ctx.lineTo(W,sy-CUP_HALF);ctx.moveTo(0,sy+CUP_HALF);ctx.lineTo(W,sy+CUP_HALF);ctx.stroke();ctx.setLineDash([]);
+   // cup + flag
+   ctx.fillStyle='#0a1410';ctx.strokeStyle='#6fe39a';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(W/2,sy,20,8,0,0,7);ctx.fill();ctx.stroke();
+   ctx.strokeStyle='#cfd8d0';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(W/2,sy);ctx.lineTo(W/2,sy-70);ctx.stroke();
+   ctx.fillStyle='#ff5d5d';ctx.beginPath();ctx.moveTo(W/2,sy-70);ctx.lineTo(W/2+34,sy-60);ctx.lineTo(W/2,sy-50);ctx.closePath();ctx.fill();
+   ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='700 12px system-ui';ctx.fillText((cupY/1000).toFixed(1)+'k down',W/2+40,sy-58);
+  }
+  // ball
+  ctx.save();
+  if(sinkFx>0){ctx.globalAlpha=clamp(sinkFx,0,1);}
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(W/2,sunk?by+(cupY-posY):by,sunk?7:9,0,7);ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.2)';ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
+  // speed / wind indicator
+  const dist=Math.round(cupY-posY);
+  ctx.fillStyle=dist>0?'#eaf6ef':'#ff9a3c';ctx.font='800 15px system-ui';ctx.textAlign='center';
+  ctx.fillText(sunk?'IN! 🏌️':(Math.abs(dist)<CUP_HALF?'so close…':(dist>0?dist+' below':(-dist)+' above')),W/2,by-24);
+  ctx.font='600 12px system-ui';ctx.fillStyle=Math.abs(vel)>CATCH?'#ff9a3c':'var(--mut)';ctx.fillStyle='#8fb5a3';
+  ctx.fillText('wind '+(wind<0?'↑':'↓')+Math.abs(Math.round(wind)),W/2,by+34);ctx.textAlign='left';
+}
+
+/* ---- hole/round flow ---- */
+function showHole(){
+  const s=strokes[hole],diff=s-par;
+  const term=s===1?'HOLE IN ONE! 🎯':diff<=-2?'Eagle! 🦅':diff===-1?'Birdie 🐦':diff===0?'Par':diff===1?'Bogey':(diff)+' over';
+  $('holeTitle').textContent='Hole '+(hole+1)+': '+term;
+  $('holeLead').textContent=s+' stroke'+(s===1?'':'s')+' · par '+par+(hole<8?'':' — final hole done!');
+  $('nextBtn').textContent=hole<8?'Next hole →':'See scorecard';
+  $('ovHole').classList.add('show');
+}
+$('nextBtn').onclick=()=>{$('ovHole').classList.remove('show');if(hole<8){loadHole(hole+1);}else{finishRound();}};
+function scoreEmoji(diff){return diff<=-2?'🦅':diff===-1?'🐦':diff===0?'🟩':diff===1?'🟨':diff===2?'🟧':'🟥';}
+function finishRound(){
+  const tot=totalStrokes(),parTot=holes.reduce((a,h)=>a+h.par,0),diff=tot-parTot;
+  $('doneScore').textContent=tot+' ('+(diff===0?'even':diff>0?'+'+diff:diff)+')';
+  const grid=holes.map((h,i)=>scoreEmoji((strokes[i]||par+3)-h.par)).join('');
+  const card='Scroll Golf #'+(utcDay()-EPOCH+1)+'\n'+tot+' strokes ('+(diff>0?'+'+diff:diff===0?'E':diff)+')\n'+grid+'\nviper-vm.github.io/demos/scroll-golf';
+  $('scoreCard').textContent=card;window.__card=card;
+  LS.set('sg_'+utcDay(),JSON.stringify({tot,strokes}));
+  $('ovDone').classList.add('show');tickCd();
+}
+
+$('startBtn').onclick=()=>{$('ovStart').classList.remove('show');loadHole(0);};
+$('rulesBtn').onclick=()=>$('ovRules').classList.add('show');
+$('rulesClose').onclick=()=>$('ovRules').classList.remove('show');
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))$('ovRules').classList.remove('show');});
+$('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(window.__card);}catch(e){}toast('Scorecard copied ⛳');};
+$('shareBtn').onclick=async()=>{if(navigator.share){try{await navigator.share({text:window.__card});}catch(e){}}else{$('copyBtn').click();}};
+let cdT;function tickCd(){clearInterval(cdT);const upd=()=>{const n=new Date();const nx=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()+1);let ms=nx-n.getTime();if(ms<0)ms=0;const h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4),s=Math.floor(ms%6e4/1e3);$('countdown').innerHTML='New course in <b style="color:var(--ink)">'+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'</b>';};upd();cdT=setInterval(upd,1000);}
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+window.__scrollgolf={state:()=>({hole,posY:Math.round(posY),vel:Math.round(vel),cupY,strokes:strokes[hole]||0,sunk}),
+  putt:(velocity)=>{vel=velocity;countStroke();return'putt';},
+  autoHole:()=>{ // aim to arrive slow at cup: give a putt that lands near cupY
+    strokes[hole]=0;posY=0;vel=0;
+    // iteratively find a good velocity by simulation
+    for(let tries=0;tries<40&&!sunk;tries++){const target=cupY-posY;const v=clamp(target*0.9+wind*-1.4,-40000,40000)*(0.9+tries*0.01);
+      vel=v;countStroke();
+      for(let f=0;f<240&&!sunk;f++){posY+=vel/60;vel*=Math.pow(0.14,1/60);posY+=wind/60;if(Math.abs(posY-cupY)<CUP_HALF&&Math.abs(vel)+Math.abs(wind)<CATCH){sink();break;}if(Math.abs(vel)<5)break;}
+    }
+    return{sunk,strokes:strokes[hole],finalPos:Math.round(posY)};}};
+
+/* ---- boot ---- */
+(function boot(){$('puzId').textContent='Scroll Golf #'+(utcDay()-EPOCH+1)+' · today’s course';buildCourse();resize();requestAnimationFrame(loop);})();
+</script>
+</body>
+</html>

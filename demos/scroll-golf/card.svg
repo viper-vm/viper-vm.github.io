@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
+  <rect width="1200" height="630" fill="#0a1410"/>
+  <!-- depth markers -->
+  <g stroke="rgba(255,255,255,.06)" stroke-width="2">
+    <line x1="700" y1="120" x2="1160" y2="120"/><line x1="700" y1="240" x2="1160" y2="240"/><line x1="700" y1="360" x2="1160" y2="360"/><line x1="700" y1="480" x2="1160" y2="480"/>
+  </g>
+  <g fill="rgba(255,255,255,.15)" font-size="16" font-family="ui-monospace,Menlo,monospace"><text x="710" y="140">12k</text><text x="710" y="260">24k</text><text x="710" y="380">36k</text></g>
+  <!-- ball -->
+  <circle cx="930" cy="180" r="14" fill="#fff"/>
+  <!-- cup + flag -->
+  <ellipse cx="930" cy="470" rx="26" ry="10" fill="#0a1410" stroke="#6fe39a" stroke-width="4"/>
+  <line x1="930" y1="470" x2="930" y2="380" stroke="#cfd8d0" stroke-width="4"/>
+  <path d="M930 380 L985 395 L930 410 Z" fill="#ff5d5d"/>
+  <rect x="700" y="440" width="460" height="60" fill="#6fe39a" opacity=".1"/>
+  <text x="70" y="150" font-size="64" font-weight="800" fill="#eaf6ef">⛳ <tspan fill="#6fe39a">SCROLL GOLF</tspan></text>
+  <text x="72" y="210" font-size="32" font-weight="600" fill="#8fb5a3">The whole page is the course.</text>
+  <text x="72" y="260" font-size="30" font-weight="800" fill="#eaf6ef">Your <tspan fill="#6fe39a">scroll-flick</tspan> is the swing.</text>
+  <text x="72" y="540" font-size="24" font-weight="700" fill="#6fe39a" font-family="ui-monospace,Menlo,monospace">putt it thousands of pixels down · a daily 9-hole course</text>
+</svg>
