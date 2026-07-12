@@ -36,19 +36,38 @@
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/askew"
   },
   {
+    "id": "ghostball",
+    "title": "Ghostball",
+    "summary": "A ball rolls behind a wall. Tap the exact instant it should come out the other side. A ghost replay shows how many milliseconds early or late you were — a benchmark of your brain's built-in physics engine.",
+    "category": "Perception",
+    "emoji": "🎱",
+    "demo_url": "/demos/ghostball/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/ghostball"
+  },
+  {
+    "id": "petri",
+    "title": "Petri",
+    "summary": "A daily Game of Life puzzle. Plant a few cells on today's dish, press play, and watch Conway's Game of Life bloom to light up every target — using as few seeds as you can. Same dish for everyone, new puzzle daily.",
+    "category": "Daily Game",
+    "emoji": "🧫",
+    "demo_url": "/demos/petri/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/petri"
+  },
+  {
+    "id": "statue",
+    "title": "Statue",
+    "summary": "Press and hold, and stay perfectly still for 30 seconds while the page tries to make you flinch — a flash, a fake notification, a spider. A live seismograph rates your stillness.",
+    "category": "Nerve",
+    "emoji": "🗿",
+    "demo_url": "/demos/statue/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/statue"
+  },
+  {
     "id": "wordle",
     "title": "Wordle Clone",
     "summary": "A fully playable Wordle clone with daily words and statistics.",
     "category": "Word Game",
     "emoji": "🟩",
     "demo_url": "/demos/wordle.html"
-  },
-  {
-    "id": "stake",
-    "title": "Fake Casino",
-    "summary": "A play-money casino sandbox — spin, bet and cash out with zero real stakes. Purely a UI/animation playground; no money, no accounts.",
-    "category": "Sandbox",
-    "emoji": "🎰",
-    "demo_url": "/demos/stake/"
   }
 ]

@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Statue 🗿 — hold perfectly still</title>
+<meta name="description" content="Hold perfectly still for 30 seconds while the page tries to make you flinch. Statue draws a live seismograph of your hand's micro-tremor and rates your stillness." />
+<link rel="canonical" href="https://viper-vm.github.io/demos/statue/" />
+<meta property="og:title" content="Statue — hold perfectly still for 30 seconds" />
+<meta property="og:description" content="Press and hold. A live seismograph draws your hand's micro-tremor while the page tries to make you flinch — a flash, a fake notification, a spider. How still can you be?" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/statue/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/statue/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#0c0d12" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230c0d12"/><text y=".92em" x="14" font-size="70">🗿</text></svg>' />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0c0d12;--panel:#161821;--panel2:#1e2130;--line:rgba(255,255,255,.09);
+    --ink:#edeff7;--mut:#939ab0;--acc:#c9a2ff;--ok:#5ee08a;--warn:#ffcf5a;--no:#ff5d7a}
+  html,body{height:100%;overflow:hidden;background:var(--bg);touch-action:none;overscroll-behavior:none}
+  body{color:var(--ink);font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  #cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+  #cv.shake{animation:shk .18s}
+  @keyframes shk{0%,100%{transform:translate(0,0)}25%{transform:translate(-6px,3px)}75%{transform:translate(5px,-4px)}}
+  #hud{position:fixed;top:calc(10px + env(safe-area-inset-top));left:0;right:0;text-align:center;pointer-events:none;z-index:5;font-weight:800;font-size:15px;color:var(--mut)}
+  #hud b{color:var(--ink);font-variant-numeric:tabular-nums}
+  .helpBtn{position:fixed;top:calc(9px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;
+    border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer;line-height:1;pointer-events:auto}
+  .flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:12}
+  .flash.go{animation:fl .28s}@keyframes fl{0%{opacity:0}30%{opacity:.85}100%{opacity:0}}
+  .fakenotif{position:fixed;top:60px;right:-320px;width:290px;background:#20242f;border:1px solid rgba(255,255,255,.14);border-radius:14px;
+    padding:12px 14px;z-index:13;box-shadow:0 12px 40px rgba(0,0,0,.5);pointer-events:none}
+  .fakenotif.go{animation:nt 3s ease}@keyframes nt{0%{right:-320px}12%{right:16px}80%{right:16px}100%{right:-320px}}
+  .fakenotif .t{font-size:13px;font-weight:800;color:#fff}.fakenotif .b{font-size:12.5px;color:var(--mut);margin-top:2px}
+  .spider{position:fixed;font-size:34px;z-index:13;pointer-events:none;opacity:0}
+  .decoy{position:fixed;width:20px;height:20px;z-index:13;pointer-events:none;opacity:0}
+  .decoy svg{width:100%;height:100%;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+  .ov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px 16px;
+    background:rgba(8,9,14,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+  .ov.show{opacity:1;pointer-events:auto}
+  .sheet{width:min(440px,100%);text-align:center;margin:auto 0}
+  .sheet.card{background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;box-shadow:0 30px 80px -20px rgba(0,0,0,.85);max-height:calc(100dvh - 40px);overflow-y:auto}
+  .logo{font-size:clamp(34px,9vw,48px);font-weight:800;letter-spacing:-.02em}.logo b{color:var(--acc)}
+  .tag{color:var(--mut);font-size:15px;margin:10px 0 22px;line-height:1.5}.tag b{color:var(--ink)}
+  .btn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:18px;border-radius:15px;padding:16px;color:#160a2a;background:var(--acc);box-shadow:0 6px 26px -8px var(--acc);transition:transform .07s}
+  .btn:active{transform:scale(.98)}
+  .btn.sec{background:var(--panel2);color:var(--ink);border:1px solid var(--line);box-shadow:none;font-size:15px;padding:13px}
+  .mini{color:var(--mut);font-size:13px;margin-top:16px;line-height:1.5}
+  .headline{font-size:clamp(26px,7vw,34px);font-weight:800;line-height:1.1;margin:2px 0 4px}
+  .subid{color:var(--mut);font-size:15px;margin-bottom:14px;line-height:1.5}
+  .strip{font-size:24px;letter-spacing:3px;margin:10px 0}
+  .metrics{display:flex;gap:10px;margin:12px 0}
+  .metric{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 6px}
+  .metric .v{font-size:22px;font-weight:800}.metric .l{font-size:10.5px;letter-spacing:.09em;color:var(--mut);font-weight:700;margin-top:3px;text-transform:uppercase}
+  .btnrow{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}.full{grid-column:1/-1}
+  .rules{text-align:left;font-size:14px;line-height:1.55}.rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:15px 0 6px;font-weight:800}
+  .rules ol{margin:0 0 4px 18px}.rules li{margin-bottom:7px}.rules b{color:var(--acc)}
+  #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);background:#1e2130;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;opacity:0;transition:all .24s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud"><span id="hudtxt"></span></div>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
+<div class="flash" id="flash"></div>
+<div class="fakenotif" id="notif"><div class="t" id="notifT"></div><div class="b" id="notifB"></div></div>
+<div class="spider" id="spider">🕷️</div>
+<div class="decoy" id="decoy"><svg viewBox="0 0 24 24" fill="#fff"><path d="M5 2l14 8-6 1.5L16 18l-2.5 1.2L10 12l-5 4z"/></svg></div>
+
+<div class="ov show" id="ovStart"><div class="sheet">
+  <div class="logo">🗿 <b>STATUE</b></div>
+  <p class="tag"><b>Press and hold</b> the circle and don't move a muscle for <b>30 seconds</b>. A seismograph tracks your hand's tremor while the page does everything it can to make you flinch.</p>
+  <button class="btn" id="startBtn">I'M READY</button>
+  <p class="mini">Desktop: hold the mouse button, keep the cursor dead still. Mobile: hold your finger down.</p>
+</div></div>
+
+<div class="ov" id="ovResult"><div class="sheet">
+  <div class="headline" id="resHead"></div>
+  <div class="subid" id="resSub"></div>
+  <div class="strip" id="resStrip"></div>
+  <div class="metrics">
+    <div class="metric"><div class="v" id="resTime"></div><div class="l">held</div></div>
+    <div class="metric"><div class="v" id="resMag"></div><div class="l">tremor</div></div>
+    <div class="metric"><div class="v" id="resRating"></div><div class="l">stillness</div></div>
+  </div>
+  <div class="btnrow">
+    <button class="btn full" id="copyBtn">COPY MY RESULT</button>
+    <button class="btn sec" id="shareBtn">Share…</button>
+    <button class="btn sec" id="againBtn">Try again</button>
+  </div>
+  <p class="mini" id="bestLine"></p>
+</div></div>
+
+<div class="ov" id="ovRules"><div class="sheet card">
+  <div class="logo" style="font-size:30px">How to play</div>
+  <div class="rules">
+    <h4>THE CHALLENGE</h4>
+    <ol>
+      <li><b>Press and hold</b> the circle in the middle and keep perfectly still.</li>
+      <li>Hold for the full <b>30 seconds</b>. The ring fills as time passes and a seismograph draws every twitch of your hand.</li>
+      <li>The page will try to break you — a sudden flash, a fake notification, a spider, a decoy cursor. <b>Don't take the bait.</b></li>
+      <li>You flinch if you <b>let go early</b> or <b>move too far</b> from where you started.</li>
+    </ol>
+    <h4>THE SCORE</h4>
+    <p>Survive and you get a <b>stillness rating</b> and a tremor magnitude. The emoji strip shows how steady you were in each 3-second window — 🟩 rock-solid, 🟨 wobbly, 🟥 flinched.</p>
+  </div>
+  <button class="btn" id="rulesClose" style="margin-top:14px">GOT IT</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>/*STATUE*/
+'use strict';
+const LS=(function(){let ok=false;const mem={};try{localStorage.setItem('__st','1');localStorage.removeItem('__st');ok=true;}catch(e){}
+  return{get(k){try{return ok?localStorage.getItem(k):(k in mem?mem[k]:null)}catch(e){return k in mem?mem[k]:null}},
+         set(k,v){v=String(v);mem[k]=v;try{if(ok)localStorage.setItem(k,v)}catch(e){}}};})();
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+const cv=$('cv'),ctx=cv.getContext('2d');
+let dpr=1,W=0,H=0;
+function resize(){dpr=Math.min(devicePixelRatio||1,2.5);W=innerWidth||360;H=innerHeight||640;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
+addEventListener('resize',resize);
+
+const HOLD_MS=30000, FLINCH_R=46, NWIN=10;
+let phase='menu',anchor=null,last=null,t0=0,rafId=0;
+let jitter=0, wave=[], winJit=new Array(NWIN).fill(0), provDone=[], provs=[];
+let target={x:0,y:0,r:46};
+
+function layout(){target.x=W/2;target.y=H*0.52;target.r=clamp(Math.min(W,H)*0.11,44,70);}
+function scheduleProvs(){
+  provs=[];provDone=[];
+  const kinds=['flash','notif','spider','decoy','shake','flash','notif','spider'];
+  // shuffle-ish and place between 4s and 28s
+  for(let i=0;i<7;i++){const t=4000+i*3400+Math.random()*1200;provs.push({t,kind:kinds[i%kinds.length]});provDone.push(false);}
+}
+
+function begin(x,y){
+  layout();anchor={x,y};last={x,y};t0=performance.now();phase='holding';
+  jitter=0;wave=[];winJit=winJit.map(()=>0);scheduleProvs();
+  $('ovStart').classList.remove('show');$('ovResult').classList.remove('show');
+  cancelAnimationFrame(rafId);loop();
+}
+function move(x,y){
+  if(phase!=='holding')return;
+  const dx=x-last.x,dy=y-last.y;const d=Math.hypot(dx,dy);
+  jitter+=d;wave.push(clamp(d,0,40));if(wave.length>240)wave.shift();
+  const t=performance.now()-t0;const wi=clamp(Math.floor(t/(HOLD_MS/NWIN)),0,NWIN-1);winJit[wi]+=d;
+  last={x,y};
+  const disp=Math.hypot(x-anchor.x,y-anchor.y);
+  if(disp>FLINCH_R)flinch();
+}
+function release(){if(phase==='holding')flinch();}
+function flinch(){
+  if(phase!=='holding')return;
+  phase='flinched';cancelAnimationFrame(rafId);
+  const t=performance.now()-t0;
+  try{if(navigator.vibrate)navigator.vibrate([30,40,30]);}catch(e){}
+  finish(false,t);
+}
+
+cv.addEventListener('pointerdown',e=>{e.preventDefault();
+  if(phase==='menu'||phase==='flinched'||phase==='survived')return;
+  begin(e.clientX,e.clientY);});
+addEventListener('pointermove',e=>move(e.clientX,e.clientY),{passive:true});
+addEventListener('pointerup',release);addEventListener('pointercancel',release);
+
+function loop(){
+  const t=performance.now()-t0;
+  runProvs(t);
+  draw(t);
+  if(t>=HOLD_MS){phase='survived';cancelAnimationFrame(rafId);finish(true,HOLD_MS);return;}
+  if(phase==='holding')rafId=requestAnimationFrame(loop);
+}
+function draw(t){
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0c0d12';ctx.fillRect(0,0,W,H);
+  // seismograph
+  const midY=H*0.24, amp=1.6;
+  ctx.strokeStyle='rgba(201,162,255,.25)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,midY);ctx.lineTo(W,midY);ctx.stroke();
+  ctx.strokeStyle='#c9a2ff';ctx.lineWidth=2;ctx.beginPath();
+  const step=W/240;wave.forEach((v,i)=>{const y=midY-(v-3)*amp*3;i?ctx.lineTo(i*step,y):ctx.moveTo(i*step,y);});ctx.stroke();
+  // hold ring
+  const p=clamp(t/HOLD_MS,0,1);const tx=target.x,ty=target.y,r=target.r;
+  ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=8;ctx.beginPath();ctx.arc(tx,ty,r,0,7);ctx.stroke();
+  ctx.strokeStyle='#c9a2ff';ctx.lineWidth=8;ctx.lineCap='round';ctx.beginPath();ctx.arc(tx,ty,r,-Math.PI/2,-Math.PI/2+p*Math.PI*2);ctx.stroke();ctx.lineCap='butt';
+  ctx.fillStyle='rgba(201,162,255,.14)';ctx.beginPath();ctx.arc(tx,ty,r-6,0,7);ctx.fill();
+  ctx.fillStyle='#edeff7';ctx.font='800 '+Math.round(r*0.5)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText(Math.max(0,Math.ceil((HOLD_MS-t)/1000)),tx,ty);ctx.textBaseline='alphabetic';ctx.textAlign='left';
+  $('hudtxt').innerHTML='HOLD STILL · <b>'+Math.max(0,Math.ceil((HOLD_MS-t)/1000))+'s</b> left';
+}
+
+function runProvs(t){
+  provs.forEach((p,i)=>{if(provDone[i]||t<p.t)return;provDone[i]=true;fire(p.kind);});
+}
+function fire(kind){
+  if(kind==='flash'){const f=$('flash');f.classList.remove('go');void f.offsetWidth;f.classList.add('go');}
+  else if(kind==='shake'){cv.classList.remove('shake');void cv.offsetWidth;cv.classList.add('shake');}
+  else if(kind==='notif'){const arr=[['Reminder','Your build finished 🎉'],['Message','wyd 👀'],['Battery','20% remaining'],['Update','Restart to finish updating']];
+    const n=arr[Math.floor(Math.random()*arr.length)];$('notifT').textContent=n[0];$('notifB').textContent=n[1];
+    const el=$('notif');el.classList.remove('go');void el.offsetWidth;el.classList.add('go');}
+  else if(kind==='spider'){const sp=$('spider');const sx=Math.random()<.5?-40:W+40;sp.style.left=sx+'px';sp.style.top=(target.y-20)+'px';sp.style.opacity=1;
+    let x=sx;const dir=sx<0?1:-1;const iv=setInterval(()=>{x+=dir*8;sp.style.left=x+'px';if((dir>0&&x>target.x-30)||(dir<0&&x<target.x+30)){clearInterval(iv);setTimeout(()=>{sp.style.opacity=0;},400);}},30);}
+  else if(kind==='decoy'){const dc=$('decoy');dc.style.opacity=1;let x=Math.random()*W,y=Math.random()*H;dc.style.left=x+'px';dc.style.top=y+'px';
+    let n=0;const iv=setInterval(()=>{n++;x+=(Math.random()-.5)*80;y+=(Math.random()-.5)*80;dc.style.left=clamp(x,0,W)+'px';dc.style.top=clamp(y,0,H)+'px';if(n>16){clearInterval(iv);dc.style.opacity=0;}},40);}
+}
+
+/* ---- results ---- */
+function rating(){ // lower jitter = higher rating; normalize by time held
+  const t=Math.max(0.5,(phase==='survived'?HOLD_MS:performance.now()-t0)/1000);
+  const rate=jitter/t;                     // px of movement per second
+  return {rate, val:clamp(Math.round(100-rate*7),0,100), mag:Math.round(clamp(Math.log10(jitter+1)*2.2,0,10)*10)/10};
+}
+function finish(survived,heldMs){
+  const r=rating();const secs=(heldMs/1000);
+  window.__lastStatue={survived,secs,r};
+  $('resHead').textContent=survived?(r.val>=90?'STATUE. 🗿':'You held. 🎯'):'You flinched. 💥';
+  $('resSub').textContent=survived
+    ? (r.val>=90?'30 seconds, barely a tremor. Genuinely unnerving.':'Full 30 seconds held. Stillness rating '+r.val+'/100.')
+    : 'You cracked at '+secs.toFixed(1)+'s. The internet wins this round.';
+  // emoji strip: per window
+  const perWinCap=(HOLD_MS/NWIN)/1000; // seconds per window
+  const reached=Math.floor(secs/(HOLD_MS/NWIN/1000));
+  let strip='';
+  for(let i=0;i<NWIN;i++){
+    if(i>reached){strip+='⬜';continue;}
+    if(!survived&&i===reached){strip+='🟥';continue;}
+    const jw=winJit[i]||0;strip+= jw<8?'🟩':jw<24?'🟨':'🟧';
+  }
+  $('resStrip').textContent=strip;
+  $('resTime').textContent=survived?'30s':secs.toFixed(1)+'s';
+  $('resMag').textContent=r.mag;
+  $('resRating').textContent=survived?r.val:'—';
+  let best=+(LS.get('statue_best')||0);if(survived&&r.val>best){best=r.val;LS.set('statue_best',best);}
+  $('bestLine').textContent=survived?('Best stillness: '+best+'/100'):'Deep breath. Try again.';
+  $('ovResult').classList.add('show');
+}
+function shareText(){const s=window.__lastStatue;
+  if(s.survived)return 'Statue 🗿 — held the full 30s\nstillness '+s.r.val+'/100 · tremor '+s.r.mag+'\ncan you out-still me? viper-vm.github.io/demos/statue';
+  return 'Statue 🗿 — flinched at '+s.secs.toFixed(1)+'s 💥\nbet you can\'t hold 30: viper-vm.github.io/demos/statue';}
+
+$('startBtn').onclick=()=>{layout();$('ovStart').classList.remove('show');phase='ready';$('hudtxt').textContent='press & hold the circle';draw(0);toast('Press and hold the circle');};
+$('againBtn').onclick=()=>{$('ovResult').classList.remove('show');phase='ready';$('hudtxt').textContent='press & hold the circle';draw(0);};
+$('rulesBtn').onclick=()=>$('ovRules').classList.add('show');
+$('rulesClose').onclick=()=>$('ovRules').classList.remove('show');
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))$('ovRules').classList.remove('show');});
+$('copyBtn').onclick=async()=>{const t=shareText();try{await navigator.clipboard.writeText(t);}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(_){}ta.remove();}toast('Copied');};
+$('shareBtn').onclick=async()=>{const t=shareText();if(navigator.share){try{await navigator.share({text:t});}catch(e){}}else{$('copyBtn').click();}};
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+window.__statue={state:()=>({phase,jitter:Math.round(jitter),held:phase==='holding'?((performance.now()-t0)/1000).toFixed(1):0}),
+  simulate:(surviveS,jitterPerS)=>{ // headless: pretend a hold with given steadiness
+    layout();phase='holding';t0=performance.now()-Math.min(surviveS,30)*1000;jitter=(jitterPerS==null?4:jitterPerS)*Math.min(surviveS,30);
+    winJit=winJit.map(()=>((jitterPerS==null?4:jitterPerS)*(HOLD_MS/NWIN/1000)));
+    const survived=surviveS>=30;phase=survived?'survived':'flinched';
+    finish(survived,Math.min(surviveS,30)*1000);
+    return window.__lastStatue&&{survived:window.__lastStatue.survived,rating:window.__lastStatue.r.val,mag:window.__lastStatue.r.mag};}};
+
+resize();layout();
+</script>
+</body>
+</html>

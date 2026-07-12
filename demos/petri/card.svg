@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
+  <rect width="1200" height="630" fill="#0a0f0c"/>
+  <!-- mini grid on the right -->
+  <g transform="translate(760,150)">
+    <rect x="-14" y="-14" width="348" height="348" rx="16" fill="#0d130f" stroke="rgba(255,255,255,.09)"/>
+    <g>
+      <rect x="60" y="30" width="46" height="46" rx="8" fill="#54e39a"/>
+      <rect x="120" y="60" width="46" height="46" rx="8" fill="#54e39a"/>
+      <rect x="90" y="120" width="46" height="46" rx="8" fill="#54e39a"/>
+      <rect x="200" y="150" width="46" height="46" rx="8" fill="#39463f"/>
+      <rect x="30" y="200" width="46" height="46" rx="8" fill="#54e39a"/>
+      <circle cx="233" cy="83" r="26" fill="none" stroke="#ffd451" stroke-width="6"/><circle cx="233" cy="83" r="11" fill="#ffd451"/>
+      <circle cx="263" cy="233" r="26" fill="none" stroke="rgba(255,212,81,.55)" stroke-width="6"/>
+      <circle cx="83" cy="290" r="26" fill="none" stroke="#ffd451" stroke-width="6"/><circle cx="83" cy="290" r="11" fill="#ffd451"/>
+    </g>
+  </g>
+  <text x="70" y="150" font-size="72" font-weight="800" fill="#e9f5ee">🧫 <tspan fill="#54e39a">PETRI</tspan></text>
+  <text x="72" y="205" font-size="32" font-weight="600" fill="#8aa398">Plant cells. Press play. Watch it bloom.</text>
+  <text x="72" y="252" font-size="30" font-weight="800" fill="#e9f5ee">Light every target with the <tspan fill="#54e39a">fewest seeds.</tspan></text>
+  <text x="72" y="470" font-size="26" font-weight="700" fill="#ffd451" font-family="ui-monospace,Menlo,monospace">a daily Game of Life puzzle</text>
+</svg>

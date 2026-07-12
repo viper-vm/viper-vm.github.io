@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
+  <rect width="1200" height="630" fill="#0b0e15"/>
+  <line x1="0" y1="430" x2="1200" y2="430" stroke="rgba(255,255,255,.08)" stroke-width="2"/>
+  <!-- exit line -->
+  <line x1="760" y1="330" x2="760" y2="520" stroke="#38e0c8" stroke-width="4" stroke-dasharray="9 9"/>
+  <text x="772" y="345" font-size="22" font-weight="700" fill="#38e0c8" font-family="ui-monospace,Menlo,monospace">EXIT</text>
+  <!-- ghost ball -->
+  <circle cx="700" cy="425" r="34" fill="#ff6b7d" opacity=".5"/>
+  <!-- wall -->
+  <rect x="560" y="300" width="200" height="250" fill="#1d2434" stroke="rgba(255,255,255,.1)"/>
+  <text x="660" y="435" font-size="28" font-weight="800" fill="rgba(255,255,255,.25)" text-anchor="middle">?</text>
+  <!-- real ball emerging -->
+  <circle cx="820" cy="425" r="34" fill="#38e0c8"/>
+  <circle cx="832" cy="413" r="11" fill="rgba(0,0,0,.25)"/>
+  <text x="70" y="150" font-size="76" font-weight="800" fill="#eaf0fb">Ghost<tspan fill="#38e0c8">ball</tspan> 🎱</text>
+  <text x="72" y="205" font-size="32" font-weight="600" fill="#8f9bb3">Tap the instant the ball should come out.</text>
+  <text x="72" y="252" font-size="30" font-weight="800" fill="#eaf0fb">Benchmark your brain's <tspan fill="#38e0c8">physics engine.</tspan></text>
+</svg>

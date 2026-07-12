@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
+  <rect width="1200" height="630" fill="#0c0d12"/>
+  <!-- seismograph line -->
+  <line x1="0" y1="150" x2="1200" y2="150" stroke="rgba(201,162,255,.2)" stroke-width="2"/>
+  <path d="M0 150 L120 150 L150 132 L180 168 L210 150 L360 150 L385 120 L410 180 L435 150 L620 150 L650 138 L680 162 L710 150 L1200 150"
+        fill="none" stroke="#c9a2ff" stroke-width="3"/>
+  <!-- hold ring -->
+  <g transform="translate(900,400)">
+    <circle r="120" fill="rgba(201,162,255,.12)"/>
+    <circle r="120" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="12"/>
+    <circle r="120" fill="none" stroke="#c9a2ff" stroke-width="12" stroke-linecap="round" stroke-dasharray="565" stroke-dashoffset="180" transform="rotate(-90)"/>
+    <text y="26" font-size="72" font-weight="800" fill="#edeff7" text-anchor="middle">30</text>
+  </g>
+  <text x="70" y="330" font-size="72" font-weight="800" fill="#edeff7">🗿 <tspan fill="#c9a2ff">STATUE</tspan></text>
+  <text x="72" y="385" font-size="32" font-weight="600" fill="#939ab0">Hold perfectly still for 30 seconds…</text>
+  <text x="72" y="432" font-size="30" font-weight="800" fill="#edeff7">…while the internet tries to make you <tspan fill="#ff5d7a">flinch.</tspan></text>
+</svg>

@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Petri 🧫 — a daily Game of Life puzzle</title>
+<meta name="description" content="Plant a few cells on today's dish, press play, and watch Conway's Game of Life bloom. Light up every target with the fewest seeds. Same puzzle for everyone, daily." />
+<link rel="canonical" href="https://viper-vm.github.io/demos/petri/" />
+<meta property="og:title" content="Petri — a daily Game of Life puzzle" />
+<meta property="og:description" content="Plant cells, press play, watch Conway's Game of Life bloom to light up today's targets — with the fewest seeds. Same dish for everyone, new puzzle daily." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/petri/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/petri/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#0a0f0c" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230a0f0c"/><circle cx="50" cy="50" r="30" fill="none" stroke="%2354e39a" stroke-width="6"/><circle cx="42" cy="44" r="7" fill="%2354e39a"/><circle cx="60" cy="56" r="5" fill="%2354e39a"/></svg>' />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0a0f0c;--panel:#121a15;--panel2:#18231c;--line:rgba(255,255,255,.09);
+    --ink:#e9f5ee;--mut:#8aa398;--acc:#54e39a;--gold:#ffd451;--wall:#39463f}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--ink);min-height:100dvh;
+    font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;
+    padding:calc(12px + env(safe-area-inset-top)) 12px calc(24px + env(safe-area-inset-bottom))}
+  .wrap{max-width:480px;margin:0 auto;text-align:center}
+  .logo{font-size:clamp(28px,7vw,38px);font-weight:800;letter-spacing:-.02em}
+  .logo b{color:var(--acc)}
+  .sub{color:var(--mut);font-size:13px;font-weight:700;margin-top:4px}
+  .sub .n{color:var(--acc)}
+  #board{width:100%;max-width:440px;aspect-ratio:1;margin:14px auto 8px;display:block;border-radius:16px;background:#0d130f;border:1px solid var(--line);touch-action:none}
+  .status{display:flex;justify-content:center;gap:16px;font-size:14px;font-weight:700;margin:2px 0 12px}
+  .status .k{color:var(--mut)}
+  .status b{font-variant-numeric:tabular-nums}
+  .seedsleft b{color:var(--acc)} .targ b{color:var(--gold)}
+  .controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn{border:0;cursor:pointer;font:inherit;font-weight:800;font-size:16px;border-radius:14px;padding:15px;transition:transform .07s,opacity .2s}
+  .btn:active{transform:scale(.98)}
+  .btn.run{background:var(--acc);color:#062013;box-shadow:0 6px 22px -8px var(--acc)}
+  .btn.clear{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+  .hint{color:var(--mut);font-size:12.5px;margin-top:10px;line-height:1.4}
+  .hint b{color:var(--ink)}
+  .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:16px}
+  .foot a{color:var(--mut);text-decoration:none;border-bottom:1px solid var(--line)}
+  .helpBtn{position:fixed;top:calc(10px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;
+    border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer}
+  .ov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px 16px;
+    background:rgba(6,10,8,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+  .ov.show{opacity:1;pointer-events:auto}
+  .sheet{width:min(440px,100%);background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;margin:auto 0;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,.85);max-height:calc(100dvh - 40px);overflow-y:auto;text-align:center}
+  .sheet h2{font-size:24px;font-weight:800}
+  .big{font-size:46px;font-weight:800;margin:8px 0 2px}
+  .lead{color:var(--mut);font-size:14px;margin:4px 0 14px;line-height:1.5}
+  .okbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:16px;border-radius:14px;padding:14px;background:var(--acc);color:#062013;margin-top:12px}
+  .sbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:14px;border-radius:14px;padding:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:9px}
+  .rules{text-align:left;font-size:14px;line-height:1.55}
+  .rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:14px 0 6px;font-weight:800}
+  .rules ol{margin:0 0 4px 18px}.rules li{margin-bottom:7px}.rules b{color:var(--acc)}
+  .count{color:var(--mut);font-size:12.5px;text-align:center;margin-top:12px}.count b{color:var(--ink)}
+  #toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);
+    background:#18231c;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;opacity:0;transition:all .24s;z-index:60;pointer-events:none;max-width:90vw}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
+<div class="wrap">
+  <div class="logo">🧫 <b>PETRI</b></div>
+  <div class="sub"><span id="puzId"></span> · <span id="dateStr"></span></div>
+  <canvas id="board" width="600" height="600"></canvas>
+  <div class="status">
+    <span class="seedsleft k">seeds left <b id="seedsLeft">0</b></span>
+    <span class="targ k">targets <b id="targCount">0</b></span>
+    <span class="k">runs left <b id="runsLeft">3</b></span>
+  </div>
+  <div class="controls">
+    <button class="btn clear" id="clearBtn">CLEAR</button>
+    <button class="btn run" id="runBtn">▶ RUN</button>
+  </div>
+  <p class="hint" id="hint">Tap empty cells to plant <b>seeds</b>. Light up every <b style="color:var(--gold)">gold target</b> with the fewest seeds. Avoid the walls.</p>
+  <p class="foot">a daily Game of Life puzzle · built by <a href="https://viper-vm.github.io" target="_blank" rel="noreferrer">Vivek Modi</a></p>
+</div>
+
+<div class="ov" id="ovResult"><div class="sheet">
+  <h2 id="resTitle"></h2>
+  <div class="big" id="resBig"></div>
+  <p class="lead" id="resLead"></p>
+  <button class="okbtn" id="resAction"></button>
+  <button class="sbtn" id="copyBtn">COPY RESULT</button>
+  <button class="sbtn" id="shareBtn">Share…</button>
+  <p class="count" id="countdown"></p>
+</div></div>
+
+<div class="ov" id="ovRules"><div class="sheet">
+  <h2>How to play 🧫</h2>
+  <div class="rules">
+    <h4>THE GOAL</h4>
+    <p>Everyone gets the same dish today. Light up every <b style="color:var(--gold)">gold target</b> — using as few seeds as you can.</p>
+    <h4>HOW A ROUND WORKS</h4>
+    <ol>
+      <li>Tap empty cells to plant <b>living seeds</b> (you have a limited supply). You can't plant on walls or on targets.</li>
+      <li>Press <b>▶ RUN</b> and watch Conway's <b>Game of Life</b> play out — cells with 2–3 neighbours survive, empty cells with exactly 3 neighbours are born, everything else dies.</li>
+      <li>A target lights up the moment a living cell touches it. Light them <b>all</b> to win.</li>
+      <li>You get <b>3 runs</b> a day — reset and re-plant to win, or to win with even fewer seeds.</li>
+    </ol>
+    <p style="color:var(--mut);font-size:13px;margin-top:12px">One seed next to a target works, but a clever pattern can bloom across several at once. New dish daily at midnight UTC.</p>
+  </div>
+  <button class="okbtn" id="rulesClose">GOT IT</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>/*PETRI*/
+'use strict';
+const LS=(function(){let ok=false;const mem={};try{localStorage.setItem('__pt','1');localStorage.removeItem('__pt');ok=true;}catch(e){}
+  return{get(k){try{return ok?localStorage.getItem(k):(k in mem?mem[k]:null)}catch(e){return k in mem?mem[k]:null}},
+         set(k,v){v=String(v);mem[k]=v;try{if(ok)localStorage.setItem(k,v)}catch(e){}}};})();
+const $=id=>document.getElementById(id);
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+const G=15, GENS=26, SEEDS=14, RUNS=3;
+function utcDay(){const n=new Date();return Math.floor(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate())/864e5);}
+const EPOCH=Math.floor(Date.UTC(2026,6,1)/864e5);
+
+let wall,target,seed,targets,phase='edit',attempts=0,best=null,anim=0;
+const idx=(x,y)=>y*G+x, inB=(x,y)=>x>=0&&x<G&&y>=0&&y<G;
+
+function buildDaily(seedVal){
+  const r=mulberry32(seedVal>>>0);
+  wall=new Uint8Array(G*G);target=new Uint8Array(G*G);seed=new Uint8Array(G*G);targets=[];
+  // walls: a few short clusters, ~10% coverage
+  const nWall=Math.floor(G*G*(0.08+r()*0.05));
+  for(let i=0;i<nWall;i++){const x=Math.floor(r()*G),y=Math.floor(r()*G);wall[idx(x,y)]=1;}
+  // targets: 4-5, spread out, not on walls, not on border
+  const K=4+Math.floor(r()*2);let guard=0;
+  while(targets.length<K&&guard<600){guard++;
+    const x=1+Math.floor(r()*(G-2)),y=1+Math.floor(r()*(G-2));const id=idx(x,y);
+    if(wall[id]||target[id])continue;
+    if(targets.some(t=>Math.abs(t.x-x)+Math.abs(t.y-y)<3))continue; // spacing
+    target[id]=1;targets.push({x,y});
+  }
+}
+function simulate(){
+  // returns {frames:[Uint8Array...], hitGen:Int for each target}
+  let cur=seed.slice();
+  const frames=[cur.slice()];
+  const hitGen=targets.map(()=>-1);
+  const check=(g)=>{targets.forEach((t,ti)=>{if(hitGen[ti]>=0)return;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=t.x+dx,y=t.y+dy;if(inB(x,y)&&cur[idx(x,y)]){hitGen[ti]=g;return;}}});};
+  check(0);
+  for(let g=1;g<GENS;g++){
+    const nxt=new Uint8Array(G*G);
+    for(let y=0;y<G;y++)for(let x=0;x<G;x++){
+      if(wall[idx(x,y)]){nxt[idx(x,y)]=0;continue;}
+      let n=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const xx=x+dx,yy=y+dy;if(inB(xx,yy)&&cur[idx(xx,yy)])n++;}
+      const alive=cur[idx(x,y)];
+      nxt[idx(x,y)]=(alive&&(n===2||n===3))||(!alive&&n===3)?1:0;
+    }
+    cur=nxt;frames.push(cur.slice());check(g);
+  }
+  return {frames,hitGen};
+}
+
+/* ---- render ---- */
+const cv=$('board'),ctx=cv.getContext('2d');
+let CS=40,drawAlive=null,litTargets=null;
+function fit(){const dpr=Math.min(devicePixelRatio||1,2.5);const px=cv.clientWidth||440;cv.width=Math.round(px*dpr);cv.height=Math.round(px*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);CS=px/G;render();}
+function render(){
+  const px=cv.clientWidth||440;ctx.clearRect(0,0,px,px);
+  for(let y=0;y<G;y++)for(let x=0;x<G;x++){
+    const id=idx(x,y),cx=x*CS,cy=y*CS,pad=CS*0.08,s=CS-pad*2;
+    ctx.fillStyle='#0f1712';ctx.fillRect(cx+pad,cy+pad,s,s);
+    if(wall[id]){ctx.fillStyle='#39463f';ctx.fillRect(cx+pad,cy+pad,s,s);}
+    const al=drawAlive?drawAlive[id]:seed[id];
+    if(al){ctx.fillStyle='#54e39a';roundRect(cx+pad,cy+pad,s,s,CS*0.16);ctx.fill();}
+    if(target[id]){
+      const lit=litTargets&&litTargets[targets.findIndex(t=>t.x===x&&t.y===y)];
+      ctx.strokeStyle=lit?'#ffd451':'rgba(255,212,81,.55)';ctx.lineWidth=Math.max(2,CS*0.09);
+      ctx.beginPath();ctx.arc(cx+CS/2,cy+CS/2,s*0.34,0,7);ctx.stroke();
+      if(lit){ctx.fillStyle='rgba(255,212,81,.9)';ctx.beginPath();ctx.arc(cx+CS/2,cy+CS/2,s*0.16,0,7);ctx.fill();}
+    }
+  }
+}
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+/* ---- interaction ---- */
+cv.addEventListener('pointerdown',e=>{
+  if(phase!=='edit')return;
+  const r=cv.getBoundingClientRect();const x=Math.floor((e.clientX-r.left)/CS),y=Math.floor((e.clientY-r.top)/CS);
+  if(!inB(x,y))return;const id=idx(x,y);
+  if(wall[id]||target[id]){toast(wall[id]?'Can’t plant on a wall':'Targets can’t be seeded — grow to them');return;}
+  if(seed[id]){seed[id]=0;}
+  else{if(seedsUsed()>=SEEDS){toast('Out of seeds — clear some first');return;}seed[id]=1;}
+  render();updateStatus();
+});
+const seedsUsed=()=>seed.reduce((n,v)=>n+v,0);
+function updateStatus(){$('seedsLeft').textContent=SEEDS-seedsUsed();$('targCount').textContent=targets.length;$('runsLeft').textContent=RUNS-attempts;
+  $('runBtn').disabled=phase!=='edit'||seedsUsed()===0||attempts>=RUNS;}
+
+/* ---- run ---- */
+function run(){
+  if(phase!=='edit'||seedsUsed()===0||attempts>=RUNS)return;
+  attempts++;phase='running';const usedSeeds=seedsUsed();
+  const {frames,hitGen}=simulate();
+  litTargets=targets.map(()=>false);
+  clearInterval(anim);let g=0;
+  const stepMs=90;
+  anim=setInterval(()=>{
+    drawAlive=frames[g];targets.forEach((t,ti)=>{if(hitGen[ti]>=0&&hitGen[ti]<=g)litTargets[ti]=true;});
+    render();g++;
+    if(g>=frames.length){clearInterval(anim);finishRun(hitGen,usedSeeds);}
+  },stepMs);
+}
+function finishRun(hitGen,usedSeeds){
+  const hits=hitGen.filter(h=>h>=0).length,win=hits===targets.length;
+  save(win?usedSeeds:null);
+  const canRetry=attempts<RUNS;
+  $('resTitle').textContent=win?'BLOOM! 🌸':(hits>0?'Almost — '+hits+'/'+targets.length:'No targets lit 🥀');
+  $('resBig').textContent=win?('🌱 '+usedSeeds+' seed'+(usedSeeds===1?'':'s')):(hits+' / '+targets.length);
+  $('resLead').textContent=win
+    ? (best!==null&&best<usedSeeds?'Your best today is '+best+' seeds — can you match it?':'You lit all '+targets.length+' targets with '+usedSeeds+' seeds.'+(canRetry?' Try to beat it!':''))
+    : (canRetry?'Reset, re-plant, and try again — '+(RUNS-attempts)+' run'+(RUNS-attempts===1?'':'s')+' left.':'Out of runs for today. Come back tomorrow!');
+  $('resAction').textContent=canRetry?'EDIT & TRY AGAIN':'DONE';
+  $('resAction').onclick=()=>{$('ovResult').classList.remove('show');if(canRetry){phase='edit';drawAlive=null;litTargets=null;render();updateStatus();}};
+  window.__lastRun={win,hits,usedSeeds,total:targets.length};
+  $('ovResult').classList.add('show');tickCountdown();
+}
+
+/* ---- persistence ---- */
+function storeKey(){return 'petri_'+utcDay();}
+function save(winSeeds){
+  let d;try{d=JSON.parse(LS.get(storeKey())||'{}');}catch(e){d={};}
+  d.attempts=attempts;
+  if(winSeeds!==null){d.best=d.best!=null?Math.min(d.best,winSeeds):winSeeds;best=d.best;}
+  d.done=attempts>=RUNS;LS.set(storeKey(),JSON.stringify(d));
+}
+function load(){try{const d=JSON.parse(LS.get(storeKey())||'{}');attempts=d.attempts||0;best=d.best!=null?d.best:null;}catch(e){}}
+
+/* ---- share ---- */
+function shareText(){
+  const id='Petri #'+(utcDay()-EPOCH+1);
+  if(best!=null)return id+'\n🌸 lit all '+targets.length+' targets · 🌱 '+best+' seeds\ngrow your own: viper-vm.github.io/demos/petri';
+  const lr=window.__lastRun||{hits:0,total:targets.length};
+  return id+'\n🥀 '+lr.hits+'/'+lr.total+' targets lit\ntry it: viper-vm.github.io/demos/petri';
+}
+
+/* ---- overlays ---- */
+let cdT;function tickCountdown(){clearInterval(cdT);const upd=()=>{const n=new Date();const nx=Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),n.getUTCDate()+1);let ms=nx-n.getTime();if(ms<0)ms=0;const h=Math.floor(ms/36e5),m=Math.floor(ms%36e5/6e4),s=Math.floor(ms%6e4/1e3);$('countdown').innerHTML='Next dish in <b>'+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+'</b>';};upd();cdT=setInterval(upd,1000);}
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2100);}
+
+/* ---- wire ---- */
+$('runBtn').onclick=run;
+$('clearBtn').onclick=()=>{if(phase!=='edit')return;seed=new Uint8Array(G*G);render();updateStatus();};
+$('rulesBtn').onclick=()=>$('ovRules').classList.add('show');
+$('rulesClose').onclick=()=>$('ovRules').classList.remove('show');
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))$('ovRules').classList.remove('show');});
+$('copyBtn').onclick=async()=>{const t=shareText();try{await navigator.clipboard.writeText(t);}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(_){}ta.remove();}toast('Copied');};
+$('shareBtn').onclick=async()=>{const t=shareText();if(navigator.share){try{await navigator.share({text:t});}catch(e){}}else{$('copyBtn').click();}};
+addEventListener('resize',fit);
+
+/* ---- debug ---- */
+window.__petri={state:()=>({phase,attempts,best,seeds:seedsUsed(),targets:targets.length}),
+  targets:()=>targets.slice(),
+  solveNaive:()=>{seed=new Uint8Array(G*G);targets.forEach(t=>{for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const x=t.x+dx,y=t.y+dy;if(inB(x,y)&&!wall[idx(x,y)]&&!target[idx(x,y)]&&seedsUsed()<SEEDS){seed[idx(x,y)]=1;return;}}});render();updateStatus();return seedsUsed();},
+  run:()=>run(),
+  simResult:()=>{const {hitGen}=simulate();return {hit:hitGen.filter(h=>h>=0).length,total:targets.length};}};
+
+/* ---- boot ---- */
+(function boot(){
+  $('puzId').textContent='Petri #'+(utcDay()-EPOCH+1);
+  $('dateStr').textContent=new Date().toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+  buildDaily((utcDay()*2654435761)>>>0||1);load();
+  requestAnimationFrame(()=>{fit();updateStatus();});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Ghostball 🎱 — benchmark your brain's physics engine</title>
+<meta name="description" content="A ball rolls behind a wall. Tap the exact instant it should come out. Ghostball benchmarks your brain's built-in physics engine — how far ahead do you really see?" />
+<link rel="canonical" href="https://viper-vm.github.io/demos/ghostball/" />
+<meta property="og:title" content="Ghostball — benchmark your brain's physics engine" />
+<meta property="og:description" content="A ball rolls behind a wall; tap the instant it should reappear. A ghost replay shows exactly how early or late you were. How far into the future does your brain see?" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/ghostball/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/ghostball/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#0b0e15" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230b0e15"/><circle cx="50" cy="52" r="26" fill="%2338e0c8"/></svg>' />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0b0e15;--panel:#151a26;--panel2:#1d2434;--line:rgba(255,255,255,.09);
+    --ink:#eaf0fb;--mut:#8f9bb3;--acc:#38e0c8;--warn:#ffcf5a;--no:#ff6b7d;--ok:#5ee08a}
+  html,body{height:100%;overflow:hidden;background:var(--bg);touch-action:none;overscroll-behavior:none}
+  body{color:var(--ink);font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  #cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+  #hud{position:fixed;top:calc(10px + env(safe-area-inset-top));left:0;right:0;text-align:center;pointer-events:none;z-index:5;
+    font-weight:800;font-size:14px;letter-spacing:.03em;color:var(--mut)}
+  #hud b{color:var(--ink)}
+  .helpBtn{position:fixed;top:calc(9px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;
+    border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer;line-height:1;pointer-events:auto}
+  .ov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px 16px;
+    background:rgba(7,10,16,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+  .ov.show{opacity:1;pointer-events:auto}
+  .sheet{width:min(460px,100%);text-align:center;margin:auto 0}
+  .sheet.card{background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:24px 22px;box-shadow:0 30px 80px -20px rgba(0,0,0,.85);max-height:calc(100dvh - 40px);overflow-y:auto}
+  .logo{font-size:clamp(34px,9vw,50px);font-weight:800;letter-spacing:-.02em;line-height:1}
+  .logo b{color:var(--acc)}
+  .tag{color:var(--mut);font-size:15px;margin:10px 0 22px;line-height:1.5}
+  .tag b{color:var(--ink)}
+  .btn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:18px;border-radius:15px;padding:16px;color:#052018;
+    background:var(--acc);box-shadow:0 6px 26px -8px var(--acc);transition:transform .07s}
+  .btn:active{transform:scale(.98)}
+  .btn.sec{background:var(--panel2);color:var(--ink);border:1px solid var(--line);box-shadow:none;font-size:15px;padding:13px}
+  .mini{color:var(--mut);font-size:13px;margin-top:16px;line-height:1.5}
+  .headline{font-size:clamp(26px,7vw,34px);font-weight:800;line-height:1.1;margin:2px 0 4px}
+  .subid{color:var(--mut);font-size:15px;margin-bottom:16px;line-height:1.5}
+  .metrics{display:flex;gap:10px;margin:12px 0}
+  .metric{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 6px}
+  .metric .v{font-size:23px;font-weight:800;font-variant-numeric:tabular-nums}
+  .metric .l{font-size:10.5px;letter-spacing:.09em;color:var(--mut);font-weight:700;margin-top:3px;text-transform:uppercase}
+  .strip{font-size:22px;letter-spacing:3px;margin:10px 0}
+  .btnrow{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}.full{grid-column:1/-1}
+  .rules{text-align:left;font-size:14px;line-height:1.55}
+  .rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:15px 0 6px;font-weight:800}
+  .rules ol{margin:0 0 4px 18px}.rules li{margin-bottom:7px}.rules b{color:var(--acc)}
+  #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);
+    background:#1d2434;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;
+    opacity:0;transition:all .24s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud"><span id="prog"></span></div>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
+
+<div class="ov show" id="ovStart"><div class="sheet">
+  <div class="logo">Ghost<b>ball</b> 🎱</div>
+  <p class="tag">A ball rolls behind a wall. <b>Tap the exact instant</b> it should come out the other side. Your brain runs a physics engine — let's benchmark it.</p>
+  <button class="btn" id="startBtn">START</button>
+  <p class="mini">8 rounds · tap anywhere to call the exit · trust your gut</p>
+</div></div>
+
+<div class="ov" id="ovResult"><div class="sheet">
+  <div class="headline" id="resHead"></div>
+  <div class="subid" id="resSub"></div>
+  <div class="strip" id="resStrip"></div>
+  <div class="metrics">
+    <div class="metric"><div class="v" id="resAvg"></div><div class="l">avg error</div></div>
+    <div class="metric"><div class="v" id="resScore"></div><div class="l">engine</div></div>
+    <div class="metric"><div class="v" id="resBest"></div><div class="l">best hit</div></div>
+  </div>
+  <div class="btnrow">
+    <button class="btn full" id="copyBtn">COPY MY RESULT</button>
+    <button class="btn sec" id="shareBtn">Share…</button>
+    <button class="btn sec" id="againBtn">Play again</button>
+  </div>
+  <p class="mini" id="bestLine"></p>
+</div></div>
+
+<div class="ov" id="ovRules"><div class="sheet card">
+  <div class="logo" style="font-size:30px">How to play</div>
+  <div class="rules">
+    <h4>THE TEST</h4>
+    <ol>
+      <li>A ball rolls in from the left at a steady speed and disappears <b>behind a wall</b>.</li>
+      <li><b>Tap anywhere</b> at the exact moment you think its center reaches the far edge of the wall — the glowing exit line.</li>
+      <li>A ghost of the ball freezes where it really was, and you see how many <b>milliseconds early or late</b> you were.</li>
+      <li>8 rounds. Speed and wall width change; later rounds the ball gently slows, so your brain has to predict the physics.</li>
+    </ol>
+    <h4>THE SCORE</h4>
+    <p>Your <b>engine rating</b> comes from how tight your timing is. A consistent early or late lean earns you an identity — <i>trigger-happy</i> vs <i>laid-back</i> — plus how many milliseconds into the future your brain is really seeing.</p>
+  </div>
+  <button class="btn" id="rulesClose" style="margin-top:14px">GOT IT</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>/*GHOSTBALL*/
+'use strict';
+const LS=(function(){let ok=false;const mem={};try{localStorage.setItem('__gb','1');localStorage.removeItem('__gb');ok=true;}catch(e){}
+  return{get(k){try{return ok?localStorage.getItem(k):(k in mem?mem[k]:null)}catch(e){return k in mem?mem[k]:null}},
+         set(k,v){v=String(v);mem[k]=v;try{if(ok)localStorage.setItem(k,v)}catch(e){}}};})();
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+const cv=$('cv'),ctx=cv.getContext('2d');
+let dpr=1,W=0,H=0;
+function resize(){dpr=Math.min(window.devicePixelRatio||1,2.5);
+  W=innerWidth||document.documentElement.clientWidth||360;
+  H=innerHeight||document.documentElement.clientHeight||640;
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
+addEventListener('resize',resize);
+
+const ROUNDS=8;
+let phase='menu',idx=0,errs=[],round=null,tStart=0,rafId=0;
+
+function makeRound(i){
+  const base=Math.min(W,H);
+  const y=H*0.5;
+  const r=clamp(base*0.045,14,26);
+  const v0=base*(0.55+i*0.06);                 // px/s, faster each round
+  const wallW=clamp(base*(0.22+i*0.02),90,W*0.5);
+  const wallX=W*0.42;
+  const exitX=wallX+wallW;
+  const startX=-r-8;
+  const D=exitX-startX;
+  // later rounds gently slow down, but decel is derived from the distance so the
+  // ball ALWAYS reaches the exit at a positive speed (vex)
+  const slow=i>=4?(0.45+(i-4)*0.08):0;         // fraction of speed lost by the exit
+  const vex=v0*(1-slow);
+  const decel=slow>0?(v0*v0-vex*vex)/(2*D):0;
+  const te=decel>0?(v0-vex)/decel:D/v0;         // exact time to reach exit
+  return {y,r,v0,vex,decel,wallX,wallW,exitX,startX,D,te};
+}
+function ballX(t){const R=round;return R.startX+R.v0*t-0.5*R.decel*t*t;}
+function ballV(t){return Math.max(round.vex||40,round.v0-round.decel*t);}
+
+function startRound(){
+  round=makeRound(idx);phase='rolling';tStart=performance.now();
+  $('prog').innerHTML='<b>'+(idx+1)+'</b> / '+ROUNDS;
+  cancelAnimationFrame(rafId);loop();
+}
+function loop(){
+  draw((performance.now()-tStart)/1000);
+  if(phase==='rolling')rafId=requestAnimationFrame(loop);
+}
+function draw(t){
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#0b0e15';ctx.fillRect(0,0,W,H);
+  const R=round;if(!R)return;
+  // ground line
+  ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,R.y+R.r+4);ctx.lineTo(W,R.y+R.r+4);ctx.stroke();
+  // exit line
+  ctx.strokeStyle=phase==='feedback'?'rgba(94,224,138,.9)':'rgba(56,224,200,.55)';ctx.lineWidth=3;ctx.setLineDash([7,7]);
+  ctx.beginPath();ctx.moveTo(R.exitX,R.y-70);ctx.lineTo(R.exitX,R.y+70);ctx.stroke();ctx.setLineDash([]);
+  // ball (hidden behind wall)
+  const bx=ballX(t);
+  const behind=bx>R.wallX-R.r && bx<R.exitX+R.r;
+  if(phase==='rolling'&&!behind){drawBall(bx,R.y,R.r,'var');}
+  if(phase==='feedback'){
+    // ghost at true tap position
+    drawBall(round._tapX,R.y,R.r,'ghost');
+  }
+  // wall (drawn over ball to occlude)
+  ctx.fillStyle='#1d2434';ctx.fillRect(R.wallX,R.y-95,R.wallW,190);
+  ctx.strokeStyle='rgba(255,255,255,.10)';ctx.lineWidth=1.5;ctx.strokeRect(R.wallX,R.y-95,R.wallW,190);
+  ctx.fillStyle='rgba(255,255,255,.25)';ctx.font='800 13px system-ui';ctx.textAlign='center';ctx.fillText('?',R.wallX+R.wallW/2,R.y+5);
+  ctx.fillStyle='rgba(56,224,200,.75)';ctx.font='700 12px system-ui';ctx.textAlign='left';ctx.fillText('EXIT',R.exitX+6,R.y-76);
+  if(phase==='feedback'){
+    const e=round._err;
+    ctx.fillStyle=Math.abs(e)<30?'#5ee08a':Math.abs(e)<90?'#ffcf5a':'#ff6b7d';
+    ctx.font='800 30px system-ui';ctx.textAlign='center';
+    ctx.fillText((e>0?'+':'')+Math.round(e)+' ms',W/2,R.y-140);
+    ctx.font='600 15px system-ui';ctx.fillStyle='rgba(255,255,255,.7)';
+    ctx.fillText(e>0?'too late — ball already passed':(e<0?'too early — ball not there yet':'perfect!'),W/2,R.y-114);
+  }
+  if(phase==='rolling'){
+    ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='600 15px system-ui';ctx.textAlign='center';
+    ctx.fillText('tap when it reaches the EXIT line',W/2,H-60);
+  }
+  ctx.textAlign='left';
+}
+function drawBall(x,y,r,mode){
+  ctx.save();
+  if(mode==='ghost'){ctx.globalAlpha=.5;ctx.fillStyle='#ff6b7d';}else{ctx.fillStyle='#38e0c8';}
+  ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();
+  ctx.fillStyle='rgba(0,0,0,.25)';ctx.beginPath();ctx.arc(x+r*0.3,y-r*0.3,r*0.32,0,7);ctx.fill();
+  ctx.restore();
+}
+function tap(){
+  if(phase!=='rolling')return;
+  const t=(performance.now()-tStart)/1000;
+  const bx=ballX(t);
+  const errPx=bx-round.exitX;                 // + means ball already past exit (late)
+  const errMs=errPx/ballV(t)*1000;
+  round._tapX=bx;round._err=errMs;errs.push(errMs);
+  phase='feedback';cancelAnimationFrame(rafId);draw(t);
+  try{if(navigator.vibrate)navigator.vibrate(10);}catch(e){}
+  setTimeout(()=>{idx++;if(idx>=ROUNDS)finish();else startRound();},1050);
+}
+cv.addEventListener('pointerdown',e=>{e.preventDefault();tap();});
+addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();tap();}});
+
+function start(){resize();idx=0;errs=[];$('ovStart').classList.remove('show');$('ovResult').classList.remove('show');startRound();}
+
+function stats(){
+  const n=errs.length||1;let s=0,a=0,best=Infinity;
+  errs.forEach(e=>{s+=e;a+=Math.abs(e);best=Math.min(best,Math.abs(e));});
+  const mean=s/n,avgAbs=a/n;
+  return{mean,avgAbs,best:Math.round(best),score:clamp(Math.round(100-avgAbs/2.2),0,100)};
+}
+function finish(){
+  phase='done';cancelAnimationFrame(rafId);round=null;$('prog').innerHTML='';ctx.clearRect(0,0,W,H);ctx.fillStyle='#0b0e15';ctx.fillRect(0,0,W,H);
+  const s=stats();
+  const early=s.mean<-12,late=s.mean>12;
+  const id=early?'⚡ Trigger-happy':late?'🐢 Laid-back':'🎯 Dead-on';
+  const head=Math.abs(s.mean)<12?'Uncanny timing.':early?'You fire early.':'You fire late.';
+  const sub=Math.abs(s.mean)<8?'Your internal clock is scary-accurate.':
+    'On average you call the exit '+Math.abs(Math.round(s.mean))+'ms '+(early?'before':'after')+' the ball actually gets there — your brain lives '+Math.abs(Math.round(s.mean))+'ms in the '+(early?'future':'past')+'.';
+  window.__lastResult={s,id,head};
+  $('resHead').textContent=head;$('resSub').textContent=sub;
+  $('resStrip').textContent=errs.map(e=>Math.abs(e)<30?'🟩':Math.abs(e)<90?'🟨':'🟥').join('');
+  $('resAvg').textContent='±'+Math.round(s.avgAbs)+'ms';$('resScore').textContent=s.score;$('resBest').textContent='±'+s.best+'ms';
+  let best=+(LS.get('gb_best')||0);if(s.score>best){best=s.score;LS.set('gb_best',best);}
+  $('bestLine').textContent='Best engine rating: '+best+'/100 · '+id;
+  $('ovResult').classList.add('show');
+}
+function shareText(){const {s,id}=window.__lastResult;
+  return 'Ghostball 🎱  '+id+'\n±'+Math.round(s.avgAbs)+'ms avg · engine '+s.score+'/100\n'+errs.map(e=>Math.abs(e)<30?'🟩':Math.abs(e)<90?'🟨':'🟥').join('')+'\nbenchmark your brain: viper-vm.github.io/demos/ghostball';}
+
+$('startBtn').onclick=start;$('againBtn').onclick=start;
+$('rulesBtn').onclick=()=>$('ovRules').classList.add('show');
+$('rulesClose').onclick=()=>$('ovRules').classList.remove('show');
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))$('ovRules').classList.remove('show');});
+$('copyBtn').onclick=async()=>{const t=shareText();try{await navigator.clipboard.writeText(t);}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(_){}ta.remove();}toast('Copied — challenge a friend');};
+$('shareBtn').onclick=async()=>{const t=shareText();if(navigator.share){try{await navigator.share({text:t});}catch(e){}}else{$('copyBtn').click();}};
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+window.__ghostball={state:()=>({phase,idx,errs:errs.slice()}),
+  tapAt:(ms)=>{if(phase!=='rolling')return'not rolling';tStart=performance.now()-ms;tap();return round._err;},
+  auto:(offMs)=>{resize();errs=[];idx=0;phase='menu';
+    for(let i=0;i<ROUNDS;i++){round=makeRound(i);const R=round;
+      const t=R.te+(offMs||0)/1000;const bx=ballX(t);errs.push((bx-R.exitX)/ballV(t)*1000);}
+    finish();
+    return window.__lastResult&&{avg:Math.round(window.__lastResult.s.avgAbs),score:window.__lastResult.s.score,mean:Math.round(window.__lastResult.s.mean)};}};
+
+resize();
+</script>
+</body>
+</html>
