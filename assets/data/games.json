@@ -135,6 +135,15 @@
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/scroll-golf"
   },
   {
+    "id": "keyprint",
+    "title": "Keyprint",
+    "summary": "Your typing rhythm is a fingerprint. Type a phrase and the millisecond gaps between your keystrokes become a barcode-like keyprint. Send the link and dare a friend to forge your cadence — scored by how closely their rhythm's shape matches yours.",
+    "category": "Social",
+    "emoji": "⌨️",
+    "demo_url": "/demos/keyprint/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/keyprint"
+  },
+  {
     "id": "wordle",
     "title": "Wordle Clone",
     "summary": "A fully playable Wordle clone with daily words and statistics.",

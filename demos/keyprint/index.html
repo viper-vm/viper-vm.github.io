@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Keyprint ⌨️ — your typing rhythm is a fingerprint</title>
+<meta name="description" content="Your typing rhythm is a fingerprint. Type a phrase, capture your cadence as a keyprint, then dare your friends to forge it. The rhythm is packed into the URL." />
+<link rel="canonical" href="https://viper-vm.github.io/demos/keyprint/" />
+<meta property="og:title" content="Keyprint — your typing rhythm is a fingerprint" />
+<meta property="og:description" content="Type a phrase and the gaps between your keystrokes become a unique keyprint. Send the link and dare a friend to forge your cadence. How close can they get?" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/keyprint/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/keyprint/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#0d0f16" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230d0f16"/><text y=".9em" x="14" font-size="60">⌨️</text></svg>' />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0d0f16;--panel:#161a26;--panel2:#1f2532;--line:rgba(255,255,255,.1);--ink:#eaeefb;--mut:#8f99b3;--acc:#7cf5c8;--acc2:#7c9bff}
+  html,body{height:100%;min-height:100dvh;background:var(--bg)}
+  body{color:var(--ink);font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;
+    padding:calc(16px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;min-height:100dvh}
+  .wrap{width:100%;max-width:520px;text-align:center}
+  .logo{font-size:clamp(26px,7vw,36px);font-weight:800}.logo b{color:var(--acc)}
+  .sub{color:var(--mut);font-size:14px;margin-top:4px;line-height:1.4}.sub b{color:var(--ink)}
+  .phrase{font-size:clamp(20px,5vw,26px);font-weight:700;letter-spacing:.01em;margin:22px 0 4px;line-height:1.4;font-family:ui-monospace,Menlo,monospace}
+  .phrase .done{color:var(--acc)}.phrase .cur{border-bottom:3px solid var(--acc);animation:bl 1s step-end infinite}@keyframes bl{50%{border-color:transparent}}.phrase .rest{color:var(--mut)}
+  #entry{position:absolute;opacity:0;pointer-events:none;left:-9999px}
+  .tapzone{margin:16px 0;border:2px dashed var(--line);border-radius:16px;padding:18px;color:var(--mut);font-size:14px;font-weight:700;cursor:text;background:var(--panel)}
+  .tapzone.active{border-color:var(--acc);color:var(--ink)}
+  #wave{width:100%;height:90px;margin:16px 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;display:block}
+  .btn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:16px;border-radius:14px;padding:14px;color:#05201a;background:var(--acc);box-shadow:0 6px 22px -8px var(--acc);transition:transform .07s}
+  .btn:active{transform:scale(.98)}.btn:disabled{opacity:.4}
+  .btn.sec{background:var(--panel2);color:var(--ink);border:1px solid var(--line);box-shadow:none;font-size:14px;margin-top:9px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .helpBtn{position:fixed;top:calc(10px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer}
+  .ov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px 16px;background:rgba(9,10,16,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+  .ov.show{opacity:1;pointer-events:auto}
+  .sheet{width:min(440px,100%);background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;margin:auto 0;box-shadow:0 30px 80px -20px rgba(0,0,0,.85);text-align:center}
+  .sheet h2{font-size:23px;font-weight:800}
+  .lead{color:var(--mut);font-size:14px;margin:8px 0 14px;line-height:1.5}.lead b{color:var(--ink)}
+  .big{font-size:52px;font-weight:800;margin:4px 0}
+  .okbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:16px;border-radius:14px;padding:14px;background:var(--acc);color:#05201a;margin-top:10px}
+  .sbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:14px;border-radius:14px;padding:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:9px}
+  .rules{text-align:left;font-size:14px;line-height:1.55}.rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:14px 0 6px;font-weight:800}.rules ol{margin:0 0 4px 18px}.rules li{margin-bottom:7px}.rules b{color:var(--acc)}
+  #linkbox{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;word-break:break-all;margin:8px 0;text-align:left}
+  #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);background:#1f2532;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;opacity:0;transition:all .24s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
+<div class="wrap">
+  <div class="logo">⌨️ <b>KEYPRINT</b></div>
+  <div class="sub" id="sub">Your typing rhythm is a fingerprint. Can your friends forge it?</div>
+  <div class="phrase" id="phrase"></div>
+  <div class="tapzone" id="tapzone" tabindex="0">tap here and start typing…</div>
+  <input id="entry" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" />
+  <canvas id="wave" width="1000" height="180"></canvas>
+  <div id="footRecord">
+    <button class="btn" id="sendBtn" disabled>Send my keyprint →</button>
+    <button class="btn sec" id="retryBtn">Type it again</button>
+  </div>
+  <div id="footDuel" style="display:none">
+    <button class="btn" id="playbackBtn">▶ Feel their rhythm</button>
+    <button class="btn sec" id="retryDuelBtn">Type it again</button>
+  </div>
+</div>
+
+<div class="ov" id="ovResult"><div class="sheet">
+  <h2 id="resTitle"></h2>
+  <div class="big" id="resBig"></div>
+  <p class="lead" id="resLead"></p>
+  <button class="okbtn" id="myTurnBtn">⌨️ Send MY keyprint back</button>
+  <button class="sbtn" id="copyResBtn">COPY RESULT</button>
+</div></div>
+
+<div class="ov" id="ovShare"><div class="sheet">
+  <h2>Keyprint captured ⌨️</h2>
+  <p class="lead">Send this link. Your friend has to type the same phrase and match your cadence.</p>
+  <div id="linkbox"></div>
+  <button class="okbtn" id="copyBtn">COPY THE LINK</button>
+  <button class="sbtn" id="shareBtn2">Share…</button>
+  <button class="sbtn" id="shareClose">Done</button>
+</div></div>
+
+<div class="ov" id="ovRules"><div class="sheet">
+  <h2>How to play ⌨️</h2>
+  <div class="rules">
+    <h4>CAPTURE YOUR KEYPRINT</h4>
+    <ol>
+      <li>Type the phrase naturally. The game measures the <b>millisecond gaps</b> between your keystrokes — your personal cadence.</li>
+      <li>That rhythm becomes a barcode-like <b>keyprint</b>. Send the link to challenge a friend.</li>
+    </ol>
+    <h4>FORGE A KEYPRINT</h4>
+    <ol>
+      <li>Open a challenge and you can <b>feel their rhythm</b> played back.</li>
+      <li>Type the same phrase trying to match their timing. Your <b>match %</b> is how close you got.</li>
+    </ol>
+    <p style="color:var(--mut);font-size:13px;margin-top:10px">Best on a real keyboard. Nothing is uploaded — the rhythm lives in the URL.</p>
+  </div>
+  <button class="okbtn" id="rulesClose">GOT IT</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>/*KEYPRINT*/
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const BASE_URL=location.origin+location.pathname;
+const PHRASE_DEFAULT='the quick brown fox';
+
+let phrase=PHRASE_DEFAULT, mode='record', times=[], targetIv=null, myIv=null;
+// times: performance.now() at each correctly typed char
+
+/* ---- codec: phrase + intervals ---- */
+function enc(ph,iv){const b=[ph.length&255];for(let i=0;i<ph.length;i++)b.push(ph.charCodeAt(i)&255);
+  b.push(iv.length&255);for(const v of iv){const c=clamp(Math.round(v),8,4000);b.push((c>>8)&255,c&255);}
+  let s='';for(const x of b)s+=String.fromCharCode(x);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function dec(str){try{const bin=atob(str.replace(/-/g,'+').replace(/_/g,'/'));const b=[];for(let i=0;i<bin.length;i++)b.push(bin.charCodeAt(i));
+  let i=0;const pl=b[i++];let ph='';for(let k=0;k<pl;k++)ph+=String.fromCharCode(b[i++]);
+  const n=b[i++];const iv=[];for(let k=0;k<n;k++)iv.push((b[i++]<<8)|b[i++]);return{phrase:ph,iv};}catch(e){return null;}}
+
+/* ---- typing capture ---- */
+const entry=$('entry');
+function renderPhrase(typedLen){
+  const el=$('phrase');el.innerHTML='';
+  for(let i=0;i<phrase.length;i++){const c=phrase[i]===' '?'␣':phrase[i];const sp=document.createElement('span');
+    sp.textContent=c;sp.className=i<typedLen?'done':(i===typedLen?'cur':'rest');el.appendChild(sp);}
+}
+function focusEntry(){entry.value='';entry.focus();$('tapzone').classList.add('active');$('tapzone').textContent='typing… keep going';}
+$('tapzone').addEventListener('click',focusEntry);
+$('tapzone').addEventListener('focus',focusEntry);
+entry.addEventListener('input',()=>{
+  const v=entry.value;
+  // accept only if it matches the phrase prefix
+  if(phrase.startsWith(v)){
+    // record a timestamp for each newly-correct char
+    while(times.length<v.length){times.push(performance.now());}
+    renderPhrase(v.length);drawWave(intervalsOf(times), targetIv);
+    if(v.length===phrase.length){complete();}
+  }else{
+    // wrong char: trim back to matching prefix, keep timing for correct ones
+    let good=0;while(good<v.length&&good<phrase.length&&v[good]===phrase[good])good++;
+    entry.value=v.slice(0,good);times=times.slice(0,good);renderPhrase(good);
+  }
+});
+function intervalsOf(ts){const out=[];for(let i=1;i<ts.length;i++)out.push(ts[i]-ts[i-1]);return out;}
+function complete(){
+  myIv=intervalsOf(times);
+  $('tapzone').classList.remove('active');$('tapzone').textContent='nice — that\'s your rhythm';
+  if(mode==='record'){$('sendBtn').disabled=false;$('sub').innerHTML='captured <b>'+myIv.length+' gaps</b> — send it to a friend';}
+  else{scoreDuel();}
+  drawWave(myIv,targetIv);
+  entry.blur();
+}
+$('retryBtn').onclick=()=>reset();
+$('retryDuelBtn').onclick=()=>reset();
+function reset(){times=[];myIv=null;entry.value='';renderPhrase(0);drawWave([],targetIv);$('sendBtn').disabled=true;
+  $('tapzone').classList.remove('active');$('tapzone').textContent='tap here and start typing…';
+  $('sub').innerHTML=mode==='duel'?'match their rhythm — <b>type it again</b>':'Your typing rhythm is a fingerprint. Can your friends forge it?';}
+
+/* ---- waveform ---- */
+function drawWave(iv,ghost){
+  const c=$('wave'),g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,c.width,c.height);
+  const N=Math.max((ghost?ghost.length:0),iv.length,1);const bw=c.width/N;const maxV=400;
+  if(ghost){g.fillStyle='rgba(124,155,255,.35)';ghost.forEach((v,i)=>{const h=clamp(v/maxV,0.04,1)*c.height;g.fillRect(i*bw+2,c.height-h,bw-4,h);});}
+  g.fillStyle='#7cf5c8';iv.forEach((v,i)=>{const h=clamp(v/maxV,0.04,1)*c.height;g.fillRect(i*bw+bw*0.28,c.height-h,bw*0.44,h);});
+}
+
+/* ---- duel scoring ---- */
+function pearson(a,b,n){let ma=0,mb=0;for(let i=0;i<n;i++){ma+=a[i];mb+=b[i];}ma/=n;mb/=n;
+  let num=0,da=0,db=0;for(let i=0;i<n;i++){const x=a[i]-ma,y=b[i]-mb;num+=x*y;da+=x*x;db+=y*y;}
+  const den=Math.sqrt(da*db);return den>1e-6?num/den:0;}
+function scoreDuel(){
+  mode='done';const n=Math.min(myIv.length,targetIv.length);if(n<1){reset();return;}
+  const corr=pearson(myIv,targetIv,n);                          // rhythm SHAPE match (-1..1)
+  let err=0;for(let i=0;i<n;i++)err+=Math.abs(myIv[i]-targetIv[i]);const avg=err/n;
+  const tempo=1-clamp(avg/320,0,1);                             // how close the absolute gaps are
+  const pct=clamp(Math.round(clamp(corr,0,1)*88+tempo*12),0,100);window.__pct=pct;
+  $('resTitle').textContent=pct>=85?'Forged it! 🕵️':pct>=65?'Close…':'Not their rhythm 🤖';
+  $('resBig').textContent=pct+'%';
+  $('resLead').textContent=pct>=85?'Your cadence is uncannily close to theirs. Are you them?':pct>=65?'You caught the vibe but drifted on the gaps. Try again?':'Everyone types differently — that\'s the whole point. Your keyprint is your own.';
+  $('ovResult').classList.add('show');
+}
+
+/* ---- playback of target rhythm ---- */
+let ac=null;function tick(){try{if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();const o=ac.createOscillator(),g=ac.createGain();o.type='square';o.frequency.value=1400;g.gain.setValueAtTime(0.12,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.04);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+0.05);}catch(e){}}
+$('playbackBtn').onclick=()=>{if(!targetIv)return;let i=0;const el=$('phrase');tick();renderPhrase(1);
+  const play=()=>{if(i>=targetIv.length){renderPhrase(0);return;}setTimeout(()=>{tick();renderPhrase(i+2);i++;play();},clamp(targetIv[i],20,2000));};play();};
+
+/* ---- flows ---- */
+$('sendBtn').onclick=()=>{if(!myIv)return;const link=BASE_URL+'#'+enc(phrase,myIv);$('linkbox').textContent=link;window.__link=link;$('ovShare').classList.add('show');};
+$('myTurnBtn').onclick=()=>{$('ovResult').classList.remove('show');location.hash='';location.reload();};
+$('copyResBtn').onclick=async()=>{try{await navigator.clipboard.writeText('⌨️ Keyprint — I forged their typing rhythm '+window.__pct+'%. Can you beat it? '+BASE_URL);}catch(e){}toast('Copied');};
+$('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText('⌨️ This is my typing fingerprint. Forge it if you can: '+window.__link);}catch(e){const ta=document.createElement('textarea');ta.value=window.__link;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(_){}ta.remove();}toast('Link copied ⌨️');};
+$('shareBtn2').onclick=async()=>{const t='⌨️ This is my typing fingerprint. Forge it if you can: '+window.__link;if(navigator.share){try{await navigator.share({text:t});}catch(e){}}else{$('copyBtn').click();}};
+$('shareClose').onclick=()=>$('ovShare').classList.remove('show');
+$('rulesBtn').onclick=()=>$('ovRules').classList.add('show');
+$('rulesClose').onclick=()=>$('ovRules').classList.remove('show');
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))$('ovRules').classList.remove('show');});
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+window.__keyprint={roundtrip:(ph,iv)=>{const e=enc(ph,iv);const d=dec(e);return{urlLen:e.length,ok:d.phrase===ph&&d.iv.length===iv.length};},
+  typeWith:(iv)=>{times=[performance.now()];let acc=0;for(const v of iv){acc+=v;times.push(times[0]+acc);}myIv=intervalsOf(times);if(mode==='duel')scoreDuel();return myIv.length;},
+  state:()=>({mode,phrase,myGaps:myIv?myIv.length:0,targetGaps:targetIv?targetIv.length:0})};
+
+/* ---- boot ---- */
+(function boot(){
+  const h=location.hash.slice(1);
+  if(h){const d=dec(h);if(d&&d.iv&&d.iv.length){phrase=d.phrase;targetIv=d.iv;mode='duel';
+    $('sub').innerHTML='someone dared you to <b>forge their rhythm</b> — type it';
+    $('footRecord').style.display='none';$('footDuel').style.display='block';}}
+  renderPhrase(0);drawWave([],targetIv);
+})();
+</script>
+</body>
+</html>
