@@ -63,6 +63,24 @@
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/statue"
   },
   {
+    "id": "wallflower",
+    "title": "Wallflower",
+    "summary": "An idle game that punishes you for playing it. A plant that only grows while you're NOT looking — in real time, even with the tab closed. Bring your cursor near and it feels watched, recoils, and wilts.",
+    "category": "Idle Game",
+    "emoji": "🌱",
+    "demo_url": "/demos/wallflower/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/wallflower"
+  },
+  {
+    "id": "longfire",
+    "title": "Longfire",
+    "summary": "Keep a single flame alive in real time — it burns down even while the tab is closed and can die while you sleep. Feed it logs before the fuel runs out, or pass it to a friend in a link like an Olympic torch, carrying its whole age.",
+    "category": "Idle Game",
+    "emoji": "🔥",
+    "demo_url": "/demos/longfire/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/longfire"
+  },
+  {
     "id": "wordle",
     "title": "Wordle Clone",
     "summary": "A fully playable Wordle clone with daily words and statistics.",

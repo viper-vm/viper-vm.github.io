@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Longfire 🔥 — keep one flame alive</title>
+<meta name="description" content="Keep a single flame alive in real time. It burns down even while the tab is closed and can die while you sleep. Feed it logs — or pass it to a friend like an Olympic torch." />
+<link rel="canonical" href="https://viper-vm.github.io/demos/longfire/" />
+<meta property="og:title" content="Longfire — keep one flame alive" />
+<meta property="og:description" content="A single flame that burns in real time, even while the tab is closed. Feed it logs before it dies — or hand it to a friend in a link, like a torch. How long can it live?" />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/longfire/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/longfire/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#120a08" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%23120a08"/><text y=".92em" x="20" font-size="66">🔥</text></svg>' />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#120a08;--panel:#20140f;--panel2:#2a1a13;--line:rgba(255,255,255,.1);
+    --ink:#fbeee6;--mut:#c19a86;--acc:#ff8a3d;--ember:#ffcf5a;--no:#ff5d5d}
+  html,body{height:100%;overflow:hidden;background:var(--bg);touch-action:none}
+  body{color:var(--ink);font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  #cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+  #top{position:fixed;top:calc(12px + env(safe-area-inset-top));left:0;right:0;text-align:center;z-index:5;pointer-events:none}
+  #top .logo{font-size:22px;font-weight:800}#top .logo b{color:var(--acc)}
+  #age{font-size:15px;color:var(--mut);font-weight:700;margin-top:3px}#age b{color:var(--ink)}
+  #fuelwrap{position:fixed;top:calc(74px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);width:min(320px,80vw);z-index:5;pointer-events:none}
+  #fuelbar{height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+  #fuelbar i{display:block;height:100%;background:linear-gradient(90deg,#ff5d5d,#ff8a3d,#ffcf5a);border-radius:99px;transition:width .4s}
+  #fuellbl{text-align:center;font-size:11px;color:var(--mut);font-weight:700;margin-top:5px;letter-spacing:.05em}
+  .bar{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:10px}
+  .b{border:0;cursor:pointer;font:inherit;font-weight:800;font-size:15px;border-radius:13px;padding:13px 18px;transition:transform .07s}
+  .b:active{transform:scale(.96)}
+  .b.log{background:var(--acc);color:#2a1005;box-shadow:0 6px 22px -8px var(--acc)}
+  .b.torch{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+  .helpBtn{position:fixed;top:calc(9px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer}
+  .ov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px 16px;background:rgba(10,6,4,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+  .ov.show{opacity:1;pointer-events:auto}
+  .sheet{width:min(430px,100%);background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;margin:auto 0;box-shadow:0 30px 80px -20px rgba(0,0,0,.85);max-height:calc(100dvh - 40px);overflow-y:auto;text-align:center}
+  .sheet h2{font-size:23px;font-weight:800}
+  .lead{color:var(--mut);font-size:14px;margin:6px 0 12px;line-height:1.5}.lead b{color:var(--ink)}
+  .okbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:16px;border-radius:14px;padding:14px;background:var(--acc);color:#2a1005;margin-top:10px}
+  .sbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:14px;border-radius:14px;padding:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:9px}
+  .rules{text-align:left;font-size:14px;line-height:1.55}.rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:14px 0 6px;font-weight:800}
+  .rules ol{margin:0 0 4px 18px}.rules li{margin-bottom:7px}.rules b{color:var(--acc)}
+  #linkbox{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;word-break:break-all;margin:10px 0;text-align:left}
+  #toast{position:fixed;left:50%;top:calc(120px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-18px);background:#2a1a13;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;opacity:0;transition:all .24s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="top"><div class="logo">🔥 <b>LONGFIRE</b></div><div id="age"></div></div>
+<div id="fuelwrap"><div id="fuelbar"><i id="fuelfill"></i></div><div id="fuellbl"></div></div>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
+<div class="bar">
+  <button class="b log" id="logBtn">🪵 Add log</button>
+  <button class="b torch" id="torchBtn">🔥 Pass the torch</button>
+</div>
+
+<div class="ov" id="ovRules"><div class="sheet">
+  <h2>How to play 🔥</h2>
+  <div class="rules">
+    <h4>KEEP IT ALIVE</h4>
+    <ol>
+      <li>Your flame burns fuel in <b>real time</b> — even while this tab is closed or your phone is asleep.</li>
+      <li>Come back and <b>🪵 add a log</b> before the fuel runs out. Tap the flame to <b>blow the embers</b> for a small boost.</li>
+      <li>If the fuel hits zero while you're away, the flame <b>dies</b> — and you'll see exactly when it happened.</li>
+      <li>The whole point is longevity: how many real days can you keep one flame going?</li>
+    </ol>
+    <h4>PASS THE TORCH</h4>
+    <p>Hand your flame to a friend with <b>🔥 Pass the torch</b> — it makes a link that carries the flame's whole age. They keep it burning from where you left off, like an Olympic relay.</p>
+  </div>
+  <button class="okbtn" id="rulesClose">GOT IT</button>
+</div></div>
+
+<div class="ov" id="ovDead"><div class="sheet">
+  <h2>🕯️ The flame went out</h2>
+  <p class="lead" id="deadLead"></p>
+  <button class="okbtn" id="relightBtn">STRIKE A NEW FLAME</button>
+  <button class="sbtn" id="memCopyBtn">COPY MEMORIAL</button>
+</div></div>
+
+<div class="ov" id="ovTorch"><div class="sheet">
+  <h2>🔥 Pass the torch</h2>
+  <p class="lead">Send this link to a friend. They'll keep your flame burning — with all <b id="torchAge"></b> of its life so far.</p>
+  <div id="linkbox"></div>
+  <button class="okbtn" id="torchCopyBtn">COPY TORCH LINK</button>
+  <button class="sbtn" id="torchShareBtn">Share…</button>
+  <button class="sbtn" id="torchClose">Keep it myself</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>/*LONGFIRE*/
+'use strict';
+const LS=(function(){let ok=false;const mem={};try{localStorage.setItem('__lf','1');localStorage.removeItem('__lf');ok=true;}catch(e){}
+  return{get(k){try{return ok?localStorage.getItem(k):(k in mem?mem[k]:null)}catch(e){return k in mem?mem[k]:null}},
+         set(k,v){v=String(v);mem[k]=v;try{if(ok)localStorage.setItem(k,v)}catch(e){}}};})();
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;const now=()=>Date.now();
+const BASE_URL=location.origin+location.pathname;
+
+const TANK_MS=10*3600*1000;            // a full tank (100 fuel) lasts 10 hours
+const BURN=100/TANK_MS;                // fuel per ms
+const LOG=42;                          // fuel per log
+
+const cv=$('cv'),ctx=cv.getContext('2d');
+let dpr=1,W=0,H=0;
+function resize(){dpr=Math.min(devicePixelRatio||1,2.5);W=innerWidth||360;H=innerHeight||640;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
+addEventListener('resize',resize);
+
+let S,dead=false,deathAt=0,parts=[];
+function fresh(){return{bornAt:now(),fuel:60,lastSeen:now(),logs:0,peakFuel:60};}
+function save(){LS.set('longfire',JSON.stringify(S));}
+function load(){try{const r=LS.get('longfire');S=r?JSON.parse(r):fresh();}catch(e){S=fresh();}if(!S.bornAt)S=fresh();}
+
+/* ---- receive a torch from a URL hash ---- */
+function tryAdopt(){
+  const h=location.hash.slice(1);if(!h)return false;
+  try{const d=JSON.parse(atob(h.replace(/-/g,'+').replace(/_/g,'/')));
+    if(d&&d.b){S={bornAt:d.b,fuel:clamp(d.f||40,1,100),lastSeen:now(),logs:d.l||0,peakFuel:d.f||40};save();
+      history.replaceState(null,'',BASE_URL);return true;}
+  }catch(e){}return false;
+}
+
+/* ---- burn down over elapsed real time ---- */
+function catchUp(){
+  const t=now();const dt=t-S.lastSeen;
+  if(dt>0){
+    if(S.fuel-dt*BURN<=0){dead=true;deathAt=S.lastSeen+S.fuel/BURN;S.fuel=0;}
+    else{S.fuel-=dt*BURN;}
+    S.lastSeen=t;save();
+  }
+  if(S.fuel<=0){dead=true;if(!deathAt)deathAt=t;}
+}
+let lastTick=now();
+function tick(){
+  if(dead){renderAge();return;}
+  const t=now();const dt=t-lastTick;lastTick=t;
+  S.fuel-=dt*BURN;
+  if(S.fuel<=0){S.fuel=0;dead=true;deathAt=t;save();showDead();return;}
+  S.lastSeen=t;save();renderAge();
+}
+setInterval(tick,1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){lastTick=now();catchUp();if(dead)showDead();else renderAge();}});
+
+function fmtDur(ms){const d=ms/864e5;if(d>=1)return d.toFixed(1)+' days';const h=ms/36e5;if(h>=1)return h.toFixed(1)+' hours';const m=ms/6e4;if(m>=1)return Math.round(m)+' min';return Math.round(ms/1e3)+' sec';}
+function ageMs(){return Math.max(0,(dead?deathAt:now())-S.bornAt);}
+function renderAge(){
+  $('age').innerHTML=dead?('lived <b>'+fmtDur(ageMs())+'</b>'):('alive for <b>'+fmtDur(ageMs())+'</b>');
+  $('fuelfill').style.width=clamp(S.fuel,0,100)+'%';
+  $('fuellbl').textContent=dead?'the fire is out':(S.fuel<20?'⚠ running low — add a log':Math.round(S.fuel)+'% fuel');
+}
+
+/* ---- actions ---- */
+$('logBtn').onclick=()=>{if(dead)return;S.fuel=clamp(S.fuel+LOG,0,100);S.logs++;S.peakFuel=Math.max(S.peakFuel,S.fuel);save();renderAge();spark(18);toast('🪵 +'+LOG+' fuel');};
+cv.addEventListener('pointerdown',()=>{if(dead)return;S.fuel=clamp(S.fuel+4,0,100);save();renderAge();spark(10);});
+
+/* ---- flame particles ---- */
+function spark(n){const bx=W/2,by=H*0.62;for(let i=0;i<n;i++)parts.push({x:bx+(Math.random()-.5)*30,y:by,vx:(Math.random()-.5)*40,vy:-60-Math.random()*120,l:.5+Math.random()*.6,t:0,r:2+Math.random()*3});}
+function render(){
+  ctx.clearRect(0,0,W,H);const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#120a08');g.addColorStop(1,'#1c0f0a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  const bx=W/2,by=H*0.62;
+  // logs
+  ctx.strokeStyle='#5a3a28';ctx.lineWidth=14;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(bx-50,by+18);ctx.lineTo(bx+50,by+6);ctx.moveTo(bx-50,by+6);ctx.lineTo(bx+50,by+18);ctx.stroke();
+  if(!dead){
+    const intensity=clamp(S.fuel/100,0.08,1);const flick=0.85+0.15*Math.sin(now()/90);
+    const fh=(60+intensity*160)*flick;const fw=(24+intensity*46);
+    const grd=ctx.createRadialGradient(bx,by-fh*0.3,4,bx,by,fh);
+    grd.addColorStop(0,'rgba(255,240,180,'+intensity+')');grd.addColorStop(0.4,'rgba(255,150,60,'+(0.85*intensity)+')');grd.addColorStop(1,'rgba(255,60,30,0)');
+    ctx.fillStyle=grd;ctx.beginPath();
+    ctx.moveTo(bx-fw,by);
+    ctx.quadraticCurveTo(bx-fw*0.8,by-fh*0.5,bx+Math.sin(now()/140)*10,by-fh);
+    ctx.quadraticCurveTo(bx+fw*0.8,by-fh*0.5,bx+fw,by);ctx.closePath();ctx.fill();
+    // inner core
+    ctx.fillStyle='rgba(255,230,150,'+(0.6*intensity)+')';ctx.beginPath();ctx.ellipse(bx,by-fh*0.35,fw*0.4,fh*0.35,0,0,7);ctx.fill();
+    if(Math.random()<0.3*intensity)spark(1);
+  }else{
+    // smoke/embers
+    ctx.fillStyle='rgba(120,120,120,.15)';ctx.beginPath();ctx.ellipse(bx,by-40,30,60,0,0,7);ctx.fill();
+    ctx.fillStyle='#5a3a28';ctx.font='40px system-ui';ctx.textAlign='center';ctx.fillText('🌑',bx,by-6);ctx.textAlign='left';
+  }
+  // particles
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.t+=1/60;if(p.t>p.l){parts.splice(i,1);continue;}p.x+=p.vx/60;p.y+=p.vy/60;p.vy+=30/60;
+    ctx.globalAlpha=(1-p.t/p.l)*0.9;ctx.fillStyle=Math.random()<.5?'#ffcf5a':'#ff8a3d';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();}
+  ctx.globalAlpha=1;
+  requestAnimationFrame(render);
+}
+
+/* ---- torch relay ---- */
+function torchURL(){const d={b:S.bornAt,f:Math.round(S.fuel),l:S.logs};const enc=btoa(JSON.stringify(d)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');return BASE_URL+'#'+enc;}
+$('torchBtn').onclick=()=>{if(dead)return;$('torchAge').textContent=fmtDur(ageMs());$('linkbox').textContent=torchURL();$('ovTorch').classList.add('show');};
+$('torchCopyBtn').onclick=async()=>{const u=torchURL();try{await navigator.clipboard.writeText('🔥 I kept this flame alive for '+fmtDur(ageMs())+'. Keep it going: '+u);}catch(e){const ta=document.createElement('textarea');ta.value=u;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(_){}ta.remove();}toast('Torch link copied 🔥');};
+$('torchShareBtn').onclick=async()=>{const txt='🔥 I kept this flame alive for '+fmtDur(ageMs())+'. Keep it going: '+torchURL();if(navigator.share){try{await navigator.share({text:txt});}catch(e){}}else{$('torchCopyBtn').click();}};
+$('torchClose').onclick=()=>$('ovTorch').classList.remove('show');
+
+/* ---- death ---- */
+function showDead(){renderAge();$('deadLead').innerHTML='Your flame lived <b>'+fmtDur(ageMs())+'</b> and went out '+deathWhen()+'.<br>It was fed '+S.logs+' log'+(S.logs===1?'':'s')+'.';$('ovDead').classList.add('show');}
+function deathWhen(){const d=new Date(deathAt);const h=d.getHours();return h>=0&&h<6?'in the small hours of the night':h<12?'this morning':h<18?'this afternoon':'tonight';}
+$('relightBtn').onclick=()=>{S=fresh();dead=false;deathAt=0;save();$('ovDead').classList.remove('show');lastTick=now();renderAge();toast('A new flame catches 🔥');};
+$('memCopyBtn').onclick=async()=>{const t='🕯️ My Longfire lived '+fmtDur(ageMs())+' before going out. RIP.\nviper-vm.github.io/demos/longfire';try{await navigator.clipboard.writeText(t);}catch(e){}toast('Memorial copied');};
+
+$('rulesBtn').onclick=()=>$('ovRules').classList.add('show');
+$('rulesClose').onclick=()=>$('ovRules').classList.remove('show');
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))$('ovRules').classList.remove('show');});
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+window.__longfire={state:()=>({fuel:+S.fuel.toFixed(1),ageMs:ageMs(),dead,logs:S.logs}),
+  burn:(hours)=>{S.bornAt-=hours*36e5;S.lastSeen=now()-hours*36e5;catchUp();if(dead)showDead();renderAge();return{fuel:+S.fuel.toFixed(1),dead,age:fmtDur(ageMs())};},
+  addLog:()=>{$('logBtn').click();return+S.fuel.toFixed(1);},
+  torchURL:()=>torchURL(),reset:()=>{S=fresh();dead=false;deathAt=0;save();renderAge();}};
+
+/* ---- boot ---- */
+(function boot(){
+  const adopted=tryAdopt();if(!adopted)load();
+  catchUp();resize();lastTick=now();renderAge();
+  if(dead)showDead();else if(adopted)setTimeout(()=>toast('🔥 You received the torch — keep it alive!'),300);
+  requestAnimationFrame(render);
+})();
+</script>
+</body>
+</html>

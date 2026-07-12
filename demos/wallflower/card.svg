@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
+  <rect width="1200" height="630" fill="#0e130f"/>
+  <!-- plant on the right -->
+  <g transform="translate(940,0)">
+    <path d="M60 560 L-60 560 L-46 490 L46 490 Z" fill="#b5764a"/>
+    <ellipse cx="0" cy="490" rx="60" ry="8" fill="#3a2c22"/>
+    <path d="M0 490 Q10 350 0 200" fill="none" stroke="#7ed957" stroke-width="12" stroke-linecap="round"/>
+    <ellipse cx="-30" cy="410" rx="34" ry="16" fill="#6fce4a" transform="rotate(-20 -30 410)"/>
+    <ellipse cx="34" cy="350" rx="34" ry="16" fill="#6fce4a" transform="rotate(20 34 350)"/>
+    <ellipse cx="-30" cy="290" rx="30" ry="14" fill="#6fce4a" transform="rotate(-20 -30 290)"/>
+    <g transform="translate(2,190)">
+      <g fill="#ff8fc4"><ellipse cx="0" cy="-26" rx="16" ry="11"/><ellipse cx="25" cy="-8" rx="16" ry="11"/><ellipse cx="16" cy="22" rx="16" ry="11"/><ellipse cx="-16" cy="22" rx="16" ry="11"/><ellipse cx="-25" cy="-8" rx="16" ry="11"/></g>
+      <circle r="14" fill="#ffd451"/>
+    </g>
+  </g>
+  <text x="70" y="150" font-size="66" font-weight="800" fill="#e9f3ea">🌱 <tspan fill="#7ed957">WALLFLOWER</tspan></text>
+  <text x="72" y="212" font-size="32" font-weight="600" fill="#8ba394">A plant that only grows while you look away.</text>
+  <text x="72" y="262" font-size="30" font-weight="800" fill="#e9f3ea">Stare at it, and it <tspan fill="#ffb04d">wilts.</tspan></text>
+  <text x="72" y="470" font-size="25" font-weight="700" fill="#7ed957" font-family="ui-monospace,Menlo,monospace">an idle game that punishes you for playing it</text>
+</svg>

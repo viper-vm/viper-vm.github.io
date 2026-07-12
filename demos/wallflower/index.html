@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Wallflower 🌱 — the plant that grows while you look away</title>
+<meta name="description" content="An idle game that punishes you for playing it. A plant only grows while you're not looking — it grows in real time while the tab is closed, and wilts the moment you watch it." />
+<link rel="canonical" href="https://viper-vm.github.io/demos/wallflower/" />
+<meta property="og:title" content="Wallflower — the plant that grows while you look away" />
+<meta property="og:description" content="An idle game that punishes you for playing it. Your plant only grows while you're NOT looking — in real time, even with the tab closed. Stare at it and it wilts." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/wallflower/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/wallflower/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#0e130f" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230e130f"/><text y=".92em" x="18" font-size="66">🌱</text></svg>' />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0e130f;--panel:#161d18;--panel2:#1e2720;--line:rgba(255,255,255,.09);
+    --ink:#e9f3ea;--mut:#8ba394;--acc:#7ed957;--soil:#3a2c22;--pot:#b5764a}
+  html,body{height:100%;overflow:hidden;background:var(--bg);touch-action:none}
+  body{color:var(--ink);font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  #cv{position:fixed;inset:0;width:100%;height:100%;display:block}
+  #top{position:fixed;top:calc(12px + env(safe-area-inset-top));left:0;right:0;text-align:center;z-index:5;pointer-events:none}
+  #top .logo{font-size:22px;font-weight:800;letter-spacing:-.01em}
+  #top .logo b{color:var(--acc)}
+  #status{font-size:14px;color:var(--mut);font-weight:700;margin-top:3px}
+  #status b{color:var(--ink);font-variant-numeric:tabular-nums}
+  #state{position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;z-index:5;pointer-events:none;
+    font-size:15px;font-weight:700;transition:opacity .3s}
+  #state.grow{color:var(--acc)} #state.wilt{color:#ffb04d}
+  .bar{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:6;
+    display:flex;gap:10px;align-items:center}
+  .waterBtn{border:0;cursor:pointer;font:inherit;font-weight:800;font-size:15px;border-radius:13px;padding:12px 18px;
+    background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+  .waterBtn:active{transform:scale(.96)}.waterBtn:disabled{opacity:.4}
+  .shareBtn{border:0;cursor:pointer;font:inherit;font-weight:800;font-size:15px;border-radius:13px;padding:12px 18px;background:var(--acc);color:#082012}
+  .shareBtn:active{transform:scale(.96)}
+  .helpBtn{position:fixed;top:calc(9px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;
+    border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer}
+  .ov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px 16px;
+    background:rgba(8,12,9,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+  .ov.show{opacity:1;pointer-events:auto}
+  .sheet{width:min(430px,100%);background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;margin:auto 0;box-shadow:0 30px 80px -20px rgba(0,0,0,.85);max-height:calc(100dvh - 40px);overflow-y:auto;text-align:center}
+  .sheet h2{font-size:22px;font-weight:800}
+  .rules{text-align:left;font-size:14px;line-height:1.55;margin-top:8px}
+  .rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:14px 0 6px;font-weight:800}
+  .rules ol{margin:0 0 4px 18px}.rules li{margin-bottom:7px}.rules b{color:var(--acc)}
+  .okbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:16px;border-radius:14px;padding:14px;background:var(--acc);color:#082012;margin-top:14px}
+  .statline{color:var(--mut);font-size:14px;margin:6px 0;line-height:1.5}.statline b{color:var(--ink)}
+  #toast{position:fixed;left:50%;top:calc(70px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-18px);background:#1e2720;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;opacity:0;transition:all .24s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="top"><div class="logo">🌱 <b>WALLFLOWER</b></div><div id="status"></div></div>
+<div id="state"></div>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
+<div class="bar">
+  <button class="waterBtn" id="waterBtn">💧 Water</button>
+  <button class="shareBtn" id="shareBtn">Share</button>
+</div>
+
+<div class="ov" id="ovRules"><div class="sheet">
+  <h2>How to play 🌱</h2>
+  <div class="rules">
+    <h4>THE TWIST</h4>
+    <p>This is an idle game that <b>punishes you for playing it</b>. Your wallflower only grows while <b>nobody is looking</b>.</p>
+    <h4>HOW IT GROWS</h4>
+    <ol>
+      <li>Move your cursor <b>away</b> from the plant — or switch tabs, or close the page entirely — and it grows in <b>real time</b>.</li>
+      <li>Bring your cursor <b>near</b> the plant and it feels watched: it recoils and slowly <b>wilts</b>.</li>
+      <li>It does most of its growing while you're gone. Come back after a day and it'll have shot up.</li>
+      <li>A splash of <b>💧 water</b> gives it a boost — but you only get a few a day.</li>
+    </ol>
+    <p style="color:var(--mut);font-size:13px;margin-top:12px">Everything is saved locally. The absurd part is the stat you'll want to screenshot: grown over days, watched for minutes.</p>
+  </div>
+  <button class="okbtn" id="rulesClose">GOT IT</button>
+</div></div>
+
+<div class="ov" id="ovShare"><div class="sheet">
+  <h2 id="shTitle">My Wallflower 🌱</h2>
+  <div id="shBody" style="margin:10px 0"></div>
+  <button class="okbtn" id="copyBtn">COPY</button>
+  <button class="okbtn" id="shareClose" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line)">CLOSE</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>/*WALLFLOWER*/
+'use strict';
+const LS=(function(){let ok=false;const mem={};try{localStorage.setItem('__wf','1');localStorage.removeItem('__wf');ok=true;}catch(e){}
+  return{get(k){try{return ok?localStorage.getItem(k):(k in mem?mem[k]:null)}catch(e){return k in mem?mem[k]:null}},
+         set(k,v){v=String(v);mem[k]=v;try{if(ok)localStorage.setItem(k,v)}catch(e){}}};})();
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const now=()=>Date.now();
+
+const cv=$('cv'),ctx=cv.getContext('2d');
+let dpr=1,W=0,H=0;
+function resize(){dpr=Math.min(devicePixelRatio||1,2.5);W=innerWidth||360;H=innerHeight||640;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
+addEventListener('resize',resize);
+
+const MAXH=320;                        // max height "cm"
+const AWAY=0.55/3600;                  // cm per second while unwatched (open)
+const WILT=-0.35/3600;                 // cm per second while watched
+const OFFLINE=0.55/3600;               // cm per second while away/closed
+const CAP_OFFLINE_MS=14*864e5;         // count at most 14 days of offline growth per return
+
+let S;
+function fresh(){return{growth:1.2,plantedAt:now(),lastSeen:now(),grownMs:0,watchedMs:0,waters:0,waterDay:0};}
+function load(){try{const r=LS.get('wallflower');S=r?JSON.parse(r):fresh();}catch(e){S=fresh();}
+  if(!S.plantedAt)S=fresh();}
+function save(){LS.set('wallflower',JSON.stringify(S));}
+
+// pointer proximity
+let ptr={x:-1e4,y:-1e4},ptrSeen=false,plantBase={x:0,y:0};
+addEventListener('pointermove',e=>{ptr={x:e.clientX,y:e.clientY};ptrSeen=true;},{passive:true});
+function watchRadius(){return Math.min(W,H)*0.42;}
+function isWatching(){if(document.hidden)return false;if(!ptrSeen)return false;
+  return Math.hypot(ptr.x-plantBase.x,ptr.y-(plantBase.y-plantHeightPx()*0.5))<watchRadius();}
+
+function plantHeightPx(){return clamp(S.growth/MAXH,0,1)*(H*0.6);}
+
+// growth tick
+function offlineCatchUp(){
+  const gap=Math.min(now()-S.lastSeen,CAP_OFFLINE_MS);
+  if(gap>0){S.growth=clamp(S.growth+gap/1000*OFFLINE,0.5,MAXH);S.grownMs+=gap;}
+  S.lastSeen=now();
+}
+let lastTick=now();
+function tick(){
+  const t=now();const dt=t-lastTick;lastTick=t;
+  if(document.hidden){S.growth=clamp(S.growth+dt/1000*OFFLINE,0.5,MAXH);S.grownMs+=dt;}
+  else if(isWatching()){S.growth=clamp(S.growth+dt/1000*WILT,0.5,MAXH);S.watchedMs+=dt;}
+  else{S.growth=clamp(S.growth+dt/1000*AWAY,0.5,MAXH);S.grownMs+=dt;}
+  S.lastSeen=t;save();updateStatus();
+}
+setInterval(tick,700);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){lastTick=now();offlineCatchUp();}});
+
+function updateStatus(){
+  const days=(now()-S.plantedAt)/864e5;
+  $('status').innerHTML='<b>'+S.growth.toFixed(1)+' cm</b> · raised over <b>'+fmtDur(now()-S.plantedAt)+'</b>';
+  const watching=isWatching()&&!document.hidden;
+  const st=$('state');
+  if(watching){st.className='wilt';st.textContent='👀 it feels watched… look away to let it grow';}
+  else{st.className='grow';st.textContent='🌿 growing quietly — the less you look, the better';}
+}
+function fmtDur(ms){const d=ms/864e5;if(d>=1)return d.toFixed(1)+' days';const h=ms/36e5;if(h>=1)return h.toFixed(1)+' hrs';return Math.round(ms/6e4)+' min';}
+
+/* ---- render ---- */
+let sway=0;
+function render(){
+  ctx.clearRect(0,0,W,H);
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0e130f');g.addColorStop(1,'#12180f');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  const bx=W/2, groundY=H-120;plantBase={x:bx,y:groundY};
+  // pot
+  ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--pot')||'#b5764a';
+  const pw=Math.min(W,H)*0.16;
+  ctx.beginPath();ctx.moveTo(bx-pw,groundY);ctx.lineTo(bx+pw,groundY);ctx.lineTo(bx+pw*0.72,groundY+70);ctx.lineTo(bx-pw*0.72,groundY+70);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#3a2c22';ctx.beginPath();ctx.ellipse(bx,groundY,pw,10,0,0,7);ctx.fill();
+  // plant
+  const watching=isWatching()&&!document.hidden;
+  const h=plantHeightPx();
+  sway+=0.02;const s=Math.sin(sway)*(watching?1.5:6)*(h/200+0.4);
+  const lean=watching&&ptrSeen?clamp((bx-ptr.x)/80,-14,14):0;   // recoil away from cursor
+  ctx.save();ctx.strokeStyle=watching?'#8fbf78':'#7ed957';ctx.lineWidth=clamp(h*0.03,3,10);ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(bx,groundY);
+  const topX=bx+s+lean, topY=groundY-h;
+  ctx.quadraticCurveTo(bx+s*0.5+lean*0.4,groundY-h*0.5,topX,topY);ctx.stroke();
+  // leaves
+  const leaves=Math.floor(clamp(h/48,0,7));
+  for(let i=1;i<=leaves;i++){
+    const f=i/(leaves+1);const lx=bx+s*f+lean*f, ly=groundY-h*f;const side=i%2?1:-1;const ls=clamp(h*0.10,8,34)*(watching?0.72:1);
+    ctx.fillStyle=watching?'#7bb268':'#6fce4a';
+    ctx.beginPath();ctx.ellipse(lx+side*ls*0.7,ly,ls,ls*0.5,side*0.5,0,7);ctx.fill();
+  }
+  // flower/bud
+  if(S.growth>MAXH*0.55){
+    const pr=clamp(h*0.05,6,16);ctx.fillStyle='#ff8fc4';
+    for(let k=0;k<6;k++){const a=k/6*Math.PI*2+sway*0.2;ctx.beginPath();ctx.ellipse(topX+Math.cos(a)*pr*1.3,topY+Math.sin(a)*pr*1.3,pr,pr*0.7,a,0,7);ctx.fill();}
+    ctx.fillStyle='#ffd451';ctx.beginPath();ctx.arc(topX,topY,pr*0.8,0,7);ctx.fill();
+  }else if(S.growth>MAXH*0.3){ctx.fillStyle='#9be36f';ctx.beginPath();ctx.arc(topX,topY,clamp(h*0.045,5,12),0,7);ctx.fill();}
+  ctx.restore();
+  // watching veil
+  if(watching){ctx.save();ctx.globalAlpha=0.05+0.05*Math.sin(sway*2);ctx.fillStyle='#ffb04d';ctx.fillRect(0,0,W,H);ctx.restore();}
+  requestAnimationFrame(render);
+}
+
+/* ---- water ---- */
+function todayIdx(){return Math.floor(Date.now()/864e5);}
+$('waterBtn').onclick=()=>{
+  if(S.waterDay!==todayIdx()){S.waterDay=todayIdx();S.waters=0;}
+  if(S.waters>=5){toast('It’s had enough water today 💧');return;}
+  S.waters++;S.growth=clamp(S.growth+2.5,0.5,MAXH);save();updateStatus();toast('+2.5cm 🌱 ('+ (5-S.waters) +' waters left today)');
+};
+
+/* ---- share ---- */
+function shareText(){
+  return 'My Wallflower 🌱 is '+S.growth.toFixed(1)+'cm tall\nraised over '+fmtDur(now()-S.plantedAt)+' · watched for only '+fmtDur(S.watchedMs)+'\nan idle game that punishes you for playing it: viper-vm.github.io/demos/wallflower';}
+$('shareBtn').onclick=()=>{
+  $('shBody').innerHTML='<p class="statline">🌱 <b>'+S.growth.toFixed(1)+' cm</b> tall</p>'+
+    '<p class="statline">⏳ raised over <b>'+fmtDur(now()-S.plantedAt)+'</b></p>'+
+    '<p class="statline">👀 watched for only <b>'+fmtDur(S.watchedMs)+'</b></p>'+
+    '<p class="statline">🌿 grew for <b>'+fmtDur(S.grownMs)+'</b> while you weren’t looking</p>';
+  $('ovShare').classList.add('show');
+};
+$('copyBtn').onclick=async()=>{const t=shareText();try{await navigator.clipboard.writeText(t);}catch(e){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(_){}ta.remove();}toast('Copied');};
+$('shareClose').onclick=()=>$('ovShare').classList.remove('show');
+$('rulesBtn').onclick=()=>$('ovRules').classList.add('show');
+$('rulesClose').onclick=()=>$('ovRules').classList.remove('show');
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))$('ovRules').classList.remove('show');});
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+window.__wallflower={state:()=>({growth:+S.growth.toFixed(2),days:+((now()-S.plantedAt)/864e5).toFixed(2),watchedMs:S.watchedMs,grownMs:S.grownMs,watching:isWatching()}),
+  addAway:(hours)=>{S.growth=clamp(S.growth+hours*3600*AWAY,0.5,MAXH);S.grownMs+=hours*36e5;save();updateStatus();return+S.growth.toFixed(2);},
+  reset:()=>{S=fresh();save();updateStatus();}};
+
+/* ---- boot ---- */
+load();offlineCatchUp();resize();updateStatus();requestAnimationFrame(render);
+</script>
+</body>
+</html>
