@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Clapback 🥁 — tap a beat, send it, dare them to match it</title>
+<meta name="description" content="Tap out a rhythm, send the link. Your friend hears it once and has to clap it back tighter than you did. The beat is packed into the URL — no backend." />
+<link rel="canonical" href="https://viper-vm.github.io/demos/clapback/" />
+<meta property="og:title" content="Clapback — tap a beat, dare a friend to match it" />
+<meta property="og:description" content="Tap out a rhythm and send the link. Your friend hears it once, then has to clap it back as tight as they can. The whole beat lives in the URL — no backend." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/clapback/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/clapback/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#0c0f18" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230c0f18"/><text y=".9em" x="16" font-size="64">🥁</text></svg>' />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0c0f18;--panel:#151a28;--panel2:#1e2536;--line:rgba(255,255,255,.1);
+    --ink:#eaeefc;--mut:#8f9abb;--acc:#ff5db1;--acc2:#5ad1ff;--ok:#5ee08a}
+  html,body{height:100%;overflow:hidden;background:var(--bg);touch-action:none}
+  body{color:var(--ink);font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;display:flex;flex-direction:column;height:100dvh}
+  header{text-align:center;padding:calc(14px + env(safe-area-inset-top)) 16px 4px;flex:0 0 auto}
+  .logo{font-size:24px;font-weight:800}.logo b{color:var(--acc)}
+  #sub{font-size:14px;color:var(--mut);margin-top:3px}#sub b{color:var(--ink)}
+  #timeline{flex:0 0 auto;height:70px;margin:14px 16px 0;position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  #timeline .base{position:absolute;top:50%;left:12px;right:12px;height:2px;background:rgba(255,255,255,.12);transform:translateY(-50%)}
+  #pad{flex:1;min-height:0;margin:16px;border-radius:22px;background:radial-gradient(120% 120% at 50% 40%,#22283c,#12161f);
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;transition:background .05s}
+  #pad.hit{background:radial-gradient(120% 120% at 50% 40%,#ff5db1,#3a2038)}
+  #pad .lbl{font-size:19px;font-weight:800;color:var(--mut);text-align:center;padding:0 20px;pointer-events:none}
+  footer{flex:0 0 auto;padding:0 16px calc(18px + env(safe-area-inset-bottom))}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .btn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:16px;border-radius:14px;padding:15px;color:#2a0a1c;background:var(--acc);box-shadow:0 6px 22px -8px var(--acc);transition:transform .07s}
+  .btn:active{transform:scale(.98)}.btn:disabled{opacity:.4}
+  .btn.sec{background:var(--panel2);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+  .helpBtn{position:fixed;top:calc(10px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer}
+  .ov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px 16px;background:rgba(8,10,16,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+  .ov.show{opacity:1;pointer-events:auto}
+  .sheet{width:min(440px,100%);background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;margin:auto 0;box-shadow:0 30px 80px -20px rgba(0,0,0,.85);max-height:calc(100dvh - 40px);overflow-y:auto;text-align:center}
+  .sheet h2{font-size:23px;font-weight:800}
+  .lead{color:var(--mut);font-size:14px;margin:6px 0 14px;line-height:1.5}.lead b{color:var(--ink)}
+  .big{font-size:46px;font-weight:800;margin:6px 0 2px}
+  .okbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:16px;border-radius:14px;padding:14px;background:var(--acc);color:#2a0a1c;margin-top:10px}
+  .sbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:14px;border-radius:14px;padding:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:9px}
+  .rules{text-align:left;font-size:14px;line-height:1.55}.rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:14px 0 6px;font-weight:800}
+  .rules ol{margin:0 0 4px 18px}.rules li{margin-bottom:7px}.rules b{color:var(--acc)}
+  #linkbox{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;word-break:break-all;margin:8px 0;text-align:left}
+  #toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);background:#1e2536;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;opacity:0;transition:all .24s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header><div class="logo">🥁 <b>CLAPBACK</b></div><div id="sub"></div></header>
+<div id="timeline"><div class="base"></div></div>
+<div id="pad"><div class="lbl" id="padLbl">tap here to lay down a beat</div></div>
+<footer>
+  <div id="footRecord" class="row" style="display:none">
+    <button class="btn sec" id="clearBtn">Clear</button>
+    <button class="btn" id="sendBtn" disabled>Send it →</button>
+  </div>
+  <div id="footPlayback" style="display:none">
+    <button class="btn" id="listenBtn">▶ Hear it once</button>
+    <button class="btn sec" id="tapBackBtn" style="margin-top:9px" disabled>Now tap it back</button>
+  </div>
+  <button class="btn sec" id="playPreview" style="display:none">▶ Play my beat</button>
+</footer>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
+
+<div class="ov show" id="ovStart"><div class="sheet">
+  <div class="logo" style="font-size:34px">🥁 <b>CLAPBACK</b></div>
+  <p class="lead">Tap out a rhythm — any rhythm. Send the link. Your friend hears it <b>once</b>, then has to clap it back <b>tighter than you did</b>. The beat lives in the URL.</p>
+  <button class="okbtn" id="startRecBtn">TAP A BEAT</button>
+</div></div>
+
+<div class="ov" id="ovResult"><div class="sheet">
+  <h2 id="resTitle"></h2>
+  <div class="big" id="resBig"></div>
+  <p class="lead" id="resLead"></p>
+  <button class="okbtn" id="myBeatBtn">🥁 Send YOUR beat back</button>
+  <button class="sbtn" id="copyResBtn">COPY RESULT</button>
+</div></div>
+
+<div class="ov" id="ovShare"><div class="sheet">
+  <h2>Beat locked 🥁</h2>
+  <p class="lead">Send this to a friend. They hear it once, then have to match it.</p>
+  <div id="linkbox"></div>
+  <button class="okbtn" id="copyBtn">COPY THE LINK</button>
+  <button class="sbtn" id="shareBtn2">Share…</button>
+  <button class="sbtn" id="shareClose">Done</button>
+</div></div>
+
+<div class="ov" id="ovRules"><div class="sheet">
+  <h2>How to play 🥁</h2>
+  <div class="rules">
+    <h4>MAKE A BEAT</h4>
+    <ol>
+      <li>Tap the big pad to lay down a rhythm — <b>3 to 12 taps</b>. Each tap drops a pip and a clap.</li>
+      <li>Hit <b>Send it</b> to turn your beat into a link. Nothing is uploaded — the timing is packed into the URL.</li>
+    </ol>
+    <h4>CLAP IT BACK</h4>
+    <ol>
+      <li>When you open a beat, tap <b>Hear it once</b> to listen.</li>
+      <li>Then tap it back on the pad as tightly as you can. Your <b>average timing error</b> (in ms) is your score — lower is better.</li>
+      <li>Send your own beat back and keep the duel going.</li>
+    </ol>
+  </div>
+  <button class="okbtn" id="rulesClose">GOT IT</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>/*CLAPBACK*/
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const BASE_URL=location.origin+location.pathname;
+const MAXTAP=12;
+
+/* ---- audio ---- */
+let ac=null;
+function unlock(){if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(ac&&ac.state==='suspended')ac.resume();}
+function clap(t){if(!ac)return;const dur=0.06;const buf=ac.createBuffer(1,ac.sampleRate*dur,ac.sampleRate);const d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+  const src=ac.createBufferSource();src.buffer=buf;const bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=1600;bp.Q.value=0.8;
+  const g=ac.createGain();g.gain.value=0.5;src.connect(bp).connect(g).connect(ac.destination);src.start(t||ac.currentTime);}
+
+/* ---- state ---- */
+let mode='menu',taps=[],target=null,rafId=0,playStart=0;
+// taps: array of performance.now() timestamps
+
+function intervals(ts){const out=[];for(let i=1;i<ts.length;i++)out.push(Math.round(ts[i]-ts[i-1]));return out;}
+
+/* ---- codec: intervals[] -> base64url (2 bytes each) ---- */
+function enc(iv){const b=[iv.length&255];for(const v of iv){const c=clamp(v,20,4000);b.push((c>>8)&255,c&255);}
+  let s='';for(const x of b)s+=String.fromCharCode(x);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function dec(str){try{const bin=atob(str.replace(/-/g,'+').replace(/_/g,'/'));const b=[];for(let i=0;i<bin.length;i++)b.push(bin.charCodeAt(i));
+  let i=0;const n=b[i++];const iv=[];for(let k=0;k<n;k++){iv.push((b[i++]<<8)|b[i++]);}return iv.length===n?iv:null;}catch(e){return null;}}
+
+/* ---- timeline render ---- */
+function renderPips(ts,rel){
+  const tl=$('timeline');tl.querySelectorAll('.pip').forEach(e=>e.remove());
+  if(ts.length<1)return;
+  const t0=ts[0],span=Math.max(400,(ts[ts.length-1]-t0)||400);
+  ts.forEach((t,i)=>{const p=document.createElement('div');p.className='pip';
+    p.style.cssText='position:absolute;top:50%;transform:translate(-50%,-50%);width:14px;height:14px;border-radius:50%;background:'+(rel?'#5ad1ff':'#ff5db1')+';box-shadow:0 0 10px currentColor;';
+    p.style.left=(12+((t-t0)/span)*(tl.clientWidth-24))+'px';tl.appendChild(p);});
+}
+
+/* ---- record mode ---- */
+function startRecord(){mode='record';taps=[];$('ovStart').classList.remove('show');
+  $('sub').innerHTML='tap the pad — <b>3 to 12 taps</b>';$('padLbl').textContent='tap here to lay down a beat';
+  $('footRecord').style.display='grid';$('footPlayback').style.display='none';$('playPreview').style.display='none';
+  renderPips([]);updateSend();}
+function padHit(){
+  unlock();const now=performance.now();
+  if(mode==='record'){if(taps.length>=MAXTAP)return;taps.push(now);clap();flashPad();renderPips(taps);$('padLbl').textContent=taps.length+' tap'+(taps.length===1?'':'s');updateSend();}
+  else if(mode==='tapback'){recordBack(now);}
+}
+function updateSend(){$('sendBtn').disabled=taps.length<3;}
+function flashPad(){const p=$('pad');p.classList.remove('hit');void p.offsetWidth;p.classList.add('hit');setTimeout(()=>p.classList.remove('hit'),70);}
+$('clearBtn').onclick=()=>{taps=[];renderPips([]);$('padLbl').textContent='tap here to lay down a beat';updateSend();};
+$('sendBtn').onclick=()=>{if(taps.length<3)return;target=intervals(taps);const link=BASE_URL+'#'+enc(target);$('linkbox').textContent=link;window.__link=link;$('ovShare').classList.add('show');};
+
+/* ---- play a beat (audio + pips) ---- */
+function playBeat(iv,cb){
+  unlock();if(!ac){cb&&cb();return;}
+  const t=ac.currentTime+0.15;let acc=0;const times=[t];clap(t);
+  for(let i=0;i<iv.length;i++){acc+=iv[i]/1000;clap(t+acc);times.push(t+acc);}
+  // visual pips synced
+  const start=performance.now();const virt=[start];let a2=0;for(const v of iv){a2+=v;virt.push(start+a2);}
+  renderPips(virt);
+  if(cb)setTimeout(cb,(acc+0.3)*1000);
+}
+
+/* ---- playback (challenge) mode ---- */
+function startChallenge(iv){
+  target=iv;mode='listen';
+  $('sub').innerHTML='someone sent you a beat — <b>hear it, then clap it back</b>';
+  $('padLbl').textContent='listen first ▶';
+  $('footRecord').style.display='none';$('footPlayback').style.display='';$('playPreview').style.display='none';
+  renderPips([]);
+}
+$('listenBtn').onclick=()=>{unlock();$('listenBtn').disabled=true;$('padLbl').textContent='🔊 listen…';
+  playBeat(target,()=>{$('tapBackBtn').disabled=false;$('listenBtn').disabled=false;$('padLbl').textContent='now tap it back!';});};
+$('tapBackBtn').onclick=()=>{mode='tapback';taps=[];backTaps=[];$('padLbl').textContent='tap the beat back now';$('sub').innerHTML='<b>your turn</b> — match it';};
+let backTaps=[];
+function recordBack(now){if(backTaps.length>=target.length+1)return;backTaps.push(now);clap();flashPad();renderPips(backTaps);
+  $('padLbl').textContent=backTaps.length+' / '+(target.length+1);
+  if(backTaps.length>=target.length+1)scoreBack();}
+function scoreBack(){
+  mode='done';const mine=intervals(backTaps);const n=Math.min(mine.length,target.length);
+  let err=0;for(let i=0;i<n;i++)err+=Math.abs(mine[i]-target[i]);const avg=Math.round(err/Math.max(1,n));
+  window.__lastScore=avg;
+  $('resTitle').textContent=avg<40?'Tight! 🎯':avg<90?'Not bad 🥁':'Off the beat 😅';
+  $('resBig').textContent='±'+avg+'ms';
+  $('resLead').textContent=avg<40?'You clapped it back almost perfectly. Show-off.':avg<90?'Solid. A little loose in places.':'Your timing drifted — give it another listen and try again.';
+  $('ovResult').classList.add('show');
+}
+
+/* ---- overlays / share ---- */
+$('startRecBtn').onclick=()=>{unlock();startRecord();};
+$('pad').addEventListener('pointerdown',e=>{e.preventDefault();padHit();});
+$('myBeatBtn').onclick=()=>{$('ovResult').classList.remove('show');location.hash='';startRecord();};
+$('copyResBtn').onclick=async()=>{const t='Clapback 🥁 I matched the beat to ±'+window.__lastScore+'ms. Beat that: '+BASE_URL;try{await navigator.clipboard.writeText(t);}catch(e){}toast('Copied');};
+$('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText('🥁 Clap this beat back if you can: '+window.__link);}catch(e){const ta=document.createElement('textarea');ta.value=window.__link;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(_){}ta.remove();}toast('Link copied 🥁');};
+$('shareBtn2').onclick=async()=>{const txt='🥁 Clap this beat back if you can: '+window.__link;if(navigator.share){try{await navigator.share({text:txt});}catch(e){}}else{$('copyBtn').click();}};
+$('shareClose').onclick=()=>$('ovShare').classList.remove('show');
+$('rulesBtn').onclick=()=>$('ovRules').classList.add('show');
+$('rulesClose').onclick=()=>$('ovRules').classList.remove('show');
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))$('ovRules').classList.remove('show');});
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+window.__clapback={roundtrip:(iv)=>{const e=enc(iv);const d=dec(e);return{urlLen:e.length,ok:JSON.stringify(d)===JSON.stringify(iv.map(v=>clamp(v,20,4000)))};},
+  score:(targetIv,offMs)=>{target=targetIv;backTaps=[performance.now()];let a=0;for(const v of targetIv){a+=v+(Math.random()*2-1)*(offMs||0);backTaps.push(backTaps[0]+a);}scoreBack();return window.__lastScore;},
+  state:()=>({mode,taps:taps.length,targetLen:target?target.length:0})};
+
+/* ---- boot ---- */
+(function boot(){const h=location.hash.slice(1);if(h){const iv=dec(h);if(iv&&iv.length){$('ovStart').classList.remove('show');startChallenge(iv);return;}}})();
+</script>
+</body>
+</html>

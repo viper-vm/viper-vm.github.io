@@ -90,6 +90,15 @@
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/sketchback"
   },
   {
+    "id": "clapback",
+    "title": "Clapback",
+    "summary": "Tap out a rhythm and send the link. Your friend hears it once, then has to clap it back as tightly as they can — scored by their average timing error in milliseconds. The whole beat is packed into the URL.",
+    "category": "Rhythm",
+    "emoji": "🥁",
+    "demo_url": "/demos/clapback/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/clapback"
+  },
+  {
     "id": "wordle",
     "title": "Wordle Clone",
     "summary": "A fully playable Wordle clone with daily words and statistics.",
