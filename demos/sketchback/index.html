@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Sketchback ✏️ — draw a friend from memory</title>
+<meta name="description" content="Draw a friend from memory in 60 seconds. The link IS the drawing — they watch it appear stroke by stroke, then have to draw you back." />
+<link rel="canonical" href="https://viper-vm.github.io/demos/sketchback/" />
+<meta property="og:title" content="Sketchback — draw a friend from memory" />
+<meta property="og:description" content="60 seconds, one finite pen, no undo — draw your friend from memory. The link you send IS the drawing; they watch it appear stroke by stroke, then draw you back." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/sketchback/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/sketchback/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#0f1014" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230f1014"/><text y=".9em" x="16" font-size="66">✏️</text></svg>' />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0f1014;--panel:#191b22;--panel2:#22252f;--line:rgba(255,255,255,.1);
+    --ink:#eceef5;--mut:#949bb0;--acc:#ffd45e;--pink:#ff6ba6;--ink2:#22252f}
+  html,body{height:100%;overflow:hidden;background:var(--bg);touch-action:none}
+  body{color:var(--ink);font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;display:flex;flex-direction:column;height:100dvh}
+  header{text-align:center;padding:calc(10px + env(safe-area-inset-top)) 14px 6px;flex:0 0 auto}
+  .logo{font-size:22px;font-weight:800}.logo b{color:var(--acc)}
+  #sub{font-size:13.5px;color:var(--mut);margin-top:2px}#sub b{color:var(--ink)}
+  #stage{flex:1;position:relative;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px 14px}
+  #paper{background:#f7f4ec;border-radius:14px;box-shadow:0 20px 60px -20px rgba(0,0,0,.7);touch-action:none;max-width:100%;max-height:100%}
+  #bar{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:12px;align-items:center;pointer-events:none}
+  .pill{background:rgba(15,16,20,.72);border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:13px;font-weight:800;color:#fff}
+  .pill.time{color:var(--acc)}.pill.ink b{color:var(--pink)}
+  #inkmeter{width:90px;height:6px;background:rgba(255,255,255,.15);border-radius:99px;overflow:hidden;display:inline-block;vertical-align:middle;margin-left:4px}
+  #inkmeter i{display:block;height:100%;background:var(--pink);border-radius:99px}
+  footer{flex:0 0 auto;padding:10px 14px calc(16px + env(safe-area-inset-bottom))}
+  .btn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:17px;border-radius:15px;padding:15px;color:#1a1405;background:var(--acc);box-shadow:0 6px 24px -8px var(--acc);transition:transform .07s}
+  .btn:active{transform:scale(.98)}.btn:disabled{opacity:.45}
+  .btn.sec{background:var(--panel2);color:var(--ink);border:1px solid var(--line);box-shadow:none;font-size:14px;padding:12px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .helpBtn{position:fixed;top:calc(9px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer}
+  .ov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px 16px;background:rgba(9,10,14,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+  .ov.show{opacity:1;pointer-events:auto}
+  .sheet{width:min(440px,100%);background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;margin:auto 0;box-shadow:0 30px 80px -20px rgba(0,0,0,.85);max-height:calc(100dvh - 40px);overflow-y:auto;text-align:center}
+  .sheet h2{font-size:23px;font-weight:800}
+  .lead{color:var(--mut);font-size:14px;margin:6px 0 14px;line-height:1.5}.lead b{color:var(--ink)}
+  .field{width:100%;font:inherit;font-size:16px;font-weight:700;text-align:center;color:#fff;background:var(--panel2);border:2px solid var(--acc);border-radius:14px;padding:12px;margin:6px 0 14px;outline:none}
+  .okbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:16px;border-radius:14px;padding:14px;background:var(--acc);color:#1a1405;margin-top:8px}
+  .sbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:14px;border-radius:14px;padding:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:9px}
+  .rules{text-align:left;font-size:14px;line-height:1.55}.rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:14px 0 6px;font-weight:800}
+  .rules ol{margin:0 0 4px 18px}.rules li{margin-bottom:7px}.rules b{color:var(--acc)}
+  #linkbox{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;word-break:break-all;margin:8px 0;max-height:80px;overflow:auto;text-align:left}
+  .swatches{display:flex;gap:8px;justify-content:center;margin:4px 0}
+  .sw{width:30px;height:30px;border-radius:50%;cursor:pointer;border:3px solid transparent}
+  .sw.on{border-color:#fff}
+  #toast{position:fixed;left:50%;bottom:calc(78px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);background:#22252f;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;opacity:0;transition:all .24s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">✏️ <b>SKETCHBACK</b></div>
+  <div id="sub"></div>
+</header>
+<div id="stage">
+  <canvas id="paper" width="640" height="640"></canvas>
+  <div id="bar">
+    <span class="pill time" id="timePill">60s</span>
+    <span class="pill ink">pen <span id="inkmeter"><i id="inkfill" style="width:100%"></i></span></span>
+  </div>
+</div>
+<footer>
+  <div id="footDraw" style="display:none">
+    <div class="swatches" id="swatches"></div>
+    <button class="btn" id="doneBtn">DONE — SEND IT ✏️</button>
+  </div>
+  <div id="footView" style="display:none" class="row">
+    <button class="btn" id="replayBtn">▶ Replay</button>
+    <button class="btn" id="myTurnBtn">Draw them back →</button>
+  </div>
+  <button class="btn sec" id="startFreshBtn" style="display:none;margin-top:9px">Start a fresh Sketchback</button>
+</footer>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
+
+<div class="ov show" id="ovStart"><div class="sheet">
+  <div class="logo" style="font-size:34px">✏️ <b>SKETCHBACK</b></div>
+  <p class="lead">Draw a friend <b>from memory</b> in 60 seconds — one finite pen, no undo. The link you send <b>is</b> the drawing: they watch it appear stroke by stroke, then draw you back.</p>
+  <input class="field" id="nameIn" maxlength="16" placeholder="who are you drawing?" />
+  <button class="okbtn" id="beginBtn">START DRAWING</button>
+  <p class="lead" style="margin-top:12px;font-size:12.5px">No accounts, no uploads — the whole doodle is packed into the URL.</p>
+</div></div>
+
+<div class="ov" id="ovShare"><div class="sheet">
+  <h2>Sent with love ✏️</h2>
+  <p class="lead">Send this link to <b id="shWho"></b>. They'll watch your masterpiece appear, then have to draw you back.</p>
+  <div id="linkbox"></div>
+  <button class="okbtn" id="copyBtn">COPY THE LINK</button>
+  <button class="sbtn" id="shareBtn2">Share…</button>
+  <button class="sbtn" id="shareClose">Done</button>
+</div></div>
+
+<div class="ov" id="ovRules"><div class="sheet">
+  <h2>How to play ✏️</h2>
+  <div class="rules">
+    <h4>THE DARE</h4>
+    <ol>
+      <li>Type who you're drawing, then <b>draw them from memory</b> — you get 60 seconds, a pen that runs out of ink, and <b>no undo</b>.</li>
+      <li>Hit send and you get a <b>link</b>. The drawing isn't attached — it <b>is</b> the link, packed into the URL.</li>
+      <li>Your friend opens it, watches their face get lovingly butchered <b>stroke by stroke</b>, then the canvas flips and they draw <b>you</b> back.</li>
+    </ol>
+    <p style="color:var(--mut);font-size:13px;margin-top:12px">No sign-ups, no servers, nothing uploaded. Just you, a bad drawing, and a link.</p>
+  </div>
+  <button class="okbtn" id="rulesClose">GOT IT</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>/*SKETCHBACK*/
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const BASE_URL=location.origin+location.pathname;
+const COLORS=['#1a1a1a','#e23b57','#2d7ef7','#28a745','#ff8a3d','#8f5bff'];
+const INK_MAX=4200;               // total pen length in canvas units
+const DRAW_MS=60000;
+
+const cv=$('paper'),ctx=cv.getContext('2d');
+const CVW=640,CVH=640;
+let mode='menu',strokes=[],cur=null,ink=INK_MAX,color=0,t0=0,rafId=0,who='',from='';
+// stroke = {c: colorIndex, p:[x,y,x,y,...]}
+
+function fitPaper(){
+  const stage=$('stage');const s=Math.min(stage.clientWidth-4,stage.clientHeight-4);
+  cv.style.width=s+'px';cv.style.height=s+'px';
+}
+addEventListener('resize',()=>{fitPaper();});
+
+/* ---- codec: strokes -> compact base64url ----
+   quantize coords to 0..255 (paper is 640, /2.51). varint-free fixed bytes:
+   [nameLen][name...][nStrokes hi][nStrokes lo] then per stroke [color][nPts hi][nPts lo][x,y...] */
+function enc(name,strks){
+  const bytes=[];
+  const nm=(name||'').slice(0,24);bytes.push(nm.length);for(let i=0;i<nm.length;i++)bytes.push(nm.charCodeAt(i)&255);
+  bytes.push((strks.length>>8)&255,strks.length&255);
+  for(const s of strks){
+    const pts=s.p;bytes.push(s.c&7);const np=Math.min(pts.length/2,4000)|0;bytes.push((np>>8)&255,np&255);
+    for(let i=0;i<np*2;i++)bytes.push(clamp(Math.round(pts[i]/CVW*255),0,255));
+  }
+  let s='';for(let i=0;i<bytes.length;i+=0x2000)s+=String.fromCharCode.apply(null,bytes.slice(i,i+0x2000));
+  return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function dec(str){
+  try{const bin=atob(str.replace(/-/g,'+').replace(/_/g,'/'));const b=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)b[i]=bin.charCodeAt(i);
+    let i=0;const nl=b[i++];let name='';for(let k=0;k<nl;k++)name+=String.fromCharCode(b[i++]);
+    const ns=(b[i++]<<8)|b[i++];const out=[];
+    for(let s=0;s<ns;s++){const c=b[i++];const np=(b[i++]<<8)|b[i++];const p=[];for(let k=0;k<np*2;k++)p.push((b[i++]/255)*CVW);out.push({c,p});}
+    return {name,strokes:out};
+  }catch(e){return null;}
+}
+
+/* ---- drawing ---- */
+function clearPaper(){ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#f7f4ec';ctx.fillRect(0,0,CVW,CVH);
+  // faint frame
+  ctx.strokeStyle='rgba(0,0,0,.05)';ctx.lineWidth=2;ctx.strokeRect(8,8,CVW-16,CVH-16);}
+function drawStroke(s,uptoLen){
+  ctx.strokeStyle=COLORS[s.c]||'#1a1a1a';ctx.lineWidth=5;ctx.lineJoin='round';ctx.lineCap='round';
+  ctx.beginPath();const p=s.p;let drawn=0;
+  for(let i=0;i<p.length;i+=2){const x=p[i],y=p[i+1];i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    if(uptoLen!=null&&i>1){drawn+=Math.hypot(x-p[i-2],y-p[i-1]);if(drawn>uptoLen)break;}}
+  ctx.stroke();
+}
+function redraw(){clearPaper();for(const s of strokes)drawStroke(s);if(cur)drawStroke(cur);}
+
+/* ---- draw mode input ---- */
+function paperPt(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)/r.width*CVW,(e.clientY-r.top)/r.height*CVH];}
+cv.addEventListener('pointerdown',e=>{if(mode!=='draw'||ink<=0)return;e.preventDefault();const[x,y]=paperPt(e);cur={c:color,p:[x,y]};});
+cv.addEventListener('pointermove',e=>{if(mode!=='draw'||!cur)return;e.preventDefault();const[x,y]=paperPt(e);
+  const lx=cur.p[cur.p.length-2],ly=cur.p[cur.p.length-1];const d=Math.hypot(x-lx,y-ly);
+  if(d<3)return;if(ink-d<=0){ink=0;endStroke();toast('Out of ink! ✏️');return;}
+  ink-=d;cur.p.push(x,y);$('inkfill').style.width=(ink/INK_MAX*100)+'%';redraw();});
+addEventListener('pointerup',()=>{if(mode==='draw')endStroke();});
+function endStroke(){if(cur&&cur.p.length>=4)strokes.push(cur);cur=null;}
+
+/* ---- timer ---- */
+function drawLoop(){const t=performance.now()-t0;const left=Math.max(0,Math.ceil((DRAW_MS-t)/1000));
+  $('timePill').textContent=left+'s';
+  if(t>=DRAW_MS){finishDrawing();return;}
+  if(mode==='draw')rafId=requestAnimationFrame(drawLoop);}
+
+function beginDraw(name){
+  who=name||'someone';mode='draw';strokes=[];cur=null;ink=INK_MAX;t0=performance.now();
+  $('sub').innerHTML='drawing <b>'+esc(who)+'</b> from memory…';
+  $('ovStart').classList.remove('show');$('footDraw').style.display='';$('footView').style.display='none';$('startFreshBtn').style.display='none';
+  buildSwatches();$('inkfill').style.width='100%';clearPaper();fitPaper();cancelAnimationFrame(rafId);drawLoop();
+}
+function finishDrawing(){
+  if(mode!=='draw')return;endStroke();mode='sent';cancelAnimationFrame(rafId);
+  const link=BASE_URL+'#'+enc(who,strokes);
+  $('shWho').textContent=who;$('linkbox').textContent=link;window.__link=link;
+  $('ovShare').classList.add('show');
+}
+$('doneBtn').onclick=finishDrawing;
+
+function buildSwatches(){const w=$('swatches');w.innerHTML='';COLORS.forEach((c,i)=>{const b=document.createElement('div');b.className='sw'+(i===color?' on':'');b.style.background=c;b.onclick=()=>{color=i;buildSwatches();};w.appendChild(b);});}
+
+/* ---- view mode (received a drawing) ---- */
+function viewReceived(data){
+  mode='view';from=data.name;strokes=data.strokes;
+  $('sub').innerHTML='someone drew <b>'+esc(from)+'</b> for you ✏️';
+  $('footDraw').style.display='none';$('footView').style.display='grid';$('startFreshBtn').style.display='';
+  fitPaper();replayStrokes();
+}
+function replayStrokes(){
+  clearPaper();let si=0,seg=0;const total=strokes.length;
+  if(!total)return;
+  clearInterval(window.__rep);
+  window.__rep=setInterval(()=>{
+    if(si>=total){clearInterval(window.__rep);return;}
+    const s=strokes[si];seg+=2;
+    clearPaper();for(let k=0;k<si;k++)drawStroke(strokes[k]);
+    drawStroke({c:s.c,p:s.p.slice(0,seg)});
+    if(seg>=s.p.length){si++;seg=0;}
+  },16);
+}
+$('replayBtn').onclick=replayStrokes;
+$('myTurnBtn').onclick=()=>{clearInterval(window.__rep);$('ovStart').classList.add('show');$('nameIn').value='';$('nameIn').placeholder='now draw '+(from||'them')+' back…';};
+$('startFreshBtn').onclick=()=>{location.hash='';location.reload();};
+
+/* ---- overlays / share ---- */
+$('beginBtn').onclick=()=>{const n=$('nameIn').value.trim();beginDraw(n);};
+$('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText($('shWho').textContent?('I drew you from memory ✏️ press play → '+window.__link):window.__link);}catch(e){const ta=document.createElement('textarea');ta.value=window.__link;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(_){}ta.remove();}toast('Link copied — go send it!');};
+$('shareBtn2').onclick=async()=>{const txt='I drew you from memory ✏️ press play → '+window.__link;if(navigator.share){try{await navigator.share({text:txt});}catch(e){}}else{$('copyBtn').click();}};
+$('shareClose').onclick=()=>$('ovShare').classList.remove('show');
+$('rulesBtn').onclick=()=>$('ovRules').classList.add('show');
+$('rulesClose').onclick=()=>$('ovRules').classList.remove('show');
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))$('ovRules').classList.remove('show');});
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+function esc(s){return (s||'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));}
+
+window.__sketchback={roundtrip:(name,n)=>{const st=[];for(let s=0;s<n;s++){const p=[];for(let k=0;k<8;k++)p.push(Math.random()*640,Math.random()*640);st.push({c:s%6,p});}
+  const e=enc(name,st);const d=dec(e);return{urlLen:e.length,name:d.name,strokes:d.strokes.length,ok:d&&d.name===name.slice(0,24)&&d.strokes.length===n};},
+  state:()=>({mode,strokes:strokes.length,ink:Math.round(ink)})};
+
+/* ---- boot ---- */
+(function boot(){
+  clearPaper();fitPaper();
+  const h=location.hash.slice(1);
+  if(h){const d=dec(h);if(d&&d.strokes){$('ovStart').classList.remove('show');viewReceived(d);return;}}
+})();
+</script>
+</body>
+</html>

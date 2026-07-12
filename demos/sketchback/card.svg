@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
+  <rect width="1200" height="630" fill="#0f1014"/>
+  <!-- paper with a wobbly face -->
+  <g transform="translate(800,120)">
+    <rect x="0" y="0" width="330" height="330" rx="16" fill="#f7f4ec"/>
+    <rect x="12" y="12" width="306" height="306" rx="10" fill="none" stroke="rgba(0,0,0,.05)" stroke-width="3"/>
+    <g fill="none" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+      <ellipse cx="165" cy="165" rx="95" ry="110" stroke="#1a1a1a"/>
+      <circle cx="128" cy="140" r="14" stroke="#2d7ef7"/>
+      <circle cx="205" cy="145" r="18" stroke="#2d7ef7"/>
+      <path d="M120 210 Q165 250 215 205" stroke="#e23b57"/>
+      <path d="M150 95 Q165 70 185 92" stroke="#28a745"/>
+      <path d="M95 120 L70 108 M235 122 L262 110" stroke="#ff8a3d"/>
+    </g>
+  </g>
+  <text x="70" y="150" font-size="66" font-weight="800" fill="#eceef5">✏️ <tspan fill="#ffd45e">SKETCHBACK</tspan></text>
+  <text x="72" y="212" font-size="32" font-weight="600" fill="#949bb0">Draw a friend from memory in 60 seconds.</text>
+  <text x="72" y="262" font-size="30" font-weight="800" fill="#eceef5">The link <tspan fill="#ff6ba6">is</tspan> the drawing. Then they draw you back.</text>
+  <text x="72" y="500" font-size="25" font-weight="700" fill="#ffd45e" font-family="ui-monospace,Menlo,monospace">no uploads — it's all packed into the URL</text>
+</svg>

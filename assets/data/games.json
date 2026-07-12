@@ -81,6 +81,15 @@
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/longfire"
   },
   {
+    "id": "sketchback",
+    "title": "Sketchback",
+    "summary": "Draw a friend from memory in 60 seconds — one finite pen, no undo. The link you send IS the drawing: they watch it appear stroke by stroke, then have to draw you back. No uploads; the whole doodle is packed into the URL.",
+    "category": "Social",
+    "emoji": "✏️",
+    "demo_url": "/demos/sketchback/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/sketchback"
+  },
+  {
     "id": "wordle",
     "title": "Wordle Clone",
     "summary": "A fully playable Wordle clone with daily words and statistics.",
