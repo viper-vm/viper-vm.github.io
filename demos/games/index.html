@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Games — Vivek Modi</title>
+  <meta name="description" content="Original browser games by Vivek Modi — Ghostpile, Sorta, Tabfish, Askew and more. All playable instantly in your browser, no sign-ups." />
+  <link rel="canonical" href="https://viper-vm.github.io/demos/games/" />
+  <meta name="theme-color" content="#14110d" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#faf6f0" media="(prefers-color-scheme: light)" />
+  <link rel="icon" type="image/svg+xml" href="/assets/img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem("theme");
+        document.documentElement.setAttribute("data-theme", saved || "light");
+      } catch (e) { document.documentElement.setAttribute("data-theme", "light"); }
+    })();
+  </script>
+  <link rel="stylesheet" href="/assets/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="/" aria-label="Vivek Modi — home"><span class="logo">VM</span><span class="name">Vivek Modi</span></a>
+      <nav aria-label="Primary">
+        <ul class="nav-links">
+          <li><a href="/#about">About</a></li>
+          <li><a href="/#experience">Experience</a></li>
+          <li><a href="/#projects">Projects</a></li>
+          <li><a href="/demos/" class="active">Demos</a></li>
+          <li><a href="/#contact">Contact</a></li>
+        </ul>
+      </nav>
+      <div class="nav-actions">
+        <button class="icon-btn" data-theme-toggle aria-label="Toggle light/dark theme"><span data-theme-icon></span></button>
+        <a class="nav-resume desk" href="/resume/">Resume</a>
+        <button class="icon-btn menu-btn" data-menu-open aria-label="Open menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="scrim" data-menu-close></div>
+  <aside class="mobile-drawer" aria-label="Mobile menu">
+    <button class="icon-btn menu-btn" data-menu-close aria-label="Close menu" style="display:grid;position:absolute;top:22px;right:24px">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <a href="/#about">About</a>
+    <a href="/#experience">Experience</a>
+    <a href="/#projects">Projects</a>
+    <a href="/demos/">Demos</a>
+    <a href="/#contact">Contact</a>
+    <a class="nav-resume" href="/resume/">View Resume</a>
+  </aside>
+
+  <main class="section" style="padding-top:56px">
+    <div class="container">
+      <p class="eyebrow mono" style="color:var(--accent);margin:0 0 8px"><a href="/demos/" style="color:var(--accent);text-decoration:none">← demos</a> / arcade</p>
+      <h1 style="font-size:clamp(30px,6vw,46px);margin:0">Games</h1>
+      <p class="page-intro">Original browser games I built from scratch — no engines, no sign-ups, no backends. Each one is a single page that runs entirely in your browser. Open and play.</p>
+      <div class="grid cols-3" id="gamesGrid"></div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="links">
+        <a href="/">Home</a>
+        <a href="/demos/">Demos</a>
+        <a href="https://github.com/viper-vm" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="mailto:vivekvm84001@gmail.com">Email</a>
+      </div>
+      <p class="credit">Designed &amp; built by Vivek Modi · © <span data-year></span></p>
+    </div>
+  </footer>
+
+  <script>
+    var PLAY = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 3 14 9-14 9V3z"/></svg>';
+    var CODE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C18 4.6 19 4.9 19 4.9c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>';
+    fetch("/assets/data/games.json")
+      .then(function (r) { return r.json(); })
+      .then(function (games) {
+        var grid = document.getElementById("gamesGrid");
+        games.forEach(function (d, i) {
+          var repo = d.repo ? '<a class="btn sm ghost" href="' + d.repo + '" target="_blank" rel="noreferrer">' + CODE + ' Code</a>' : "";
+          var el = document.createElement("article");
+          el.className = "card demo-card reveal";
+          el.setAttribute("data-delay", ((i % 3) * 0.08).toFixed(2));
+          el.innerHTML =
+            '<div style="display:flex;align-items:center;justify-content:space-between">' +
+              '<span class="cat">' + (d.category || "Game") + '</span>' +
+              '<span style="font-size:30px;line-height:1">' + (d.emoji || "🎮") + '</span>' +
+            '</div>' +
+            '<h3>' + d.title + '</h3>' +
+            '<p>' + (d.summary || "") + '</p>' +
+            '<div class="actions">' +
+              '<a class="btn sm solid" href="' + d.demo_url + '">' + PLAY + ' Play</a>' + repo +
+            '</div>';
+          grid.appendChild(el);
+        });
+        var cards = grid.querySelectorAll(".demo-card.reveal");
+        cards.forEach(function (c, i) { setTimeout(function () { c.classList.add("in"); }, 60 + i * 70); });
+      })
+      .catch(function () {
+        document.getElementById("gamesGrid").innerHTML =
+          '<p style="color:var(--muted)">Couldn\'t load the games list. Browse them on ' +
+          '<a href="https://github.com/viper-vm/viper-vm.github.io/tree/main/demos">GitHub</a> instead.</p>';
+      });
+  </script>
+  <script src="/assets/js/site.js" defer></script>
+</body>
+</html>

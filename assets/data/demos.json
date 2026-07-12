@@ -1,39 +1,12 @@
 [
   {
-    "id": "sorta",
-    "title": "Sorta",
-    "summary": "A daily deduction game. A machine has one secret rule about shapes (color, form, fill, size). Feed it probe shapes, watch what it accepts, crack the rule — then ace the 5-shape exam everyone on Earth takes today. New puzzle daily, Wordle-style emoji-grid share. No backend.",
-    "category": "Game",
-    "emoji": "🔷",
-    "demo_url": "/demos/sorta/",
-    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/sorta"
-  },
-  {
-    "id": "ghostpile",
-    "title": "Ghostpile",
-    "summary": "A dodge-run chain letter. Hold to fly, release to fall, thread the cave — and every player who beats the link is frozen inside it as a solid wall, so each share makes the level harder. No backend: the whole pile of ghosts is encoded in the URL. Works on touch and keyboard.",
-    "category": "Game",
-    "emoji": "👻",
-    "demo_url": "/demos/ghostpile/",
-    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/ghostpile"
-  },
-  {
-    "id": "tabfish",
-    "title": "Tabfish",
-    "summary": "The fishing game you play by not playing it. Cast your lure, then switch tabs and work — it sinks in real time toward rarer, deeper fish, even while the tab is closed. Your tab title becomes a live depth ticker and flips to FISH ON when one bites. Set the hook before it escapes.",
-    "category": "Game",
-    "emoji": "🎣",
-    "demo_url": "/demos/tabfish/",
-    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/tabfish"
-  },
-  {
-    "id": "askew",
-    "title": "Askew",
-    "summary": "Tap the exact center of 20 shapes in 45 seconds. Askew separates your precision from your bias and reveals the hidden direction your aim always drifts — the 'which way does your brain secretly lean' number. Left-leaner or right-leaner? Share your scatter plot.",
-    "category": "Game",
-    "emoji": "◎",
-    "demo_url": "/demos/askew/",
-    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/askew"
+    "id": "games",
+    "title": "Games",
+    "summary": "A growing arcade of original browser games built from scratch — Ghostpile (a chain-letter dodge run), Sorta (a daily deduction puzzle), Tabfish (an idle tab-bar fishing game), Askew and more. All playable instantly, no sign-ups.",
+    "category": "Arcade",
+    "emoji": "🎮",
+    "demo_url": "/demos/games/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos"
   },
   {
     "id": "infra-atlas",
@@ -77,13 +50,5 @@
     "category": "Security",
     "emoji": "🔐",
     "demo_url": "/demos/jwt.html"
-  },
-  {
-    "id": "wordle",
-    "title": "Wordle Clone",
-    "summary": "A fully playable Wordle clone with daily words and statistics.",
-    "category": "Game",
-    "emoji": "🟩",
-    "demo_url": "/demos/wordle.html"
   }
 ]

@@ -1,0 +1,54 @@
+[
+  {
+    "id": "ghostpile",
+    "title": "Ghostpile",
+    "summary": "A dodge-run chain letter. Hold to fly, release to fall, thread the cave — and every player who beats the link is frozen inside it as a solid wall, so each share makes the level harder. The whole pile of ghosts is encoded in the URL — no backend.",
+    "category": "Game",
+    "emoji": "👻",
+    "demo_url": "/demos/ghostpile/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/ghostpile"
+  },
+  {
+    "id": "sorta",
+    "title": "Sorta",
+    "summary": "A daily deduction game. A machine has one secret rule about shapes — probe it, crack the rule, then ace the 5-shape exam everyone on Earth takes today. Wordle-style spoiler-free emoji-grid share.",
+    "category": "Daily Game",
+    "emoji": "🔷",
+    "demo_url": "/demos/sorta/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/sorta"
+  },
+  {
+    "id": "tabfish",
+    "title": "Tabfish",
+    "summary": "The fishing game you play by not playing it. Cast your lure, switch tabs and work — it sinks in real time toward rarer, deeper fish, even while the tab is closed. Your tab title flips to FISH ON when one bites.",
+    "category": "Idle Game",
+    "emoji": "🎣",
+    "demo_url": "/demos/tabfish/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/tabfish"
+  },
+  {
+    "id": "askew",
+    "title": "Askew",
+    "summary": "Tap the exact center of 20 shapes in 45 seconds. Askew separates your precision from your bias and reveals which way your brain secretly leans — a shareable identity number and scatter plot.",
+    "category": "Perception",
+    "emoji": "◎",
+    "demo_url": "/demos/askew/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/askew"
+  },
+  {
+    "id": "wordle",
+    "title": "Wordle Clone",
+    "summary": "A fully playable Wordle clone with daily words and statistics.",
+    "category": "Word Game",
+    "emoji": "🟩",
+    "demo_url": "/demos/wordle.html"
+  },
+  {
+    "id": "stake",
+    "title": "Fake Casino",
+    "summary": "A play-money casino sandbox — spin, bet and cash out with zero real stakes. Purely a UI/animation playground; no money, no accounts.",
+    "category": "Sandbox",
+    "emoji": "🎰",
+    "demo_url": "/demos/stake/"
+  }
+]
