@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
+  <defs><radialGradient id="d" cx="42%" cy="40%" r="65%"><stop offset="0" stop-color="#ffe6b0"/><stop offset="1" stop-color="#f2c988"/></radialGradient></defs>
+  <rect width="1200" height="630" fill="#120d08"/>
+  <ellipse cx="900" cy="315" rx="250" ry="230" fill="rgba(255,255,255,.03)"/>
+  <!-- wobbly dough -->
+  <path d="M900 110 L1000 150 L1055 240 L1120 300 L1050 370 L1090 460 L980 500 L910 540 L820 505 L740 520 L720 420 L680 330 L735 250 L720 165 L820 150 Z" fill="url(#d)" stroke="rgba(180,120,60,.5)" stroke-width="4"/>
+  <g fill="#c0392b"><circle cx="880" cy="280" r="12"/><circle cx="960" cy="330" r="12"/><circle cx="850" cy="380" r="12"/><circle cx="940" cy="410" r="12"/></g>
+  <text x="70" y="150" font-size="72" font-weight="800" fill="#f6ecdd">🍕 <tspan fill="#ffbf42">DOUGHJO</tspan></text>
+  <text x="72" y="212" font-size="32" font-weight="600" fill="#bda589">Spin a soft-body dough into the biggest pizza…</text>
+  <text x="72" y="262" font-size="30" font-weight="800" fill="#f6ecdd">…without <tspan fill="#ff5d5d">tearing</tspan> it. 61cm, shaped like Australia.</text>
+  <text x="72" y="480" font-size="25" font-weight="700" fill="#ffbf42" font-family="ui-monospace,Menlo,monospace">every pizza comes out a wobbly one-of-a-kind shape</text>
+</svg>

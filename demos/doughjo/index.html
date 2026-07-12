@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Doughjo 🍕 — spin the biggest pizza</title>
+<meta name="description" content="Spin a soft-body ball of dough into the biggest pizza you can — without tearing it. Every spin ends in a wobbly one-of-a-kind shape. How wide can you go?" />
+<link rel="canonical" href="https://viper-vm.github.io/demos/doughjo/" />
+<meta property="og:title" content="Doughjo — spin the biggest pizza" />
+<meta property="og:description" content="Swirl a soft-body ball of dough into the widest pizza you can without tearing it. Centrifugal force stretches it thin; every result is a wobbly one-of-a-kind shape." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/doughjo/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/doughjo/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#120d08" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%23120d08"/><text y=".9em" x="16" font-size="64">🍕</text></svg>' />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#120d08;--panel:#201811;--panel2:#2a2016;--line:rgba(255,255,255,.1);--ink:#f6ecdd;--mut:#bda589;--acc:#ffbf42;--tear:#ff5d5d}
+  html,body{height:100%;overflow:hidden;background:var(--bg);touch-action:none}
+  body{color:var(--ink);font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  #cv{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab}#cv:active{cursor:grabbing}
+  #hud{position:fixed;top:calc(12px + env(safe-area-inset-top));left:0;right:0;text-align:center;z-index:5;pointer-events:none;text-shadow:0 2px 12px rgba(0,0,0,.55),0 0 3px rgba(0,0,0,.5)}
+  #hint{text-shadow:0 1px 8px rgba(0,0,0,.6)}
+  #diam{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  #diamlbl{font-size:12px;font-weight:800;letter-spacing:.15em;color:var(--mut)}
+  #best{font-size:13px;color:var(--mut);font-weight:700;margin-top:4px}#best b{color:var(--acc)}
+  .helpBtn{position:fixed;top:calc(9px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer}
+  #hint{position:fixed;bottom:calc(76px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;z-index:5;pointer-events:none;color:var(--mut);font-size:14px;font-weight:600}
+  .bar{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:10px}
+  .b{border:0;cursor:pointer;font:inherit;font-weight:800;font-size:15px;border-radius:13px;padding:13px 20px;transition:transform .07s}.b:active{transform:scale(.96)}
+  .b.done{background:var(--acc);color:#2a1c00;box-shadow:0 6px 22px -8px var(--acc)}
+  .b.sec{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+  .ov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px 16px;background:rgba(10,7,4,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+  .ov.show{opacity:1;pointer-events:auto}
+  .sheet{width:min(430px,100%);background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;margin:auto 0;box-shadow:0 30px 80px -20px rgba(0,0,0,.85);text-align:center}
+  .logo{font-size:clamp(32px,9vw,46px);font-weight:800}.logo b{color:var(--acc)}
+  .lead{color:var(--mut);font-size:14.5px;margin:10px 0 18px;line-height:1.5}.lead b{color:var(--ink)}
+  .btn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:17px;border-radius:15px;padding:15px;color:#2a1c00;background:var(--acc);box-shadow:0 6px 24px -8px var(--acc)}
+  .sbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:14px;border-radius:14px;padding:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:9px}
+  .big{font-size:46px;font-weight:800;margin:6px 0 2px}
+  #resCanvas{width:180px;height:180px;margin:6px auto}
+  .rules{text-align:left;font-size:14px;line-height:1.55}.rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:14px 0 6px;font-weight:800}.rules ol{margin:0 0 4px 18px}.rules li{margin-bottom:7px}.rules b{color:var(--acc)}
+  #toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);background:#2a2016;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;opacity:0;transition:all .24s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud"><div id="diam">0<span style="font-size:.5em">cm</span></div><div id="diamlbl">PIZZA</div><div id="best">best <b id="bestv">0</b>cm</div></div>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
+<div id="hint">press on the dough and swirl in circles to spin it out</div>
+<div class="bar"><button class="b done" id="doneBtn">✋ That's my pizza</button><button class="b sec" id="freshBtn">Fresh dough</button></div>
+
+<div class="ov show" id="ovStart"><div class="sheet">
+  <div class="logo">🍕 <b>DOUGHJO</b></div>
+  <p class="lead">Press on the ball of dough and <b>swirl in circles</b> to spin it. Centrifugal force stretches it into a pizza — go as <b>wide</b> as you dare, but spin too hard and it <b>tears</b>. Every pizza comes out a wobbly one-of-a-kind shape.</p>
+  <button class="btn" id="startBtn">GET SPINNING</button>
+</div></div>
+
+<div class="ov" id="ovResult"><div class="sheet">
+  <h2 id="resTitle" style="font-size:24px;font-weight:800"></h2>
+  <canvas id="resCanvas" width="360" height="360"></canvas>
+  <div class="big" id="resBig"></div>
+  <p class="lead" id="resLead"></p>
+  <button class="btn" id="againBtn">Spin another</button>
+  <button class="sbtn" id="copyBtn">COPY RESULT</button>
+</div></div>
+
+<div class="ov" id="ovRules"><div class="sheet">
+  <h2 style="font-size:23px;font-weight:800">How to play 🍕</h2>
+  <div class="rules">
+    <h4>SPIN IT OUT</h4>
+    <ol>
+      <li><b>Press on the dough</b> and drag in <b>circles</b>. The faster you swirl, the more it spins.</li>
+      <li>Spinning flings the dough outward (centrifugal force) — it gets <b>wider and thinner</b>, wobbling like the real thing.</li>
+      <li>Push too far and a seam <b>tears</b> — game over for that ball. Stop while you're ahead and hit <b>✋ That's my pizza</b> to lock in your diameter.</li>
+    </ol>
+    <p style="color:var(--mut);font-size:13px;margin-top:12px">Nobody's pizza comes out round. That's the fun — yours might look like a country.</p>
+  </div>
+  <button class="btn" id="rulesClose" style="margin-top:12px">GOT IT</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>/*DOUGHJO*/
+'use strict';
+const LS=(function(){let ok=false;const mem={};try{localStorage.setItem('__dj','1');localStorage.removeItem('__dj');ok=true;}catch(e){}
+  return{get(k){try{return ok?localStorage.getItem(k):(k in mem?mem[k]:null)}catch(e){return k in mem?mem[k]:null}},set(k,v){v=String(v);mem[k]=v;try{if(ok)localStorage.setItem(k,v)}catch(e){}}};})();
+const $=id=>document.getElementById(id);const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const SHAPES=['Australia','Italy','a heart','a potato','Texas','a blob','Africa','a puddle','a kidney bean','France','a cloud','Greenland'];
+
+const cv=$('cv'),ctx=cv.getContext('2d');
+let dpr=1,W=0,H=0;
+function resize(){dpr=Math.min(devicePixelRatio||1,2.5);W=innerWidth||360;H=innerHeight||640;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);build();}
+addEventListener('resize',resize);
+
+const M=40;
+let cx=0,cy=0,baseR=0,R=0,Rmax=0,angle=0,spin=0,torn=false,peak=0,lumps=[],pts=[];
+let best=+(LS.get('doughjo_best')||0);
+const CM_PER_PX=()=>60/(Rmax);   // Rmax maps to ~60cm
+
+function build(){
+  cx=W/2;cy=H*0.52;baseR=Math.min(W,H)*0.085;R=baseR;Rmax=Math.min(W,H)*0.34;angle=0;spin=0;torn=false;peak=baseR;
+  lumps=[];for(let i=0;i<M;i++)lumps.push(0.86+Math.random()*0.28);       // per-point rest wobble
+  pts=[];for(let i=0;i<M;i++){const a=i/M*Math.PI*2;pts.push({x:cx+baseR*Math.cos(a),y:cy+baseR*Math.sin(a),px:cx+baseR*Math.cos(a),py:cy+baseR*Math.sin(a)});}
+  $('bestv').textContent=Math.round(best);$('diam').innerHTML=Math.round(baseR*CM_PER_PX()*0+ baseR/Rmax*60)+'<span style="font-size:.5em">cm</span>';
+}
+
+function diameterCm(){return Math.round(R/Rmax*60);}
+function step(dt){
+  if(torn)return;
+  angle+=spin*dt;spin*=0.978;
+  const TEAR=95, coef=(Rmax-baseR)/TEAR;
+  if(Math.abs(spin)>TEAR){R=Math.min(R,Rmax);tear();return;}
+  const Rt=Math.min(baseR+Math.abs(spin)*coef,Rmax);
+  if(Rt>R)R+=(Rt-R)*0.15; else R+=(Rt-R)*0.008;    // ratchet: grows fast, relaxes slowly
+  peak=Math.max(peak,R);
+  // soft-body points wobble toward their spinning target ring
+  for(let i=0;i<M;i++){const p=pts[i];const a=angle+i/M*Math.PI*2;const tr=R*lumps[i];
+    const tx=cx+tr*Math.cos(a),ty=cy+tr*Math.sin(a)*0.9;   // slight vertical squash
+    const vx=(p.x-p.px)*0.86,vy=(p.y-p.py)*0.86;p.px=p.x;p.py=p.y;
+    p.x+=vx+(tx-p.x)*0.35;p.y+=vy+(ty-p.y)*0.35;}
+  $('diam').innerHTML=diameterCm()+'<span style="font-size:.5em">cm</span>';
+}
+function tear(){torn=true;const cm=diameterCm();finish(true,cm);}
+
+let lastT=0;
+function loop(t){const dt=lastT?clamp((t-lastT)/1000,0.001,0.033):0.016;lastT=t;step(dt);draw();requestAnimationFrame(loop);}
+function draw(){
+  ctx.clearRect(0,0,W,H);const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#120d08');g.addColorStop(1,'#1a120a');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // mat
+  ctx.fillStyle='rgba(255,255,255,.03)';ctx.beginPath();ctx.ellipse(cx,cy,Rmax*1.25,Rmax*1.1,0,0,7);ctx.fill();
+  // dough blob
+  ctx.beginPath();for(let i=0;i<=M;i++){const p=pts[i%M];i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);}ctx.closePath();
+  const dg=ctx.createRadialGradient(cx-R*0.2,cy-R*0.2,R*0.2,cx,cy,R);dg.addColorStop(0,'#ffe6b0');dg.addColorStop(1,torn?'#e8a86a':'#f2c988');
+  ctx.fillStyle=dg;ctx.fill();
+  ctx.strokeStyle=torn?'rgba(255,93,93,.7)':'rgba(180,120,60,.5)';ctx.lineWidth=3;ctx.stroke();
+  // flour speckles rotating with the dough
+  ctx.fillStyle='rgba(120,80,40,.35)';
+  for(let i=0;i<10;i++){const a=angle*1+i*2.4,rr=R*(0.2+((i*37)%50)/100);ctx.beginPath();ctx.arc(cx+rr*Math.cos(a),cy+rr*Math.sin(a)*0.9,2.5,0,7);ctx.fill();}
+}
+
+/* ---- swirl input ---- */
+let dragging=false,lastAng=0;
+function pt(e){const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+cv.addEventListener('pointerdown',e=>{if(torn)return;e.preventDefault();dragging=true;const p=pt(e);lastAng=Math.atan2(p.y-cy,p.x-cx);$('hint').style.opacity=0;});
+cv.addEventListener('pointermove',e=>{if(!dragging||torn)return;const p=pt(e);const a=Math.atan2(p.y-cy,p.x-cx);let d=a-lastAng;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;
+  spin+=d*9;lastAng=a;});
+addEventListener('pointerup',()=>{dragging=false;});
+
+/* ---- finish ---- */
+function finish(tornFlag,cm){
+  const shape=SHAPES[Math.floor(Math.random()*SHAPES.length)];
+  if(!tornFlag&&cm>best){best=cm;LS.set('doughjo_best',best);}
+  else if(tornFlag){/* torn doesn't count for best */}
+  window.__lastDough={torn:tornFlag,cm,shape};
+  $('resTitle').textContent=tornFlag?'TORN! 🫓':(cm>=45?'Chef\'s kiss 🤌':'Nice pie 🍕');
+  $('resBig').textContent=cm+' cm';
+  $('resLead').textContent=(tornFlag?'You pushed it too far and it ripped at ':'A wobbly ')+ (tornFlag?cm+'cm. ':cm+'cm masterpiece — ')+'shaped like '+shape+'.';
+  drawResult();
+  $('ovResult').classList.add('show');
+}
+function drawResult(){
+  const c=$('resCanvas'),g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,360,360);
+  g.save();g.translate(180,180);const sc=150/Math.max(R,1);
+  g.beginPath();for(let i=0;i<=M;i++){const p=pts[i%M];i?g.lineTo((p.x-cx)*sc,(p.y-cy)*sc):g.moveTo((p.x-cx)*sc,(p.y-cy)*sc);}g.closePath();
+  g.fillStyle=window.__lastDough&&window.__lastDough.torn?'#e8a86a':'#f2c988';g.fill();g.strokeStyle='rgba(180,120,60,.6)';g.lineWidth=3;g.stroke();
+  g.fillStyle='#c0392b';for(let i=0;i<6;i++){const a=i*1.7,rr=R*sc*0.5*Math.random();g.beginPath();g.arc(Math.cos(a)*rr,Math.sin(a)*rr,6,0,7);g.fill();}
+  g.restore();
+}
+
+$('doneBtn').onclick=()=>{if(torn)return;finish(false,diameterCm());};
+$('freshBtn').onclick=()=>{build();$('ovResult').classList.remove('show');};
+$('againBtn').onclick=()=>{build();$('ovResult').classList.remove('show');};
+$('startBtn').onclick=()=>$('ovStart').classList.remove('show');
+$('rulesBtn').onclick=()=>$('ovRules').classList.add('show');
+$('rulesClose').onclick=()=>$('ovRules').classList.remove('show');
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))$('ovRules').classList.remove('show');});
+$('copyBtn').onclick=async()=>{const d=window.__lastDough;const t='🍕 Doughjo — I spun a '+d.cm+'cm pizza'+(d.torn?' (then tore it 🫓)':'')+', shaped like '+d.shape+'\nspin your own: viper-vm.github.io/demos/doughjo';try{await navigator.clipboard.writeText(t);}catch(e){}toast('Copied');};
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+window.__doughjo={state:()=>({cm:diameterCm(),R:Math.round(R),spin:+spin.toFixed(1),torn,best}),
+  spinUp:(targetSpin)=>{spin=targetSpin||40;for(let i=0;i<50&&!torn;i++){step(1/60);}return{cm:diameterCm(),torn,peak:Math.round(peak)};},
+  reset:()=>build()};
+
+resize();requestAnimationFrame(loop);
+</script>
+</body>
+</html>

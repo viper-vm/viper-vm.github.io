@@ -108,6 +108,15 @@
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/krak"
   },
   {
+    "id": "doughjo",
+    "title": "Doughjo",
+    "summary": "Spin a soft-body ball of dough into the biggest pizza you can — without tearing it. Swirl to build spin; centrifugal force stretches it wider and thinner, wobbling like the real thing. Push too far and it rips. Every pizza is a one-of-a-kind shape.",
+    "category": "Physics Toy",
+    "emoji": "🍕",
+    "demo_url": "/demos/doughjo/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/doughjo"
+  },
+  {
     "id": "wordle",
     "title": "Wordle Clone",
     "summary": "A fully playable Wordle clone with daily words and statistics.",
