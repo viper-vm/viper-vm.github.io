@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Callback 🎶 — a duet in a URL</title>
+<meta name="description" content="Tap out a loop on a 5-pad pentatonic instrument over a lo-fi drum beat, then send the link. Your friend hears your loop and records their own layer on top — a duet built one link at a time." />
+<link rel="canonical" href="https://viper-vm.github.io/demos/callback/" />
+<meta property="og:title" content="Callback — a duet in a URL" />
+<meta property="og:description" content="Tap a loop on a 5-pad pentatonic instrument over a drum beat, send the link, and your friend layers their part on top. A whole song, built one link at a time, no backend." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/callback/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/callback/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#0a0e14" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230a0e14"/><text y=".9em" x="18" font-size="60">🎶</text></svg>' />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0a0e14;--panel:#141a24;--panel2:#1d2531;--line:rgba(255,255,255,.1);--ink:#eaf0f8;--mut:#8b97ac;--acc:#42e6c3}
+  html,body{height:100%;overflow:hidden;background:var(--bg);touch-action:none}
+  body{color:var(--ink);font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;display:flex;flex-direction:column;height:100dvh}
+  header{text-align:center;padding:calc(12px + env(safe-area-inset-top)) 16px 4px;flex:0 0 auto}
+  .logo{font-size:23px;font-weight:800}.logo b{color:var(--acc)}
+  #sub{font-size:14px;color:var(--mut);margin-top:3px}#sub b{color:var(--ink)}
+  #grid{flex:0 0 auto;height:120px;margin:12px 14px 0;position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  #play{position:absolute;top:0;bottom:0;width:2px;background:var(--acc);left:0;box-shadow:0 0 8px var(--acc)}
+  #pads{flex:1;min-height:0;display:flex;gap:8px;margin:12px 14px}
+  .pad{flex:1;border-radius:16px;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;padding-bottom:14px;font-weight:800;font-size:14px;color:rgba(0,0,0,.5);transition:transform .05s,filter .05s;border:1px solid rgba(255,255,255,.12)}
+  .pad:active,.pad.hit{transform:scale(.96);filter:brightness(1.3)}
+  footer{flex:0 0 auto;padding:0 14px calc(16px + env(safe-area-inset-bottom))}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .btn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:15px;border-radius:14px;padding:14px;color:#052018;background:var(--acc);box-shadow:0 6px 22px -8px var(--acc);transition:transform .07s}
+  .btn:active{transform:scale(.98)}.btn:disabled{opacity:.4}
+  .btn.sec{background:var(--panel2);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+  .helpBtn{position:fixed;top:calc(10px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer}
+  .ov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px 16px;background:rgba(7,10,14,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+  .ov.show{opacity:1;pointer-events:auto}
+  .sheet{width:min(440px,100%);background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;margin:auto 0;box-shadow:0 30px 80px -20px rgba(0,0,0,.85);text-align:center}
+  .sheet h2{font-size:23px;font-weight:800}
+  .lead{color:var(--mut);font-size:14.5px;margin:8px 0 16px;line-height:1.5}.lead b{color:var(--ink)}
+  .okbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:16px;border-radius:14px;padding:14px;background:var(--acc);color:#052018;margin-top:10px}
+  .sbtn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:14px;border-radius:14px;padding:12px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);margin-top:9px}
+  .rules{text-align:left;font-size:14px;line-height:1.55}.rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:14px 0 6px;font-weight:800}.rules ol{margin:0 0 4px 18px}.rules li{margin-bottom:7px}.rules b{color:var(--acc)}
+  #linkbox{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;word-break:break-all;margin:8px 0;text-align:left;max-height:80px;overflow:auto}
+  #toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);background:#1d2531;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;opacity:0;transition:all .24s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header><div class="logo">🎶 <b>CALLBACK</b></div><div id="sub"></div></header>
+<div id="grid"><div id="play"></div></div>
+<div id="pads"></div>
+<footer>
+  <div id="footRecord" class="row" style="display:none">
+    <button class="btn sec" id="clearBtn">Clear my part</button>
+    <button class="btn" id="sendBtn" disabled>Send it →</button>
+  </div>
+  <div id="footListen" style="display:none">
+    <button class="btn" id="layerBtn">🎙 Add my layer on top</button>
+  </div>
+  <button class="btn sec" id="stopBtn" style="display:none;margin-top:9px">⏸ Stop</button>
+</footer>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
+
+<div class="ov show" id="ovStart"><div class="sheet">
+  <div class="logo" style="font-size:32px">🎶 <b>CALLBACK</b></div>
+  <p class="lead">Tap out a loop on the pads over the beat. Send the link — your friend hears it and records their <b>own layer on top</b>. A whole song, built one link at a time.</p>
+  <button class="okbtn" id="startBtn">START A LOOP</button>
+</div></div>
+
+<div class="ov" id="ovShare"><div class="sheet">
+  <h2>Loop locked 🎶</h2>
+  <p class="lead">Send this to a friend. They'll hear it and add their part on top.</p>
+  <div id="linkbox"></div>
+  <button class="okbtn" id="copyBtn">COPY THE LINK</button>
+  <button class="sbtn" id="shareBtn2">Share…</button>
+  <button class="sbtn" id="shareClose">Keep jamming</button>
+</div></div>
+
+<div class="ov" id="ovRules"><div class="sheet">
+  <h2>How to play 🎶</h2>
+  <div class="rules">
+    <h4>MAKE A LOOP</h4>
+    <ol>
+      <li>A drum beat loops. Tap the <b>5 pads</b> (a pentatonic scale — everything sounds good together) in time.</li>
+      <li>Your notes snap to the grid and repeat every loop. Hit <b>Send it</b> to pack the loop into a link.</li>
+    </ol>
+    <h4>ADD A LAYER</h4>
+    <ol>
+      <li>Open a friend's link and you'll hear their loop playing.</li>
+      <li>Tap <b>Add my layer</b> and play your part <b>on top</b>. Send it back and keep stacking — up to four layers.</li>
+    </ol>
+    <p style="color:var(--mut);font-size:13px;margin-top:10px">Every layer lives in the URL. No accounts, no uploads.</p>
+  </div>
+  <button class="okbtn" id="rulesClose">GOT IT</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>/*CALLBACK*/
+'use strict';
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const BASE_URL=location.origin+location.pathname;
+const STEPS=32, BPM=104, STEP_MS=60000/BPM/4;      // 16th notes
+const FREQS=[261.63,293.66,329.63,392.00,440.00];  // C major pentatonic
+const PADC=['#ff6b6b','#ffb84d','#ffe14d','#4dd97a','#4da3ff'];
+const LNAME=['C','D','E','G','A'];
+const MAXLAYERS=4;
+
+let ac=null;
+function unlock(){if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}if(ac&&ac.state==='suspended')ac.resume();}
+function note(freq,t,vol){if(!ac)return;const o=ac.createOscillator(),g=ac.createGain();o.type='triangle';o.frequency.value=freq;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol||0.28,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+0.4);
+  o.connect(g).connect(ac.destination);o.start(t);o.stop(t+0.42);}
+function kick(t){if(!ac)return;const o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(45,t+0.12);
+  g.gain.setValueAtTime(0.5,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.16);o.connect(g).connect(ac.destination);o.start(t);o.stop(t+0.18);}
+function hat(t){if(!ac)return;const dur=0.03,buf=ac.createBuffer(1,ac.sampleRate*dur,ac.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
+  const s=ac.createBufferSource();s.buffer=buf;const hp=ac.createBiquadFilter();hp.type='highpass';hp.frequency.value=7000;const g=ac.createGain();g.gain.value=0.12;
+  s.connect(hp).connect(g).connect(ac.destination);s.start(t);}
+
+/* ---- state ---- */
+let layers=[],myLayer=[],mode='menu',playing=false,seqStep=0,seqTimer=0,loopStart=0;
+// layer = [{s:step, p:pad}]
+
+/* ---- codec ---- */
+function enc(lays){const b=[lays.length&255];for(const L of lays){b.push(L.length&255);for(const n of L)b.push(((n.s&31)<<3)|(n.p&7));}
+  let s='';for(const x of b)s+=String.fromCharCode(x);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+function dec(str){try{const bin=atob(str.replace(/-/g,'+').replace(/_/g,'/'));const b=[];for(let i=0;i<bin.length;i++)b.push(bin.charCodeAt(i));
+  let i=0;const nl=b[i++];const out=[];for(let l=0;l<nl;l++){const nn=b[i++];const L=[];for(let k=0;k<nn;k++){const v=b[i++];L.push({s:(v>>3)&31,p:v&7});}out.push(L);}return out;}catch(e){return null;}}
+
+/* ---- pads ---- */
+function buildPads(){const w=$('pads');w.innerHTML='';for(let i=0;i<5;i++){const p=document.createElement('div');p.className='pad';p.style.background=PADC[i];p.textContent=LNAME[i];
+  p.addEventListener('pointerdown',e=>{e.preventDefault();hitPad(i);});w.appendChild(p);}}
+function flashPad(i){const p=$('pads').children[i];if(!p)return;p.classList.add('hit');setTimeout(()=>p.classList.remove('hit'),90);}
+function hitPad(i){unlock();note(FREQS[i],ac?ac.currentTime:0);flashPad(i);
+  if(mode==='record'||mode==='layer'){const el=performance.now()-loopStart;const step=Math.round((el%(STEPS*STEP_MS))/STEP_MS)%STEPS;myLayer.push({s:step,p:i});renderGrid();$('sendBtn').disabled=myLayer.length===0;}}
+
+/* ---- sequencer ---- */
+function startLoop(){unlock();playing=true;seqStep=0;loopStart=performance.now();$('stopBtn').style.display='block';
+  clearInterval(seqTimer);seqTimer=setInterval(()=>{
+    const t=ac?ac.currentTime:0;
+    // drums
+    if(seqStep%8===0)kick(t);
+    if(seqStep%2===0)hat(t);
+    // layers + my live layer
+    const all=layers.concat([myLayer]);
+    all.forEach(L=>L.forEach(n=>{if(n.s===seqStep)note(FREQS[n.p],t,0.24);}));
+    // playhead
+    $('play').style.left=(seqStep/STEPS*100)+'%';
+    if(seqStep===0)loopStart=performance.now();
+    seqStep=(seqStep+1)%STEPS;
+  },STEP_MS);
+}
+function stopLoop(){playing=false;clearInterval(seqTimer);$('stopBtn').style.display='none';$('play').style.left='0';}
+$('stopBtn').onclick=()=>{stopLoop();};
+
+/* ---- grid render ---- */
+function renderGrid(){const g=$('grid');g.querySelectorAll('.gn').forEach(e=>e.remove());
+  const all=layers.map((L,li)=>({L,mine:false,li})).concat([{L:myLayer,mine:true,li:layers.length}]);
+  all.forEach(({L,mine})=>L.forEach(n=>{const d=document.createElement('div');d.className='gn';
+    d.style.cssText='position:absolute;width:10px;height:10px;border-radius:50%;transform:translate(-50%,-50%);background:'+PADC[n.p]+';'+(mine?'':'opacity:.5;');
+    d.style.left=(n.s/STEPS*100)+'%';d.style.top=(12+n.p*20)+'px';g.appendChild(d);}));}
+
+/* ---- flows ---- */
+function startRecord(){mode='record';layers=[];myLayer=[];$('ovStart').classList.remove('show');
+  $('sub').innerHTML='tap a loop over the beat — <b>your part</b>';$('footRecord').style.display='grid';$('footListen').style.display='none';
+  buildPads();renderGrid();startLoop();}
+function startListen(incoming){mode='listen';layers=incoming;myLayer=[];
+  $('sub').innerHTML='a <b>'+incoming.length+'-layer</b> loop — hear it, then add yours';$('footRecord').style.display='none';$('footListen').style.display='block';
+  buildPads();renderGrid();startLoop();}
+$('layerBtn').onclick=()=>{if(layers.length>=MAXLAYERS){toast('Four layers is plenty! Send it on.');return;}mode='layer';myLayer=[];
+  $('sub').innerHTML='<b>your turn</b> — play on top';$('footListen').style.display='none';$('footRecord').style.display='grid';$('sendBtn').disabled=true;};
+$('clearBtn').onclick=()=>{myLayer=[];renderGrid();$('sendBtn').disabled=true;};
+$('sendBtn').onclick=()=>{if(myLayer.length===0)return;const out=layers.concat([myLayer]);const link=BASE_URL+'#'+enc(out);$('linkbox').textContent=link;window.__link=link;$('ovShare').classList.add('show');};
+
+$('startBtn').onclick=()=>{unlock();startRecord();};
+$('rulesBtn').onclick=()=>$('ovRules').classList.add('show');
+$('rulesClose').onclick=()=>$('ovRules').classList.remove('show');
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))$('ovRules').classList.remove('show');});
+$('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText('🎶 Add your layer to our loop: '+window.__link);}catch(e){const ta=document.createElement('textarea');ta.value=window.__link;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(_){}ta.remove();}toast('Link copied 🎶');};
+$('shareBtn2').onclick=async()=>{const t='🎶 Add your layer to our loop: '+window.__link;if(navigator.share){try{await navigator.share({text:t});}catch(e){}}else{$('copyBtn').click();}};
+$('shareClose').onclick=()=>$('ovShare').classList.remove('show');
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+window.__callback={roundtrip:(lays)=>{const e=enc(lays);const d=dec(e);return{urlLen:e.length,ok:JSON.stringify(d)===JSON.stringify(lays)};},
+  state:()=>({mode,layers:layers.length,myNotes:myLayer.length,playing}),
+  addNote:(step,pad)=>{myLayer.push({s:step,p:pad});return myLayer.length;}};
+
+/* ---- boot ---- */
+(function boot(){const h=location.hash.slice(1);if(h){const d=dec(h);if(d&&d.length){$('ovStart').classList.remove('show');startListen(d);}}})();
+</script>
+</body>
+</html>

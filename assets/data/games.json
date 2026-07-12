@@ -117,6 +117,15 @@
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/doughjo"
   },
   {
+    "id": "callback",
+    "title": "Callback",
+    "summary": "A duet in a URL. Tap out a loop on a 5-pad pentatonic instrument over a lo-fi drum beat, then send the link. Your friend hears it and records their own layer on top — a whole song built one link at a time, up to four layers. No backend.",
+    "category": "Music",
+    "emoji": "🎶",
+    "demo_url": "/demos/callback/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/callback"
+  },
+  {
     "id": "wordle",
     "title": "Wordle Clone",
     "summary": "A fully playable Wordle clone with daily words and statistics.",

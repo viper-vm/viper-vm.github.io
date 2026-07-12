@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="system-ui,-apple-system,'Segoe UI',Roboto,sans-serif">
+  <rect width="1200" height="630" fill="#0a0e14"/>
+  <!-- pads on the right -->
+  <g transform="translate(700,150)">
+    <rect x="0" y="0" width="80" height="330" rx="14" fill="#ff6b6b"/>
+    <rect x="95" y="0" width="80" height="330" rx="14" fill="#ffb84d"/>
+    <rect x="190" y="0" width="80" height="330" rx="14" fill="#ffe14d"/>
+    <rect x="285" y="0" width="80" height="330" rx="14" fill="#4dd97a"/>
+    <rect x="380" y="0" width="80" height="330" rx="14" fill="#4da3ff"/>
+  </g>
+  <!-- note dots -->
+  <g><circle cx="100" cy="470" r="10" fill="#ff6b6b"/><circle cx="230" cy="470" r="10" fill="#ffe14d"/><circle cx="360" cy="470" r="10" fill="#4da3ff" opacity=".5"/><circle cx="470" cy="470" r="10" fill="#4dd97a"/></g>
+  <text x="70" y="150" font-size="72" font-weight="800" fill="#eaf0f8">🎶 <tspan fill="#42e6c3">CALLBACK</tspan></text>
+  <text x="72" y="212" font-size="32" font-weight="600" fill="#8b97ac">A duet in a URL. Tap a loop, send the link.</text>
+  <text x="72" y="262" font-size="30" font-weight="800" fill="#eaf0f8">Your friend adds <tspan fill="#42e6c3">their layer</tspan> on top.</text>
+  <text x="72" y="560" font-size="25" font-weight="700" fill="#42e6c3" font-family="ui-monospace,Menlo,monospace">a whole song, built one link at a time · no backend</text>
+</svg>
