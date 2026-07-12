@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Krak 💥 — break the sound barrier with a whip</title>
+<meta name="description" content="Flick a physics-simulated bullwhip so the tip breaks the sound barrier. Only a true sonic CRACK pops the lanterns. How high can you push the Mach number?" />
+<link rel="canonical" href="https://viper-vm.github.io/demos/krak/" />
+<meta property="og:title" content="Krak — break the sound barrier with a whip" />
+<meta property="og:description" content="A real tapered-whip physics toy: flick so the tip concentrates energy and breaks Mach 1 with a sonic CRACK. Pop the lanterns, chase a higher Mach number." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://viper-vm.github.io/demos/krak/" />
+<meta property="og:image" content="https://viper-vm.github.io/demos/krak/card.svg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="theme-color" content="#0b0d10" />
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="%230b0d10"/><text y=".9em" x="18" font-size="64">💥</text></svg>' />
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#0b0d10;--panel:#161a20;--panel2:#20252e;--line:rgba(255,255,255,.1);--ink:#eef2f7;--mut:#8f99a8;--acc:#ffd23f;--boom:#ff4d6d}
+  html,body{height:100%;overflow:hidden;background:var(--bg);touch-action:none}
+  body{color:var(--ink);font-family:ui-rounded,"SF Pro Rounded",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  #cv{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab}
+  #cv:active{cursor:grabbing}
+  #hud{position:fixed;top:calc(12px + env(safe-area-inset-top));left:0;right:0;text-align:center;z-index:5;pointer-events:none}
+  #mach{font-size:40px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  #machlbl{font-size:12px;font-weight:800;letter-spacing:.15em;color:var(--mut)}
+  #best{font-size:13px;color:var(--mut);font-weight:700;margin-top:4px}#best b{color:var(--acc)}
+  .helpBtn{position:fixed;top:calc(9px + env(safe-area-inset-top));right:14px;z-index:15;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--mut);font-size:17px;font-weight:800;cursor:pointer}
+  #hint{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;z-index:5;pointer-events:none;color:var(--mut);font-size:14px;font-weight:600}
+  #shareBtn{position:fixed;bottom:calc(52px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:6;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:14px;border-radius:12px;padding:10px 20px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);display:none}
+  .ov{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px 16px;background:rgba(8,9,12,.96);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;overflow-y:auto}
+  .ov.show{opacity:1;pointer-events:auto}
+  .sheet{width:min(430px,100%);background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;margin:auto 0;box-shadow:0 30px 80px -20px rgba(0,0,0,.85);text-align:center}
+  .logo{font-size:clamp(32px,9vw,46px);font-weight:800}.logo b{color:var(--acc)}
+  .lead{color:var(--mut);font-size:14.5px;margin:10px 0 18px;line-height:1.5}.lead b{color:var(--ink)}
+  .btn{width:100%;border:0;cursor:pointer;font:inherit;font-weight:800;font-size:17px;border-radius:15px;padding:15px;color:#241b00;background:var(--acc);box-shadow:0 6px 24px -8px var(--acc)}
+  .rules{text-align:left;font-size:14px;line-height:1.55}.rules h4{font-size:11px;letter-spacing:.14em;color:var(--mut);margin:14px 0 6px;font-weight:800}.rules ol{margin:0 0 4px 18px}.rules li{margin-bottom:7px}.rules b{color:var(--acc)}
+  #toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(18px);background:#20252e;border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:600;padding:11px 18px;border-radius:99px;opacity:0;transition:all .24s;z-index:60;pointer-events:none;max-width:90vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div id="hud"><div id="mach">0.00</div><div id="machlbl">MACH</div><div id="best">best <b id="bestv">0.00</b> · lanterns <b id="lantv" style="color:var(--acc)">0</b></div></div>
+<button class="helpBtn" id="rulesBtn" aria-label="How to play">?</button>
+<div id="hint">grab the handle and flick — snap it back to crack the tip</div>
+<button id="shareBtn">Share my best Mach</button>
+
+<div class="ov show" id="ovStart"><div class="sheet">
+  <div class="logo">💥 <b>KRAK</b></div>
+  <p class="lead">Grab the whip handle and <b>flick</b> it. Because the whip tapers, the wave speeds up as it travels — snap it right and the <b>tip breaks the sound barrier</b> with a CRACK. Only a real sonic boom pops the lanterns.</p>
+  <button class="btn" id="startBtn">GRAB THE WHIP</button>
+</div></div>
+
+<div class="ov" id="ovRules"><div class="sheet">
+  <h2 style="font-size:23px;font-weight:800">How to play 💥</h2>
+  <div class="rules">
+    <h4>THE PHYSICS</h4>
+    <ol>
+      <li><b>Drag the handle</b> (the fat end). The whip is a real tapered chain — flick forward and <b>snap back</b>, and the wave concentrates energy as it runs to the light tip.</li>
+      <li>When the tip crosses <b>Mach 1</b>, it CRACKs — a shockwave rings out. That's a genuine sonic boom, same as a real bullwhip.</li>
+      <li>Land a crack near a <b>🏮 lantern</b> to pop it. Chase the highest Mach number you can.</li>
+    </ol>
+  </div>
+  <button class="btn" id="rulesClose" style="margin-top:12px">GOT IT</button>
+</div></div>
+
+<div id="toast"></div>
+
+<script>/*KRAK*/
+'use strict';
+const LS=(function(){let ok=false;const mem={};try{localStorage.setItem('__kk','1');localStorage.removeItem('__kk');ok=true;}catch(e){}
+  return{get(k){try{return ok?localStorage.getItem(k):(k in mem?mem[k]:null)}catch(e){return k in mem?mem[k]:null}},set(k,v){v=String(v);mem[k]=v;try{if(ok)localStorage.setItem(k,v)}catch(e){}}};})();
+const $=id=>document.getElementById(id);const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+const cv=$('cv'),ctx=cv.getContext('2d');
+let dpr=1,W=0,H=0;
+function resize(){dpr=Math.min(devicePixelRatio||1,2.5);W=innerWidth||360;H=innerHeight||640;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);build();}
+addEventListener('resize',resize);
+
+const N=16, SOUND=2100;          // px/s that counts as Mach 1 (tuned so a good snap crosses it)
+let pts=[],rest=[],target={x:0,y:0},dragging=false;
+let mach=0,best=+(LS.get('krak_best')||0),lanterns=[],popped=0,shocks=[],crackCd=0;
+
+function build(){
+  pts=[];rest=[];
+  const hx=W*0.28,hy=H*0.6;const total=Math.min(W,H)*0.55;
+  for(let i=0;i<N;i++){pts.push({x:hx+i*(total/N),y:hy,px:hx+i*(total/N),py:hy});}
+  for(let i=0;i<N-1;i++){rest.push((total/N)*(1-i/N*0.72));} // taper: much shorter toward tip = whip-crack
+  target={x:hx,y:hy};
+  lanterns=[];for(let i=0;i<3;i++)lanterns.push({x:W*(0.55+i*0.14),y:H*(0.3+Math.random()*0.4),r:22,pop:false});
+  popped=0;$('lantv').textContent='0';$('bestv').textContent=best.toFixed(2);
+}
+
+function step(dt){
+  // integrate free points
+  for(let i=1;i<N;i++){const p=pts[i];const vx=(p.x-p.px)*0.985,vy=(p.y-p.py)*0.985;p.px=p.x;p.py=p.y;p.x+=vx;p.y+=vy+0.4;}
+  // pin handle
+  pts[0].x=target.x;pts[0].y=target.y;pts[0].px=target.x;pts[0].py=target.y;
+  // constraints
+  for(let it=0;it<28;it++){
+    for(let i=0;i<N-1;i++){const a=pts[i],b=pts[i+1];let dx=b.x-a.x,dy=b.y-a.y;let d=Math.hypot(dx,dy)||1e-6;const diff=(d-rest[i])/d;
+      if(i===0){b.x-=dx*diff;b.y-=dy*diff;}else{const m=diff*0.5;a.x+=dx*m;a.y+=dy*m;b.x-=dx*m;b.y-=dy*m;}}
+    pts[0].x=target.x;pts[0].y=target.y;
+  }
+  // tip speed
+  const tip=pts[N-1];const tvx=(tip.x-tip.px)/dt,tvy=(tip.y-tip.py)/dt;const spd=Math.hypot(tvx,tvy);
+  mach=spd/SOUND;
+  if(crackCd>0)crackCd-=dt;
+  if(mach>=1&&crackCd<=0){crack(tip.x,tip.y,mach);crackCd=0.25;}
+  if(mach>best){best=mach;LS.set('krak_best',best);$('bestv').textContent=best.toFixed(2);}
+}
+function crack(x,y,m){
+  shocks.push({x,y,r:8,max:60+m*40,t:0});
+  boom();try{if(navigator.vibrate)navigator.vibrate(15);}catch(e){}
+  lanterns.forEach(l=>{if(!l.pop&&Math.hypot(l.x-x,l.y-y)<l.r+50){l.pop=true;popped++;$('lantv').textContent=popped;shocks.push({x:l.x,y:l.y,r:4,max:70,t:0,gold:true});}});
+  if(!lanterns.some(l=>!l.pop)&&lanterns.length){toast('All lanterns popped! 🏮 keep chasing Mach');setTimeout(()=>build(),700);}
+}
+let ac=null;function boom(){try{if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
+  const dur=0.14;const buf=ac.createBuffer(1,ac.sampleRate*dur,ac.sampleRate);const d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.2);
+  const src=ac.createBufferSource();src.buffer=buf;const g=ac.createGain();g.gain.value=0.35;src.connect(g).connect(ac.destination);src.start();}catch(e){}}
+
+let lastT=0;
+function loop(t){
+  const dt=lastT?clamp((t-lastT)/1000,0.001,0.033):0.016;lastT=t;
+  step(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#0b0d10');g.addColorStop(1,'#12161c');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // lanterns
+  lanterns.forEach(l=>{if(l.pop)return;ctx.fillStyle='rgba(255,160,60,.18)';ctx.beginPath();ctx.arc(l.x,l.y,l.r+8,0,7);ctx.fill();
+    ctx.fillStyle='#ff9a3c';ctx.beginPath();ctx.arc(l.x,l.y,l.r,0,7);ctx.fill();ctx.fillStyle='rgba(0,0,0,.25)';ctx.font='20px system-ui';ctx.textAlign='center';ctx.fillText('🏮',l.x,l.y+7);ctx.textAlign='left';});
+  // shockwaves
+  for(let i=shocks.length-1;i>=0;i--){const s=shocks[i];s.t+=1/60;s.r+=(s.max-s.r)*0.18;
+    ctx.strokeStyle=(s.gold?'rgba(255,210,63,':'rgba(255,255,255,')+(1-s.t*2.2)+')';ctx.lineWidth=3;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.stroke();if(s.t>0.45)shocks.splice(i,1);}
+  // whip (taper)
+  ctx.lineJoin='round';ctx.lineCap='round';
+  for(let i=0;i<N-1;i++){const a=pts[i],b=pts[i+1];const w=clamp(9*(1-i/N),1.4,9);
+    ctx.strokeStyle=mach>=1?'#ffd23f':'#d8dee7';ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}
+  // handle
+  ctx.fillStyle='#8a5a2b';ctx.beginPath();ctx.arc(pts[0].x,pts[0].y,12,0,7);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=2;ctx.stroke();
+  // tip glow
+  const tip=pts[N-1];ctx.fillStyle=mach>=1?'#ff4d6d':'#ffd23f';ctx.beginPath();ctx.arc(tip.x,tip.y,mach>=1?6:3.5,0,7);ctx.fill();
+  $('mach').textContent=mach.toFixed(2);$('mach').style.color=mach>=1?'#ff4d6d':(mach>=0.6?'#ffd23f':'#eef2f7');
+}
+
+/* input */
+function pt(e){const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};}
+cv.addEventListener('pointerdown',e=>{e.preventDefault();const p=pt(e);if(Math.hypot(p.x-pts[0].x,p.y-pts[0].y)<Math.min(W,H)*0.3||true){dragging=true;target=p;$('hint').style.opacity=0;}});
+cv.addEventListener('pointermove',e=>{if(!dragging)return;target=pt(e);});
+addEventListener('pointerup',()=>{dragging=false;});
+
+$('startBtn').onclick=()=>{$('ovStart').classList.remove('show');if(!ac){try{ac=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}}$('shareBtn').style.display='block';};
+$('rulesBtn').onclick=()=>$('ovRules').classList.add('show');
+$('rulesClose').onclick=()=>$('ovRules').classList.remove('show');
+$('ovRules').addEventListener('click',e=>{if(e.target===$('ovRules'))$('ovRules').classList.remove('show');});
+$('shareBtn').onclick=async()=>{const t='💥 Krak — I cracked my whip to Mach '+best.toFixed(2)+'\nbreak the sound barrier: viper-vm.github.io/demos/krak';try{await navigator.clipboard.writeText(t);}catch(e){}toast('Copied — Mach '+best.toFixed(2));};
+let toastT;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+
+window.__krak={state:()=>({mach:+mach.toFixed(2),best:+best.toFixed(2),popped}),
+  flick:(power)=>{ // programmatically crack the whip: fast forward throw, then hard snap-back
+    let peak=0;const hx=pts[0].x,hy=pts[0].y;const P=power||1;
+    // let it settle at rest
+    for(let i=0;i<20;i++){target={x:hx,y:hy};step(1/60);}
+    // fast forward throw (accelerate the handle to the right)
+    for(let i=0;i<8;i++){target={x:hx+ i/8*W*0.34*P, y:hy - i/8*H*0.06};step(1/60);peak=Math.max(peak,mach);}
+    // hard snap back (reverse direction sharply — this is what cracks a whip)
+    for(let i=0;i<8;i++){target={x:hx+W*0.34*P - i/8*W*0.42*P, y:hy};step(1/60);peak=Math.max(peak,mach);}
+    // follow through / let the wave reach the tip
+    for(let i=0;i<14;i++){target={x:hx-W*0.08*P,y:hy};step(1/60);peak=Math.max(peak,mach);}
+    return{peakMach:+peak.toFixed(2),best:+best.toFixed(2)};}};
+
+resize();requestAnimationFrame(loop);
+</script>
+</body>
+</html>

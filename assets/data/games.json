@@ -99,6 +99,15 @@
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/clapback"
   },
   {
+    "id": "krak",
+    "title": "Krak",
+    "summary": "Flick a physics-simulated bullwhip so the tip breaks the sound barrier. Because the whip tapers, the wave concentrates energy as it travels — snap it right and the tip cracks past Mach 1, popping the lanterns. Chase a higher Mach number.",
+    "category": "Physics Toy",
+    "emoji": "💥",
+    "demo_url": "/demos/krak/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/krak"
+  },
+  {
     "id": "wordle",
     "title": "Wordle Clone",
     "summary": "A fully playable Wordle clone with daily words and statistics.",
