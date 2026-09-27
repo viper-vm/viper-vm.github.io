@@ -9,6 +9,15 @@
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos"
   },
   {
+    "id": "plumb",
+    "title": "Plumb",
+    "summary": "Does your building stack up? Drop the DXF floor plans you already have and Plumb lines every floor up on the one below, then finds what 2D drawings hide between sheets: floating columns, columns that jog, toilets over bedrooms, ducts and lift wells that shift, deep cantilevers. Registration-colour overlay, 3D X-ray stack, markups DXF back to CAD, printable report — plus optional Claude assist for odd layer names and RFIs.",
+    "category": "CAD / Architecture",
+    "emoji": "🏗️",
+    "demo_url": "/demos/plumb/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/plumb"
+  },
+  {
     "id": "pivot",
     "title": "Pivot",
     "summary": "Will your sofa fit? Describe the item and every door, hallway, stair flight and lift on the way in — Pivot solves the real 3D “piano mover’s problem” in your browser, animates the exact moves (stand it on its arm, hook it round the frame…), names the tightest centimetre, and tests fixes when it won’t go.",
