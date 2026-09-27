@@ -9,6 +9,15 @@
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos"
   },
   {
+    "id": "pivot",
+    "title": "Pivot",
+    "summary": "Will your sofa fit? Describe the item and every door, hallway, stair flight and lift on the way in — Pivot solves the real 3D “piano mover’s problem” in your browser, animates the exact moves (stand it on its arm, hook it round the frame…), names the tightest centimetre, and tests fixes when it won’t go.",
+    "category": "3D / Motion planning",
+    "emoji": "🛋️",
+    "demo_url": "/demos/pivot/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/pivot"
+  },
+  {
     "id": "groundtruth",
     "title": "Groundtruth",
     "summary": "A satellite time machine for India's megaprojects — swipe, lens and blink through every satellite capture since 2010 of 33 sites (Navi Mumbai Airport, Atal Setu, Chenab Bridge, Khavda…), or scan any spot on Earth. Real capture dates, milestone timelines, 3D terrain, measuring, a watchlist that flags new imagery, and MP4 timelapse export.",

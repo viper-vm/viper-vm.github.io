@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Pivot — will it fit? Rehearse the move before the movers come</title>
+  <meta name="description" content="Pivot simulates your sofa, fridge or wardrobe moving through your real doors, hallways, stairs and lift — in 3D — and tells you whether it will fit, exactly how to move it, and what to change if it won't." />
+  <meta name="theme-color" content="#f1ede5" />
+  <meta property="og:title" content="Pivot — will it fit through the door?" />
+  <meta property="og:description" content="A 3D motion planner for the real world: enter your doors, hallways, stairs and lift, and Pivot rehearses the move — then gives you the mover's playbook." />
+  <meta property="og:image" content="https://viper-vm.github.io/demos/pivot/card.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231b1a17'/%3E%3Cpath d='M9 22V11.5a2.5 2.5 0 0 1 5 0V17h7.5a2.5 2.5 0 0 1 0 5Z' fill='%23ff5a1f' transform='rotate(-18 16 16)'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23fff'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,650;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="css/app.css" rel="stylesheet" />
+  <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+    } }
+  </script>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <!-- items -->
+      <symbol id="it-sofa" viewBox="0 0 24 24"><path d="M5 11V8.6A2.6 2.6 0 0 1 7.6 6h8.8A2.6 2.6 0 0 1 19 8.6V11"/><path d="M3 12a1.6 1.6 0 0 1 3.2 0v2.2h11.6V12a1.6 1.6 0 0 1 3.2 0v5.2H3Z"/><path d="M5 17.2V19M19 17.2V19"/></symbol>
+      <symbol id="it-loveseat" viewBox="0 0 24 24"><path d="M7 11V8.6A2.6 2.6 0 0 1 9.6 6h4.8A2.6 2.6 0 0 1 17 8.6V11"/><path d="M5 12a1.6 1.6 0 0 1 3.2 0v2.2h7.6V12a1.6 1.6 0 0 1 3.2 0v5.2H5Z"/><path d="M7 17.2V19M17 17.2V19"/></symbol>
+      <symbol id="it-armchair" viewBox="0 0 24 24"><path d="M8 11V8a2.2 2.2 0 0 1 2.2-2.2h3.6A2.2 2.2 0 0 1 16 8v3"/><path d="M6 12a1.5 1.5 0 0 1 3 0v2.2h6V12a1.5 1.5 0 0 1 3 0v5.2H6Z"/><path d="M8 17.2V19M16 17.2V19"/></symbol>
+      <symbol id="it-sectional" viewBox="0 0 24 24"><path d="M3.5 6.5h17v6h-7v5h-10Z"/><path d="M3.5 9.2h14.2M6.2 9.2v8.3"/></symbol>
+      <symbol id="it-mattress" viewBox="0 0 24 24"><path d="M3 11 7.5 7.5H21L16.5 11Z"/><path d="M3 11v3.5h13.5V11M16.5 14.5 21 11V7.5"/><path d="M6 9.3h11"/></symbol>
+      <symbol id="it-boxspring" viewBox="0 0 24 24"><path d="M3 11 7.5 7.5H21L16.5 11Z"/><path d="M3 11v4.5h13.5V11M16.5 15.5 21 12V7.5"/><path d="M6.4 11v4.5M9.8 11v4.5M13.2 11v4.5"/></symbol>
+      <symbol id="it-wardrobe" viewBox="0 0 24 24"><rect x="5.5" y="3" width="13" height="17" rx="1.2"/><path d="M12 3v17M10.2 10.5v2M13.8 10.5v2M7 20v1.2M17 20v1.2"/></symbol>
+      <symbol id="it-bookcase" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1.2"/><path d="M5 9h14M5 15h14M8 5.5V9M10 6v3M13.5 11.5V15"/></symbol>
+      <symbol id="it-fridge" viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2"/><path d="M6 9.5h12M9 5.2v2M9 12v3.5"/></symbol>
+      <symbol id="it-washer" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="13" r="4.2"/><path d="M8 6.2h2.5"/><path d="M9.8 14.2a2.6 2.6 0 0 0 3.6.6" /></symbol>
+      <symbol id="it-piano" viewBox="0 0 24 24"><path d="M4.5 20V6.2A2.2 2.2 0 0 1 6.7 4h10.6a2.2 2.2 0 0 1 2.2 2.2V20"/><path d="M3 11.5h18v3.2H3Z"/><path d="M7 11.5v2M10 11.5v2M13 11.5v2M16 11.5v2"/></symbol>
+      <symbol id="it-table" viewBox="0 0 24 24"><path d="M2.5 8.5h19"/><path d="m3.5 8.5 1.2-2.2h14.6l1.2 2.2"/><path d="M5.5 8.5V19M18.5 8.5V19M8.5 8.5v5.5M15.5 8.5v5.5"/></symbol>
+      <symbol id="it-tv" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="11.5" rx="1.5"/><path d="M9 20h6M12 16.5V20"/></symbol>
+      <symbol id="it-box" viewBox="0 0 24 24"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5Z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9M7.8 5.3l8.4 4.5"/></symbol>
+      <!-- route steps -->
+      <symbol id="st-door" viewBox="0 0 24 24"><path d="M3 21h18"/><path d="M6 21V3.8h12V21"/><path d="M9 21V6.5l6.5-1.2V21" opacity=".55"/><circle cx="13.6" cy="13" r=".95" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="st-hall" viewBox="0 0 24 24"><path d="M3 5.5h18M3 18.5h18"/><path d="M6.5 12h11m-3.2-3.2 3.2 3.2-3.2 3.2"/></symbol>
+      <symbol id="st-turn-L" viewBox="0 0 24 24"><path d="M16.5 20.5v-7.5a4.5 4.5 0 0 0-4.5-4.5H6"/><path d="m9.5 5-3.5 3.5L9.5 12"/></symbol>
+      <symbol id="st-turn-R" viewBox="0 0 24 24"><path d="M7.5 20.5v-7.5A4.5 4.5 0 0 1 12 8.5h6"/><path d="m14.5 5 3.5 3.5-3.5 3.5"/></symbol>
+      <symbol id="st-turn-UL" viewBox="0 0 24 24"><path d="M16 20.5V9.5a4 4 0 0 0-8 0v5"/><path d="m4.5 11.5 3.5 3.5 3.5-3.5"/></symbol>
+      <symbol id="st-turn-UR" viewBox="0 0 24 24"><path d="M8 20.5V9.5a4 4 0 0 1 8 0v5"/><path d="m12.5 11.5 3.5 3.5 3.5-3.5"/></symbol>
+      <symbol id="st-stairs" viewBox="0 0 24 24"><path d="M3 20.5h4.5V16H12v-4.5h4.5V7H21"/><path d="M3 20.5h18" opacity=".4"/></symbol>
+      <symbol id="st-stairs-down" viewBox="0 0 24 24"><path d="M3 7h4.5v4.5H12V16h4.5v4.5H21"/><path d="M3 20.5h18" opacity=".4"/></symbol>
+      <symbol id="st-lift" viewBox="0 0 24 24"><rect x="4.5" y="3" width="15" height="18" rx="1.6"/><path d="M12 3v18"/><path d="m7.2 10 1.6-2.2 1.6 2.2M13.6 14l1.6 2.2 1.6-2.2"/></symbol>
+      <symbol id="st-room" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="1.2"/><path d="M3.5 13.5H8a1 1 0 0 1 1 1V20"/><path d="M14 9.5h3.5"/></symbol>
+      <symbol id="st-outside" viewBox="0 0 24 24"><path d="M2.5 16.5h11v-6h-11Z"/><path d="M13.5 12.5h4l3 3v1h-7"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></symbol>
+      <!-- ui -->
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5Z" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24"><path d="M7.5 5.5h3v13h-3zM13.5 5.5h3v13h-3z" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="i-restart" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 4v4.5h4.5"/></symbol>
+      <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3.5M8 7.5l4-4 4 4"/><path d="M5 11.5v7A2 2 0 0 0 7 20.5h10a2 2 0 0 0 2-2v-7"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.2A8.3 8.3 0 1 1 9.8 4a6.6 6.6 0 0 0 10.2 10.2Z"/></symbol>
+      <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 8.5V5.5A1.5 1.5 0 0 1 5.5 4h3M15.5 4h3A1.5 1.5 0 0 1 20 5.5v3M20 15.5v3a1.5 1.5 0 0 1-1.5 1.5h-3M8.5 20h-3A1.5 1.5 0 0 1 4 18.5v-3"/><rect x="8.5" y="8.5" width="7" height="7" rx="1"/></symbol>
+      <symbol id="i-follow" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+      <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3.5 9 4.8-9 4.8-9-4.8Z"/><path d="m3 12.3 9 4.8 9-4.8M3 16.3l9 4.7 9-4.7"/></symbol>
+      <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.2V4.5a1 1 0 0 1 1-1h7.7l8.3 8.3a1.5 1.5 0 0 1 0 2.1l-6.2 6.2a1.5 1.5 0 0 1-2.1 0Z"/><circle cx="8" cy="8" r="1.4"/></symbol>
+      <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2.3l1.6-2.5h5.2L16.2 7h2.3A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5Z"/><circle cx="12" cy="12.8" r="3.4"/></symbol>
+      <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8.5" rx="1.5"/><path d="M7 14h10v6.5H7Z"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+      <symbol id="i-chev" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+      <symbol id="i-up" viewBox="0 0 24 24"><path d="m7 14 5-5 5 5"/></symbol>
+      <symbol id="i-down" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m4.5 12.5 5 5 10-11"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 2.8 19.5h18.4Z"/><path d="M12 10v4.2M12 16.8v.2"/></symbol>
+      <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5 13.8 10 20.5 12l-6.7 2L12 20.5 10.2 14 3.5 12l6.7-2Z"/></symbol>
+      <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.6M12 16.8v.2"/></symbol>
+      <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3.5h11l3.5 3.5v11.5a2 2 0 0 1-2 2h-11a2 2 0 0 1-2-2v-13a2 2 0 0 1 .5-2Z"/><path d="M8 3.5V9h7V3.5M7.5 20.5v-6h9v6"/></symbol>
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.5v10h13v-10"/><path d="M10 19.5v-5h4v5"/></symbol>
+      <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2.5 4.5 13.5H12l-1 8 8.5-11H12Z"/></symbol>
+      <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l2.8-2.8a4.5 4.5 0 0 0-6.4-6.4L11.5 6"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-2.8 2.8a4.5 4.5 0 0 0 6.4 6.4l1.3-1.2"/></symbol>
+      <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M20 11.5A8 8 0 1 0 17.6 17"/><path d="M20 5v6.5h-6.5"/></symbol>
+      <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4.5h11.5l-2 4 2 4H5"/></symbol>
+      <symbol id="i-ruler" viewBox="0 0 24 24"><path d="m3.5 16.5 13-13 4 4-13 13Z"/><path d="m7.5 12.5 2 2M10.5 9.5l2 2M13.5 6.5l2 2"/></symbol>
+    </defs>
+  </svg>
+
+  <div class="app" id="app">
+    <header class="top">
+      <a class="brand" href="./" aria-label="Pivot home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><rect width="32" height="32" rx="9" class="bm-bg"/><g class="bm-sofa"><path d="M9 22V11.5a2.5 2.5 0 0 1 5 0V17h7.5a2.5 2.5 0 0 1 0 5Z"/></g><circle cx="16" cy="16" r="2" class="bm-dot"/></svg>
+        </span>
+        <span class="brand-name">Pivot</span>
+      </a>
+      <p class="tagline">Will it fit? <span>Rehearse the move before the movers come.</span></p>
+      <nav class="top-actions">
+        <div class="menu-wrap">
+          <button class="btn ghost" id="examplesBtn" aria-haspopup="true" aria-expanded="false"><svg><use href="#i-spark"/></svg><span>Examples</span></button>
+          <div class="menu" id="examplesMenu" role="menu" hidden></div>
+        </div>
+        <div class="menu-wrap">
+          <button class="btn ghost" id="homesBtn" aria-haspopup="true" aria-expanded="false"><svg><use href="#i-home"/></svg><span>My places</span></button>
+          <div class="menu" id="homesMenu" role="menu" hidden></div>
+        </div>
+        <div class="seg" id="unitsSeg" role="group" aria-label="Units">
+          <button data-u="cm" class="on">cm</button><button data-u="in">in</button>
+        </div>
+        <button class="icon-btn" id="themeBtn" title="Light / dark" aria-label="Toggle theme"><svg><use href="#i-moon"/></svg></button>
+        <button class="icon-btn" id="helpBtn" title="How it works" aria-label="How it works"><svg><use href="#i-help"/></svg></button>
+      </nav>
+    </header>
+
+    <aside class="setup" id="setup" aria-label="Item and route">
+      <div class="setup-scroll">
+        <section class="block" id="itemBlock">
+          <div class="block-head">
+            <span class="num">1</span>
+            <h2>What are you moving?</h2>
+          </div>
+          <div class="types" id="types" role="radiogroup" aria-label="Item type"></div>
+          <div class="paste">
+            <svg><use href="#i-ruler"/></svg>
+            <input id="pasteDims" type="text" placeholder="Paste dimensions — e.g. 213 × 94 × 86 cm or W84&quot; D37&quot; H34&quot;" aria-label="Paste dimensions from a product page" />
+          </div>
+          <div class="fields" id="itemFields"></div>
+          <div class="toggles" id="itemToggles"></div>
+          <p class="item-note" id="itemNote" hidden></p>
+          <p class="item-summary" id="itemSummary"></p>
+        </section>
+
+        <section class="block" id="routeBlock">
+          <div class="block-head">
+            <span class="num">2</span>
+            <h2>The way in</h2>
+            <span class="block-hint">from the van to where it lives</span>
+          </div>
+          <ol class="route" id="route"></ol>
+          <div class="add-row">
+            <div class="menu-wrap">
+              <button class="btn add" id="addStepBtn" aria-haspopup="true"><svg><use href="#i-plus"/></svg>Add a step</button>
+              <div class="menu up" id="addStepMenu" role="menu" hidden></div>
+            </div>
+            <button class="btn ghost small" id="saveHomeBtn" title="Save this route to reuse with other furniture"><svg><use href="#i-save"/></svg>Save route</button>
+          </div>
+          <div class="warnings" id="routeWarnings" hidden></div>
+        </section>
+
+        <section class="block slim">
+          <details class="adv">
+            <summary>Wiggle room</summary>
+            <p class="adv-text">How much space Pivot insists on around the item. Your tape measure is rarely better than ±½ cm, and real movers need a little slack.</p>
+            <div class="seg wide" id="marginSeg" role="group" aria-label="Wiggle room">
+              <button data-m="0.5">½ cm <small>tight</small></button><button data-m="1" class="on">1 cm <small>normal</small></button><button data-m="2.5">2½ cm <small>relaxed</small></button>
+            </div>
+          </details>
+        </section>
+      </div>
+      <div class="setup-foot">
+        <button class="btn primary big" id="checkBtn"><svg><use href="#i-bolt"/></svg><span>Check the fit</span></button>
+      </div>
+    </aside>
+
+    <main class="stage" id="stage">
+      <div class="viewport" id="viewport"></div>
+      <div class="labels" id="labels"></div>
+
+      <div class="verdict" id="verdict" data-state="idle">
+        <div class="v-idle">
+          <strong>Describe the item and the way in, then press <em>Check the fit</em>.</strong>
+          <span>Pivot tries tens of thousands of tilts, spins and pivots to find one that works.</span>
+        </div>
+        <div class="v-run">
+          <div class="v-row"><span class="spinner" aria-hidden="true"></span><strong id="runTitle">Rehearsing the move…</strong><button class="link" id="stopBtn">Stop</button></div>
+          <div class="race" aria-hidden="true"><div class="race-a" id="raceA"></div><div class="race-b" id="raceB"></div></div>
+          <div class="race-legend"><span class="a">from outside</span><span id="runStats">0 moves tried</span><span class="b">from the room</span></div>
+        </div>
+        <div class="v-done">
+          <div class="v-badge" id="vBadge"><svg><use href="#i-check"/></svg></div>
+          <div class="v-text"><strong id="vTitle">It fits.</strong><span id="vSub"></span></div>
+          <button class="btn small edit-pill" id="editBtn" title="Change the item or the route">Edit</button>
+        </div>
+      </div>
+
+      <div class="view-tools" id="viewTools">
+        <button class="icon-btn" id="fitBtn" title="Fit the whole route"><svg><use href="#i-fit"/></svg></button>
+        <button class="icon-btn" id="followBtn" title="Follow the item"><svg><use href="#i-follow"/></svg></button>
+        <button class="icon-btn" id="labelsBtn" title="Measurements on/off"><svg><use href="#i-tag"/></svg></button>
+        <div class="floors" id="floors" hidden></div>
+        <button class="icon-btn" id="snapBtn" title="Save a picture"><svg><use href="#i-camera"/></svg></button>
+      </div>
+
+      <div class="timeline" id="timeline" hidden>
+        <button class="play" id="playBtn" aria-label="Play"><svg><use href="#i-play"/></svg></button>
+        <div class="scrub" id="scrub">
+          <div class="clear-strip" id="clearStrip"></div>
+          <div class="track"><div class="fill" id="scrubFill"></div></div>
+          <div class="marks" id="scrubMarks"></div>
+          <div class="knob" id="scrubKnob"></div>
+          <input type="range" id="scrubInput" min="0" max="1000" value="0" aria-label="Scrub through the move" />
+        </div>
+        <div class="tl-meta">
+          <span class="tl-step" id="tlStep">Step 1</span>
+          <div class="seg tiny" id="speedSeg" role="group" aria-label="Speed"><button data-s="0.5">½×</button><button data-s="1" class="on">1×</button><button data-s="2">2×</button></div>
+        </div>
+      </div>
+
+      <button class="pb-reopen" id="pbReopen" hidden>Show the playbook</button>
+    </main>
+
+    <aside class="playbook" id="playbook" hidden aria-label="Result">
+      <header class="pb-head">
+        <div>
+          <p class="eyebrow" id="pbEyebrow">The mover's playbook</p>
+          <h3 id="pbTitle">How to get it in</h3>
+        </div>
+        <button class="icon-btn" id="pbClose" title="Hide"><svg><use href="#i-x"/></svg></button>
+      </header>
+      <div class="pb-scroll" id="pbScroll">
+        <div class="pb-summary" id="pbSummary"></div>
+        <ol class="steps" id="steps"></ol>
+        <div class="fixes" id="fixes" hidden></div>
+      </div>
+      <footer class="pb-foot">
+        <button class="btn ghost small" id="shareBtn"><svg><use href="#i-link"/></svg>Copy link</button>
+        <button class="btn ghost small" id="printBtn"><svg><use href="#i-print"/></svg>Mover's sheet</button>
+      </footer>
+    </aside>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <dialog class="help" id="helpDlg">
+    <div class="help-inner">
+      <button class="icon-btn help-x" id="helpClose" aria-label="Close"><svg><use href="#i-x"/></svg></button>
+      <p class="eyebrow">How Pivot works</p>
+      <h2>A motion planner for your front door.</h2>
+      <p>Furniture sites tell you to compare a few numbers — width, depth, “diagonal depth”. That treats your sofa as a box and your home as one doorway. Real moves fail at the <em>combination</em>: a door that opens straight onto a narrow hallway, a landing with a low ceiling, a lift that's a few centimetres short.</p>
+      <ol class="how">
+        <li><strong>You describe the item</strong> — its real shape, not just a box: a sofa's seat, back and arms, a piano's keyboard, a table's legs.</li>
+        <li><strong>You walk the route</strong> — every door, hallway, turn, stair flight and lift, in order, with a tape measure.</li>
+        <li><strong>Pivot rehearses the move in 3D.</strong> Two searches grow at once — one from the van, one backwards from the room — trying tens of thousands of positions, tilts and pivots (it's the classic “piano mover's problem” from robotics). When they meet, the item fits.</li>
+        <li><strong>You get the playbook</strong> — the exact sequence (“stand it on its arm, back first, swing it left round the frame”), the tightest spot to the centimetre, and a sheet to hand to the movers.</li>
+      </ol>
+      <p class="fine">If Pivot can't find a way it says so honestly, shows how far the item got, and tests fixes for you — legs off, the door off its hinges, the largest size that would make it. A search that fails isn't a mathematical proof, so treat a very close “no” as “ask a professional”.</p>
+      <p class="fine">Everything runs in your browser. Nothing you type is sent anywhere.</p>
+    </div>
+  </dialog>
+
+  <div class="print-sheet" id="printSheet" aria-hidden="true"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
