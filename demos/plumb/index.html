@@ -3,198 +3,154 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Plumb — does your building stack up?</title>
-  <meta name="description" content="Drop the DXF with your floor plans. Plumb lines the floors up and finds what 2D drawings hide: floating columns, toilets over bedrooms, ducts that jog, lifts that wander and deep cantilevers — then shows the building as a 3D X-ray and exports the markups back to CAD." />
-  <meta name="theme-color" content="#0d0f12" />
-  <meta property="og:title" content="Plumb — does your building stack up?" />
-  <meta property="og:description" content="Vertical coordination for 2D CAD: floating columns, wet-over-dry, shafts and cores that don't line up — found automatically from your DXF floor plans." />
+  <title>Plumb — your plans, checked and built in 3D</title>
+  <meta name="description" content="Drop the DWG or DXF floor plans you already have. Plumb lines the floors up, finds what doesn't stack between them (floating columns, toilets over bedrooms, shafts that jog) and turns the plans into a 3D building, in your browser." />
+  <meta name="theme-color" content="#0b0d10" />
+  <meta property="og:title" content="Plumb — your plans, checked and built in 3D" />
+  <meta property="og:description" content="Floating columns, toilets over bedrooms, shafts that jog: found automatically in your DWG or DXF floor plans. Then see the building in 3D." />
   <meta property="og:image" content="https://viper-vm.github.io/demos/plumb/card.png" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d0f12'/%3E%3Cpath d='M16 4v9' stroke='%23e8b04b' stroke-width='2'/%3E%3Cpath d='M16 13l-5 6 5 9 5-9z' fill='%23e8b04b'/%3E%3C/svg%3E" />
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('plumb.theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark')}catch(e){}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="css/app.css" rel="stylesheet" />
-  <script type="importmap">
-    { "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
-        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
-    } }
-  </script>
+  <link href="css/base.css" rel="stylesheet" />
+  <link href="css/landing.css" rel="stylesheet" />
 </head>
-<body>
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <defs>
-      <symbol id="i-bob" viewBox="0 0 24 24"><path d="M12 2.5v7"/><path d="M12 9.5 8 14l4 7.5 4-7.5Z" fill="currentColor"/></symbol>
-      <symbol id="i-open" viewBox="0 0 24 24"><path d="M3.5 7.5v10a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-6.5l-2-2.5h-4.5a2 2 0 0 0-2 2Z"/></symbol>
-      <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9.5 3.5h5M10.5 3.5v5.5l-5 8.5a2 2 0 0 0 1.7 3h9.6a2 2 0 0 0 1.7-3l-5-8.5V3.5"/><path d="M7.8 15h8.4"/></symbol>
-      <symbol id="i-2d" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12h16M12 4v16"/></symbol>
-      <symbol id="i-3d" viewBox="0 0 24 24"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></symbol>
-      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></symbol>
-      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.2A8.3 8.3 0 1 1 9.8 4a6.6 6.6 0 0 0 10.2 10.2Z"/></symbol>
-      <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.4 2.3c-.7.3-1 .8-1 1.5v.6M12 16.8v.2"/></symbol>
-      <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 8.5V5.5A1.5 1.5 0 0 1 5.5 4h3M15.5 4h3A1.5 1.5 0 0 1 20 5.5v3M20 15.5v3a1.5 1.5 0 0 1-1.5 1.5h-3M8.5 20h-3A1.5 1.5 0 0 1 4 18.5v-3"/></symbol>
-      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
-      <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
-      <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
-      <symbol id="i-chev" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
-      <symbol id="i-up" viewBox="0 0 24 24"><path d="m7 14 5-5 5 5"/></symbol>
-      <symbol id="i-down" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
-      <symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></symbol>
-      <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 8V3.5h10V8"/><rect x="3.5" y="8" width="17" height="8.5" rx="1.5"/><path d="M7 14h10v6.5H7Z"/></symbol>
-      <symbol id="i-col" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="18" rx="1"/><path d="M5 21h14"/></symbol>
-      <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3.5s-6 6.8-6 10.8a6 6 0 0 0 12 0c0-4-6-10.8-6-10.8Z"/></symbol>
-      <symbol id="i-shaft" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="1"/><path d="m7 3 10 18M17 3 7 21"/></symbol>
-      <symbol id="i-lift" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="m9 10 1.5-2 1.5 2M12 14l1.5 2 1.5-2"/></symbol>
-      <symbol id="i-cant" viewBox="0 0 24 24"><path d="M3 9h12M3 9v12M15 9v4H3"/><path d="M15 9h6v2h-6" opacity=".6"/></symbol>
-      <symbol id="i-check" viewBox="0 0 24 24"><path d="m4.5 12.5 5 5 10-11"/></symbol>
-      <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4 2.8 19.5h18.4Z"/><path d="M12 10v4.2M12 16.8v.2"/></symbol>
-      <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3.5 9 4.8-9 4.8-9-4.8Z"/><path d="m3 12.3 9 4.8 9-4.8M3 16.3l9 4.7 9-4.7"/></symbol>
-      <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3.5 13.8 10 20.5 12l-6.7 2L12 20.5 10.2 14 3.5 12l6.7-2Z"/></symbol>
-      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/></symbol>
-      <symbol id="i-ruler" viewBox="0 0 24 24"><path d="m3.5 15.5 12-12 5 5-12 12Z"/><path d="m7.5 11.5 2 2M10 9l1.5 1.5M12.5 6.5l2 2M5 14l1.5 1.5"/></symbol>
-      <symbol id="i-cube" viewBox="0 0 24 24"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9Z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/><path d="M8 5.2 16 9.7" opacity=".5"/></symbol>
-      <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></symbol>
-      <symbol id="i-cut" viewBox="0 0 24 24"><path d="M3 12h18" stroke-dasharray="2.5 2.5"/><path d="M6 12V6h12v6"/><path d="M6 15v3h12v-3" opacity=".45"/></symbol>
-      <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
-      <symbol id="i-move" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-2.5 2.5M12 3l2.5 2.5M12 21l-2.5-2.5M12 21l2.5-2.5M3 12l2.5-2.5M3 12l2.5 2.5M21 12l-2.5-2.5M21 12l-2.5 2.5"/></symbol>
-    </defs>
-  </svg>
-
-  <header class="top">
-    <a class="brand" href="./" aria-label="Plumb home">
-      <span class="bob"><svg><use href="#i-bob"/></svg></span>
-      <span class="brand-name">Plumb</span>
-    </a>
-    <p class="tagline">Does your building stack up?</p>
-    <div class="filechip" id="fileChip" hidden>
-      <span class="fc-name" id="fcName">—</span>
-      <span class="fc-meta" id="fcMeta"></span>
-    </div>
-    <nav class="top-actions">
-      <label class="btn primary" id="openBtn" tabindex="0" title="Open DWG or DXF files (several at once for one file per floor)"><svg><use href="#i-open"/></svg><span>Open CAD</span><input id="fileInput" type="file" accept=".dxf,.DXF,.dwg,.DWG" multiple hidden /></label>
-      <button class="btn ghost" id="sampleBtn"><svg><use href="#i-flask"/></svg><span>Sample</span></button>
-      <div class="seg" id="viewSeg" role="group" aria-label="View">
-        <button data-v="2d" class="on"><svg><use href="#i-2d"/></svg><span>Overlay</span></button>
-        <button data-v="3d"><svg><use href="#i-3d"/></svg><span>Stack</span></button>
-        <button data-v="model"><svg><use href="#i-home"/></svg><span>Model</span></button>
-      </div>
-      <button class="icon-btn" id="themeBtn" title="Light / dark"><svg><use href="#i-sun"/></svg></button>
-      <button class="icon-btn" id="helpBtn" title="How Plumb works"><svg><use href="#i-help"/></svg></button>
+<body class="landing">
+  <header class="lnav">
+    <a class="brand" href="./" aria-label="Plumb home"><span class="bob"><svg aria-hidden="true"><use href="#i-bob"/></svg></span><span>Plumb</span></a>
+    <nav class="lnav-links" aria-label="Sections">
+      <a href="#how">How it works</a><a href="#checks">Checks</a><a href="#model">3D model</a><a href="#files">Files</a><a href="app/help.html">Help</a>
     </nav>
+    <span class="lnav-end">
+      <button class="icon-btn" id="themeBtn" title="Light / dark" aria-label="Light or dark"><svg aria-hidden="true"><use data-theme-icon href="#i-sun"/></svg></button>
+      <a class="btn primary" href="app/" id="openApp">Open the app</a>
+    </span>
   </header>
 
-  <main class="work" id="work">
-    <aside class="left" aria-label="Floors and layers">
-      <section class="pane">
-        <h2 class="pane-h">Floors <span class="pane-sub" id="floorsSub"></span></h2>
-        <ol class="floors" id="floors"></ol>
-        <p class="pane-note" id="alignNote"></p>
-      </section>
-      <section class="pane grow">
-        <h2 class="pane-h">Layers <span class="pane-sub">what Plumb thinks each layer is</span><button class="ai-link" id="aiNaming" title="Ask Claude to read unusual layer names and room labels (your API key)"><svg><use href="#i-spark"/></svg>Ask Claude</button></h2>
-        <div class="layers" id="layers"></div>
-      </section>
-    </aside>
-
-    <section class="stage" id="stage">
-      <canvas id="plan" class="plan"></canvas>
-      <div class="view3d" id="view3d" hidden></div>
-      <div class="view3d" id="model3d" hidden></div>
-      <div class="hud-top">
-        <div class="pairchip" id="pairChip"></div>
-      </div>
-      <div class="hud-tools" id="hud2d">
-        <button class="icon-btn" id="zoomIn" title="Zoom in"><svg><use href="#i-plus"/></svg></button>
-        <button class="icon-btn" id="zoomOut" title="Zoom out"><svg><use href="#i-minus"/></svg></button>
-        <button class="icon-btn" id="zoomFit" title="Fit"><svg><use href="#i-fit"/></svg></button>
-        <button class="icon-btn toggle" id="dimBtn" title="Show the drawing's own dimensions (D)" aria-pressed="false"><svg><use href="#i-ruler"/></svg></button>
-      </div>
-      <div class="hud-bottom" id="hudBottom">
-        <div class="legend" id="legend"></div>
-        <label class="slider" id="mixWrap"><span>Floor below</span><input type="range" id="mix" min="0" max="100" value="55" /><span>Floor above</span></label>
-        <label class="slider" id="explodeWrap" hidden><span>Stacked</span><input type="range" id="explode" min="0" max="100" value="45" /><span>Exploded</span></label>
-        <div class="modelbar" id="modelBar" hidden>
-          <label class="mb-sel" title="Show floors up to"><svg><use href="#i-layers"/></svg><select id="mFloor"></select></label>
-          <label class="mb-cut" title="Section cut through the top floor shown"><svg><use href="#i-cut"/></svg><input type="range" id="mCut" min="8" max="100" value="100" /></label>
-          <button class="chip" id="mRoof" aria-pressed="true">Roof</button>
-          <button class="chip" id="mColors" aria-pressed="true">Room colours</button>
-          <button class="chip" id="mHeights"><svg><use href="#i-sliders"/></svg>Heights</button>
-          <button class="chip" id="mExport" title="Download the model as glTF binary (.glb) — opens in Blender, SketchUp (with glTF importer), Rhino 8, Windows 3D Viewer…"><svg><use href="#i-dl"/></svg>.glb</button>
+  <main>
+    <section class="hero">
+      <div class="hero-text">
+        <p class="eyebrow">For architects · set up for Ahmedabad</p>
+        <h1>Your plans, checked and built in&nbsp;3D.</h1>
+        <p class="lede">Drop the DWG or DXF you already have. Plumb lines the floors up, finds what doesn’t stack between them, and turns the plans into a 3D building. In your browser, in seconds.</p>
+        <div class="cta">
+          <button class="btn primary big" id="pickBtn"><svg aria-hidden="true"><use href="#i-upload"/></svg>Choose drawings</button>
+          <a class="btn big" href="app/?sample=1"><svg aria-hidden="true"><use href="#i-flask"/></svg>Try the sample building</a>
         </div>
+        <p class="fineprint">DWG or DXF · or drop them anywhere on this page · stays on your computer · no sign-up</p>
       </div>
-      <form class="popover heights" id="heightsPop" hidden>
-        <h4>Storey heights</h4>
-        <p>Plans don't carry heights, so Plumb assumes these. Change them to match your section.</p>
-        <label>Floor to floor <input type="number" step="0.05" min="2.2" max="8" name="floor" /> m</label>
-        <label>Slab <input type="number" step="0.01" min="0.08" max="0.6" name="slab" /> m</label>
-        <label>Door head <input type="number" step="0.05" min="1.8" max="4" name="door" /> m</label>
-        <label>Window sill <input type="number" step="0.05" min="0" max="2" name="sill" /> m</label>
-        <label>Window head <input type="number" step="0.05" min="1" max="4" name="head" /> m</label>
-        <label>Parapet <input type="number" step="0.05" min="0.6" max="2" name="parapet" /> m</label>
-        <div class="hp-actions"><button type="button" class="btn small ghost" id="hpReset">Reset</button><button type="submit" class="btn small primary">Apply</button></div>
-      </form>
-      <div class="tip" id="tip" hidden></div>
-      <div class="dropveil" id="dropveil" hidden><div><svg><use href="#i-open"/></svg><strong>Drop your DWG or DXF floor plans</strong><span>one file with every floor, or one file per floor — any mix</span></div></div>
-      <div class="busy" id="busy" hidden><span class="spinner"></span><span id="busyText">Reading…</span></div>
+      <figure class="hero-vis" id="heroVis">
+        <div class="hv-seg seg" role="group" aria-label="Show">
+          <button class="on" data-hv="plan">Floors checked</button><button data-hv="model">3D model</button>
+        </div>
+        <div class="hv-frame">
+          <img class="hv-img on" data-hv="plan" src="img/hero-plan.webp" width="1400" height="886" alt="Two floor plans over each other: the floor below in cyan, the floor above in violet. Problems between them are ringed in red and orange." />
+          <img class="hv-img" data-hv="model" src="img/hero-cut.webp" width="1400" height="875" loading="lazy" alt="The same building as a 3D model, cut through its second floor, with rooms tinted by use." />
+        </div>
+        <figcaption class="hv-cap" data-hv="plan"><span><i style="--c:var(--below)"></i>floor below</span><span><i style="--c:var(--above)"></i>floor above</span><span><i style="--c:var(--ink)"></i>lines up</span><span><i style="--c:var(--high)"></i>problem</span></figcaption>
+        <figcaption class="hv-cap" data-hv="model" hidden><span>Walls, doors, windows, slabs and roof, from the 2D plans. Cut through any floor.</span></figcaption>
+      </figure>
     </section>
 
-    <aside class="right" aria-label="Issues">
-      <div class="banner" id="banner" hidden>
-        <span>This is a <b>sample building</b> with five planted problems. Drop your own DXF anywhere on the page.</span>
-        <button class="icon-btn" id="bannerX" aria-label="Dismiss"><svg><use href="#i-x"/></svg></button>
+    <ul class="strip" aria-label="What it finds">
+      <li><svg aria-hidden="true"><use href="#i-col"/></svg>Floating columns</li>
+      <li><svg aria-hidden="true"><use href="#i-drop"/></svg>Toilets over bedrooms</li>
+      <li><svg aria-hidden="true"><use href="#i-shaft"/></svg>Ducts that jog</li>
+      <li><svg aria-hidden="true"><use href="#i-lift"/></svg>Lift wells that drift</li>
+      <li><svg aria-hidden="true"><use href="#i-cant"/></svg>Deep cantilevers</li>
+    </ul>
+
+    <section class="sec" id="how">
+      <p class="eyebrow">How it works</p>
+      <h2>From drawings to a checked building in four steps</h2>
+      <ol class="steps4">
+        <li><b>1</b><h3>Drop</h3><p>One drawing with every floor plan laid out side by side, or one file per floor. Plumb works out the units, what each layer holds, every room and every column.</p></li>
+        <li><b>2</b><h3>Check</h3><p>Each floor is lined up on the one below by its columns, then checked for everything that has to continue down: structure, wet areas, shafts, cores and slab edges.</p></li>
+        <li><b>3</b><h3>See it in 3D</h3><p>The plans become a building: walls to full height, doors, windows, slabs and a roof. Show it up to any floor and slice through it.</p></li>
+        <li><b>4</b><h3>Hand it back</h3><p>Markups as a DXF to XREF over your drawing, an issue log for each consultant, a printed report, and a 3D model file.</p></li>
+      </ol>
+    </section>
+
+    <section class="sec" id="checks">
+      <p class="eyebrow">What it checks</p>
+      <h2>The problems that live between sheets</h2>
+      <p class="sec-lede">Each sheet is right on its own, so these usually turn up on site, after the slab is cast.</p>
+      <div class="cards">
+        <article><span class="ci high"><svg aria-hidden="true"><use href="#i-col"/></svg></span><h3>Floating columns</h3><p>A column with nothing under it needs a transfer beam, and IS 1893 lists it as a vertical irregularity. Columns that step sideways get their offset in mm.</p></article>
+        <article><span class="ci high"><svg aria-hidden="true"><use href="#i-drop"/></svg></span><h3>Wet over dry</h3><p>A toilet or kitchen above a bedroom or living room means drains through its ceiling and leaks into it. The overlap is measured in m².</p></article>
+        <article><span class="ci medium"><svg aria-hidden="true"><use href="#i-shaft"/></svg></span><h3>Shafts and cores</h3><p>Ducts, lift wells and stairs have to run straight. Plumb reports how far each one shifts, or that it stops.</p></article>
+        <article><span class="ci low"><svg aria-hidden="true"><use href="#i-cant"/></svg></span><h3>Overhangs</h3><p>Balconies and cantilevers beyond the floor below, with depth and area, so the structural engineer sees them early.</p></article>
       </div>
-      <section class="summary" id="summary"></section>
-      <div class="filters" id="filters"></div>
-      <ol class="issues" id="issues"></ol>
-      <footer class="right-foot">
-        <button class="btn small" id="exportDxf" title="Issue markers as a DXF you can XREF over your drawing"><svg><use href="#i-dl"/></svg>Markups DXF</button>
-        <button class="btn small" id="exportCsv"><svg><use href="#i-dl"/></svg>CSV</button>
-        <button class="btn small" id="printBtn"><svg><use href="#i-print"/></svg>Report</button>
-        <button class="btn small ai-btn" id="aiRfi" title="Draft an RFI for each consultant with Claude (your API key)"><svg><use href="#i-spark"/></svg>RFIs</button>
-      </footer>
-    </aside>
+    </section>
+
+    <section class="sec split" id="model">
+      <div class="split-text">
+        <p class="eyebrow">3D model</p>
+        <h2>A 3D building from your 2D plans</h2>
+        <ul class="ticks">
+          <li>Walls stood up to full height, however they were drawn</li>
+          <li>Lintels over doors; sills, glass and lintels in windows</li>
+          <li>Slabs with shafts left open, parapets round balconies, and a roof</li>
+          <li>Show the building up to any floor and slice through it</li>
+          <li>Storey heights set to match your section</li>
+          <li>Download a .glb for Blender, SketchUp, Rhino, or a client’s phone</li>
+        </ul>
+      </div>
+      <figure class="shot"><img src="img/hero-model.webp" width="1400" height="875" loading="lazy" alt="A four-storey building in 3D with its roof on, made from the floor plans." /></figure>
+    </section>
+
+    <section class="sec split flip">
+      <div class="split-text">
+        <p class="eyebrow">Revisions</p>
+        <h2>Every revision, compared</h2>
+        <p class="sec-lede">Upload the next drawing set into the same project. Plumb finds each issue again in the same place on the same floors, marks what got fixed, what’s new and what came back, and keeps the history with your notes.</p>
+        <p class="sec-lede">Mark an issue in review with the structural or plumbing consultant, resolved, or accepted as drawn.</p>
+      </div>
+      <div class="revcard" aria-hidden="true">
+        <div class="rc-head"><b>Riverside Residency</b><span class="rc-rev">Rev C</span></div>
+        <div class="rc-row"><i class="dot high"></i><span>Floating column · 1st over stilt</span><em class="badge open">Open</em></div>
+        <div class="rc-row"><i class="dot high"></i><span>Toilet over bedroom · 3rd over 2nd</span><em class="badge review">In review</em></div>
+        <div class="rc-row"><i class="dot medium"></i><span>Duct shifted 300 mm · 2nd over 1st</span><em class="badge resolved">Resolved in Rev C</em></div>
+        <div class="rc-row"><i class="dot low"></i><span>Balcony overhang 1.5 m</span><em class="badge accepted">Accepted</em></div>
+        <div class="rc-foot"><span>2 fixed since Rev B</span><span>1 new</span></div>
+      </div>
+    </section>
+
+    <section class="sec" id="files">
+      <p class="eyebrow">Files</p>
+      <h2>Works with the drawings you already make</h2>
+      <ul class="logos"><li>AutoCAD</li><li>BricsCAD</li><li>ZWCAD</li><li>DraftSight</li><li>LibreCAD</li><li>Revit (DWG export)</li><li>ArchiCAD (DWG export)</li></ul>
+      <p class="sec-lede">DWG and DXF, text or binary, several files at once. Layer names don’t need to follow any standard: Plumb reads them by name and by what’s drawn on them, and remembers your office’s names.</p>
+    </section>
+
+    <section class="sec two">
+      <div class="panel"><svg aria-hidden="true"><use href="#i-eye"/></svg><h3>Private by design</h3><p>Drawings are read on your computer and saved only in your browser. Nothing is uploaded. The optional AI assist uses your own key and sends layer names and findings, never the drawing.</p></div>
+      <div class="panel"><svg aria-hidden="true"><use href="#i-pin"/></svg><h3>Starting in Ahmedabad</h3><p>Coming next: area statements with RERA carpet area and FSI under Gujarat’s CGDCR 2017, then bye-law checks with the clause beside every result. mm or ft-in, m² or ft², the way offices here draw.</p></div>
+    </section>
+
+    <section class="sec" id="faq">
+      <p class="eyebrow">Questions</p>
+      <h2>Before you try it</h2>
+      <div class="faq">
+        <details><summary>Do I need AutoCAD?</summary><p>No. Any DWG or DXF works, from any CAD program, or exported from Revit or ArchiCAD.</p></details>
+        <details><summary>What if it reads my drawing wrong?</summary><p>The import shows the floors, units and layer roles it found, and each one can be changed in a click. Click a room in the plan to set its type. Plumb remembers your office’s layer names for the next job.</p></details>
+        <details><summary>Does it replace the structural engineer?</summary><p>No. It finds coordination problems early and turns them into precise questions for the right consultant.</p></details>
+        <details><summary>Where are my drawings stored?</summary><p>Only in this browser, on your computer. Nothing is uploaded to any server. Settings has a button to delete everything.</p></details>
+        <details><summary>What does it cost?</summary><p>Nothing while it’s being built.</p></details>
+      </div>
+    </section>
+
+    <section class="final">
+      <h2>Try it on your own drawings.</h2>
+      <div class="cta"><button class="btn primary big" data-pick><svg aria-hidden="true"><use href="#i-upload"/></svg>Choose drawings</button><a class="btn big" href="app/?sample=1">See the sample building</a></div>
+    </section>
   </main>
 
-  <dialog class="help" id="helpDlg">
-    <div class="help-inner">
-      <button class="icon-btn help-x" id="helpClose" aria-label="Close"><svg><use href="#i-x"/></svg></button>
-      <p class="eyebrow">How Plumb works</p>
-      <h2>2D drawings hide what's above and below.</h2>
-      <p>Floating columns, toilets over bedrooms, soil stacks that jog, lift wells that drift a few centimetres — they live <em>between</em> sheets, so nobody sees them until the site does. BIM clash detection needs a 3D model. Plumb works from the 2D plans you already have.</p>
-      <ol class="how">
-        <li><strong>Reads your drawings</strong> — <b>DWG</b> (AutoCAD R13 to 2025) or <b>DXF</b> (ASCII or binary, any version): every floor plan in one file (side by side, each titled like “FIRST FLOOR PLAN”), or one file per floor, in any mix.</li>
-        <li><strong>Understands the drawing</strong> — works out units, which layers are walls, columns, doors, windows, ducts and stairs, and finds every room from the linework, naming it from the text inside. Open-plan spaces are split by their labels.</li>
-        <li><strong>Stacks the floors</strong> — aligns each floor on the one below by matching columns (outliers are exactly the columns that don't line up).</li>
-        <li><strong>Checks what lines up</strong> — columns with nothing below, columns that step sideways or grow, wet rooms over bedrooms and living rooms, ducts, stairs and lifts that don't continue, and slabs that cantilever beyond the floor below.</li>
-        <li><strong>Hands it back</strong> — a markups DXF you can XREF over your drawing, a CSV and a printable report.</li>
-      </ol>
-      <p><strong>Three views.</strong> <em>Overlay</em> puts each floor over the one below (the ruler button shows the dimensions drawn in the file). <em>Stack</em> pulls the floors apart to show what continues. <em>Model</em> turns the plans into a 3D building — walls to full height, doors, windows, slabs, parapets and a roof — which you can cut through floor by floor, set the storey heights for, and download as <b>.glb</b>.</p>
-      <p><strong>Optional Claude assist.</strong> With your own Anthropic API key, <em>Ask Claude</em> reads layer names and room labels that rules miss (office codes, <i>M.B.R.</i>, <i>T&amp;B</i>, labels in Hindi or German…) and suggests corrections you approve; <em>RFIs</em> drafts a request for each consultant from the findings. Only names and findings are sent — never the drawing.</p>
-      <p class="fine">Plumb is a coordination aid, not a structural design check — every issue is a question to put to your engineer. The analysis runs entirely in your browser; drawings never leave your computer. Shortcuts: <b>2</b> overlay, <b>3</b> stack, <b>m</b> model, <b>d</b> dimensions, <b>j</b>/<b>k</b> step through issues, <b>f</b> fits, <b>Esc</b> clears. DWG files are read with LibreDWG (GPL), downloaded the first time you open one.</p>
-    </div>
-  </dialog>
-
-  <dialog class="help ai" id="aiDlg">
-    <div class="help-inner">
-      <button class="icon-btn help-x" id="aiClose" aria-label="Close"><svg><use href="#i-x"/></svg></button>
-      <p class="eyebrow"><svg><use href="#i-spark"/></svg> Claude assist · optional</p>
-      <h2 id="aiTitle">Read my drawing’s naming</h2>
-      <p id="aiIntro"></p>
-      <form class="ai-key" id="aiForm" autocomplete="off">
-        <label class="ai-field"><span>Anthropic API key</span><input type="password" id="aiKey" placeholder="sk-ant-…" spellcheck="false" autocomplete="off" /></label>
-        <label class="ai-check"><input type="checkbox" id="aiRemember" /> Remember on this device</label>
-        <div class="ai-go"><button class="btn primary" id="aiGo" type="submit"><svg><use href="#i-spark"/></svg><span id="aiGoText">Ask Claude</span></button><span class="ai-status" id="aiStatus" role="status"></span></div>
-      </form>
-      <div class="ai-out" id="aiOut"></div>
-      <p class="fine">Sent from your browser straight to Anthropic’s API with your key, using Claude Opus 5 (if it declines, Anthropic retries on its recommended fallback model). Plumb has no server and never sees your key or your drawing. <span id="aiWhat"></span></p>
-    </div>
-  </dialog>
-
-  <div class="print-sheet" id="printSheet" aria-hidden="true"></div>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <script type="module" src="js/app.js"></script>
+  <footer class="lfoot"><span><b>Plumb</b> · working name</span><nav><a href="app/">All projects</a><a href="app/help.html">Help</a><a href="app/settings.html">Settings</a><a href="/">viper-vm.github.io</a></nav></footer>
+  <script type="module" src="js/pages/landing.js"></script>
 </body>
 </html>

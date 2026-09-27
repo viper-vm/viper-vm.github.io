@@ -1,4 +1,4 @@
-// Plumb — optional Claude assist, with your own Anthropic API key, called straight from the
+// Plumb — optional AI assist, with your own Anthropic API key, called straight from the
 // browser (Plumb has no server). Two jobs where a language model beats rules:
 //   1. read unusual layer names and room labels (abbreviations, other languages, office codes)
 //   2. turn the findings into RFIs for each consultant
@@ -34,15 +34,15 @@ async function ask(apiKey, { system, user, schema, effort, maxTokens = 16000, si
   } catch (e) {
     throw new Error(explain(Anthropic, e));
   }
-  if (res.stop_reason === 'refusal') throw new Error('Claude declined this request.');
+  if (res.stop_reason === 'refusal') throw new Error('The AI declined this request.');
   if (res.stop_reason === 'max_tokens') throw new Error('The answer was cut off (too long). Try again with fewer layers.');
   const text = res.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
-  try { return JSON.parse(text); } catch { throw new Error('Claude replied in an unexpected format — try again.'); }
+  try { return JSON.parse(text); } catch { throw new Error('The AI replied in an unexpected format — try again.'); }
 }
 
 function explain(Anthropic, e) {
   if (e instanceof Anthropic.AuthenticationError) return 'That API key was rejected — check it at console.anthropic.com.';
-  if (e instanceof Anthropic.PermissionDeniedError) return 'This key isn’t allowed to use Claude Opus 5.';
+  if (e instanceof Anthropic.PermissionDeniedError) return 'This API key isn’t allowed to use the model Plumb asks for.';
   if (e instanceof Anthropic.RateLimitError) return 'Rate limited by the API — wait a minute and try again.';
   if (e instanceof Anthropic.APIUserAbortError) return 'Cancelled.';
   if (e instanceof Anthropic.APIConnectionError) return 'Couldn’t reach api.anthropic.com — check your connection.';

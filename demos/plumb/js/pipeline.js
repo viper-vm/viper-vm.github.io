@@ -53,7 +53,7 @@ export function analyseFiles(files, opts = {}) {
     for (const t of p.dx.dimTexts) merged.dimTexts.push({ ...t, x: t.x + ox, y: t.y + oy });
     for (const fl of p.dx.dimFills) merged.dimFills.push({ ...fl, pts: fl.pts.map((q) => [q[0] + ox, q[1] + oy]) });
     const lv = levelFromName(p.f.name) || bestTitle(p.dx);
-    floors.push({ id: k, title: lv ? cleanTitle(lv.text) : p.f.name.replace(/\.dxf$/i, ''), level: lv ? lv.level : k, typical: !!(lv && lv.typical), box: [b.x0 + ox, b.y0 + oy, b.x1 + ox, b.y1 + oy], file: p.f.name, origin: [ox, oy], k: p.dx.k });
+    floors.push({ id: k, title: lv ? cleanTitle(lv.text) : p.f.name.replace(/\.(dxf|dwg)$/i, ''), level: lv ? lv.level : k, typical: !!(lv && lv.typical), box: [b.x0 + ox, b.y0 + oy, b.x1 + ox, b.y1 + oy], file: p.f.name, origin: [ox, oy], k: p.dx.k });
     x += b.x1 - b.x0 + 30;
   });
   floors.sort((a, b) => a.level - b.level || a.id - b.id);
@@ -87,13 +87,29 @@ function finish(dx, unit, roles, floors, opts, t0) {
   return { dx, unit, roles, floors, an, transforms, aligns, issues, ms: { total: now() - t0 } };
 }
 
-/** "ground.dxf", "first-floor.dxf", "L2.dxf", "B1_plan.dxf", "03.dxf" → a level. */
+const ORD = ['GROUND', 'FIRST', 'SECOND', 'THIRD', 'FOURTH', 'FIFTH', 'SIXTH', 'SEVENTH', 'EIGHTH', 'NINTH', 'TENTH'];
+const nth = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? 'TH' : ['TH', 'ST', 'ND', 'RD'][n % 10] || 'TH');
+const storey = (n) => ({ level: n, typical: false, text: n < 0 ? `BASEMENT ${-n}` : `${n < ORD.length ? ORD[n] : nth(n)} FLOOR` });
+const SHORT = { gf: 0, ff: 1, sf: 2, tf: 3 }; // office shorthand in India: ground, first, second, third floor
+
+/**
+ * A file's level from its name: "ground.dxf", "first-floor.dxf", "B1_plan.dxf", and floor codes on
+ * their own or after the project's name: "L2.dxf", "03.dxf", "4F.dwg", "Riverside GF.dwg", "B1.dxf".
+ */
 export function levelFromName(name) {
-  const base = String(name).replace(/\.dxf$/i, '').replace(/[_\-.]+/g, ' ').trim();
-  const lv = parseLevel(base) || parseLevel(base + ' floor');
+  const base = String(name).replace(/\.(dxf|dwg)$/i, '').replace(/[_\-.]+/g, ' ').trim();
+  const lv = parseLevel(base);
   if (lv) return { ...lv, text: /floor|plan|level/i.test(lv.text) ? lv.text : base + ' floor' };
-  const m = base.match(/^(?:f|fl|flr|floor|lvl|level|l)?\s*(\d{1,2})$/i);
-  return m ? { level: parseInt(m[1], 10), typical: false, text: `Floor ${parseInt(m[1], 10)}` } : null;
+  for (const w of base.toLowerCase().split(/\s+/).reverse()) {
+    if (w in SHORT) return storey(SHORT[w]);
+    const m = w.match(/^(?:l|f|fl|flr|lvl)(\d{1,2})$|^(\d{1,2})(?:f|fl|flr)$/);
+    if (m) return storey(parseInt(m[1] || m[2], 10));
+    const b = w.match(/^b(\d)$/);
+    if (b) return storey(-parseInt(b[1], 10));
+  }
+  if (/^\d{1,2}$/.test(base)) return storey(parseInt(base, 10));
+  const f = parseLevel(base + ' floor');
+  return f ? { ...f, text: base + ' floor' } : null;
 }
 
 function bestTitle(dx) {

@@ -158,10 +158,11 @@ export class Plan2D {
     if (!this.data) return;
     const S = view.s * dpr, ox = W / 2, oy = H / 2;
     const X = (x) => ox + (x - view.cx) * S, Y = (y) => oy - (y - view.cy) * S;
-    this._grid(ctx, W, H, dpr, view, X, Y, pal);
+    if (!o.noGrid) this._grid(ctx, W, H, dpr, view, X, Y, pal);
 
-    const k = o.k;
-    const floors = k > 0 ? [k - 1, k] : [0];
+    // o.only: draw one floor on its own (thumbnails), in ink, with no overlay or issues
+    const k = o.only != null ? 0 : o.k;
+    const floors = o.only != null ? [o.only] : k > 0 ? [k - 1, k] : [0];
     const aL = Math.min(1, 2 * (1 - this.mix)), aU = Math.min(1, 2 * this.mix);
     const alphaOf = (fi) => (k === 0 ? 1 : fi === k ? aU : aL);
     const colorOf = (fi) => (k === 0 ? pal.ink : fi === k ? pal.above : pal.below);
@@ -460,7 +461,7 @@ export class Plan2D {
     }
 
     // 8. scale bar
-    scaleBar(ctx, S, dpr, 16 * dpr, o.scaleBottom ? H - 12 * dpr : 74 * dpr, pal);
+    if (!o.noScale) scaleBar(ctx, S, dpr, 16 * dpr, o.scaleBottom ? H - 12 * dpr : 74 * dpr, pal);
   }
 
   _grid(ctx, W, H, dpr, view, X, Y, pal) {

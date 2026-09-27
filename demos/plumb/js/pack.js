@@ -1,12 +1,13 @@
 // Plumb — turn an analysis into what the page draws (small, transferable, no parser state).
 
-import { floorDims } from './dims.js';
+import { floorDims, dimChecks } from './dims.js';
 
 /** Only what the page needs (the parsed entity lists are large; keep the metric ones). */
 export function pack(r) {
   const dims = floorDims(r.dx, r.roles, r.floors.map((f) => f.box), r.unit.mm);
   return {
     unit: r.unit,
+    dimChecks: dimChecks(r.dx, r.unit.mm),
     ms: r.ms,
     bounds: r.dx.bounds,
     layers: [...r.dx.layers.values()].map((l) => {

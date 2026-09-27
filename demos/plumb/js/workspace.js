@@ -1,38 +1,28 @@
-// Plumb — the app: files in, analysis in a worker, the overlay/stack views, issues out.
+// Plumb — the workspace of one project: each floor over the one below (Plan), the floors
+// pulled apart (Stack), and the building in 3D (3D model). Everything the architect changes
+// (a layer role, a unit, a floor's order, an issue's status, storey heights) is saved to the project.
 
 import { Plan2D } from './view2d.js';
 import { KIND, GROUPS, SEVERITIES, SEV_LABEL, TYPE_COLOR, TYPE_LABEL, ROLE_COLOR, ROLE_LABEL, levelTag, floorName, fmtArea, esc } from './style.js';
 import { ROLES, ROOM_TYPES, normName } from './recognize.js';
 import { markupsDXF, issuesCSV, reportHTML, download } from './export.js';
-import { readNaming, draftRFIs } from './ai.js';
+import { injectIcons, setTheme as applyTheme, themeNow, qs } from './shell/ui.js';
+import { saveProject, getSettings, saveSettings, pendDrawings } from './shell/store.js';
+import { analyseRevision, massRevision } from './shell/engine.js';
+import { openProject, number } from './shell/projects.js';
+import { attachOrAdd, setStatus, summarize } from './shell/model.js';
 
+injectIcons();
 const $ = (s) => document.querySelector(s);
-const SAMPLE = { url: 'samples/riverside-residency.dxf', name: 'riverside-residency.dxf' };
-const store = {
-  get(k) { try { return localStorage.getItem('plumb.' + k); } catch { return null; } },
-  set(k, v) { try { localStorage.setItem('plumb.' + k, v); } catch { /* private mode */ } },
-  del(k) { try { localStorage.removeItem('plumb.' + k); } catch { /* private mode */ } },
-};
+const UNITS = [[1, 'mm'], [10, 'cm'], [1000, 'm'], [25.4, 'in'], [304.8, 'ft']];
 
 const state = {
-  files: null,
-  label: '',
-  isSample: false,
-  result: null,
-  floorsAll: null,
-  floorsEdited: false,
-  opts: { roles: new Map(), types: new Map(), nudges: {}, unitMM: null },
-  k: 1,
-  view: '2d',
-  selected: null,
-  accepted: new Set(),   // signatures, so "looks fine" survives re-analysis
-  filter: null,
-  nudging: null,
-  theme: store.get('theme') || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'),
-  apiKey: store.get('key') || '',
-  ai: null,             // {mode, abort, naming}
-  rfis: null,           // Claude-drafted RFIs, also printed in the report
+  P: null, REV: null, SET: null,
+  result: null, floorsAll: null,
+  k: 1, view: '2d', selected: null, filter: null, nudging: null,
+  mass: null, massFor: null, ai: null, rfis: null,
 };
+const opts = () => state.REV.opts;
 
 // ------------------------------------------------------------------ views
 const stage = $('#stage');
@@ -42,144 +32,86 @@ const plan = new Plan2D($('#plan'), {
   onClick: (pr) => { hideTip(); openRoomPicker(pr); },
   onNudge: (n) => { if (state.nudging) { state.nudging.dx = n.dx; state.nudging.dy = n.dy; renderPairChip(); } },
 });
-// keep fitted plans clear of the floating chips and sliders
 plan.pads = () => {
   const st = stage.getBoundingClientRect(), hb = $('#hudBottom').getBoundingClientRect(), chip = $('#pairChip').getBoundingClientRect();
   return { t: Math.max(24, chip.bottom - st.top + 14), b: Math.max(24, st.bottom - hb.top + 14), l: 24, r: st.width > 640 ? 60 : 50 };
 };
-let stack = null;
-async function getStack() {
-  if (stack) return stack;
-  const { Stack3D } = await import('./view3d.js');
-  stack = new Stack3D($('#view3d'), { onPin: (iss) => select(iss.id, { scroll: true }) });
-  stack.setTheme(state.theme);
-  stack.setExplode(+$('#explode').value / 100);
-  return stack;
+// the 3D views load on first use; the promise is kept so two quick calls share one view
+let stack = null, stackP = null;
+function getStack() {
+  return (stackP ||= (async () => {
+    const { Stack3D } = await import('./view3d.js');
+    stack = new Stack3D($('#view3d'), { onPin: (iss) => select(iss.id, { scroll: true }) });
+    stack.setTheme(themeNow());
+    stack.setExplode(+$('#explode').value / 100);
+    return stack;
+  })());
 }
+let model = null, modelP = null;
+function getModel() {
+  return (modelP ||= (async () => {
+    const { Model3D } = await import('./model3d.js');
+    model = new Model3D($('#model3d'));
+    model.setTheme(themeNow());
+    model.setHeights(heights());
+    model.setCut(1);
+    return model;
+  })());
+}
+const heights = () => ({ ...state.SET.heights, ...(state.P.heights || {}) });
 
 // ------------------------------------------------------------------ analysis
-let worker = null, workerBroken = false, job = 0;
-function makeWorker() {
-  if (worker || workerBroken) return worker;
-  try {
-    worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
-    worker.addEventListener('error', () => { workerBroken = true; worker = null; });
-  } catch { workerBroken = true; worker = null; }
-  return worker;
-}
-
-function serialOpts() {
-  return {
-    roles: [...state.opts.roles],
-    types: [...state.opts.types],
-    nudges: state.opts.nudges,
-    unitMM: state.opts.unitMM || undefined,
-    floors: state.floorsEdited && state.floorsAll ? state.floorsAll : undefined,
-  };
-}
-
+let job = 0;
 async function runAnalysis() {
-  if (!state.files) return;
   const id = ++job;
   busy('Reading the drawing…');
   const t0 = performance.now();
   try {
-    const result = await new Promise((resolve, reject) => {
-      const w = makeWorker();
-      if (!w) return inline().then(resolve, reject);
-      const onMsg = (e) => {
-        if (e.data.id !== id) return;
-        if (e.data.type === 'progress') { if (id === job) busy(e.data.stage); return; }
-        w.removeEventListener('message', onMsg);
-        w.removeEventListener('error', onErr);
-        if (e.data.type === 'result') resolve(e.data.result); else reject(new Error(e.data.message));
-      };
-      const onErr = () => { w.removeEventListener('message', onMsg); inline().then(resolve, reject); };
-      w.addEventListener('message', onMsg);
-      w.addEventListener('error', onErr, { once: true });
-      w.postMessage({ id, files: state.files, opts: serialOpts() });
-    });
+    await saveProject(state.P);
+    const r = await analyseRevision(state.P, state.REV, { onStage: (s) => { if (id === job) busy(s); } });
     if (id !== job) return;
-    // keep the spinner up a beat so quick re-runs don't flicker
-    const left = 260 - (performance.now() - t0);
-    if (left > 0) await new Promise((r) => setTimeout(r, left));
-    onResult(result);
+    attachOrAdd(state.P, state.REV, r);
+    number(r);
+    const left = 220 - (performance.now() - t0);
+    if (left > 0) await new Promise((res) => setTimeout(res, left));
+    state.P.summary = summarize(r, state.P);
+    state.REV.summary = state.P.summary;
+    saveProject(state.P).catch(() => {});
+    onResult(r);
   } catch (err) {
     if (id !== job) return;
     console.error(err);
     busy(null);
-    const msg = String(err.message || err);
-    if (msg === 'DWG_LOAD') failed('Couldn’t load the DWG reader (needs internet the first time). Save the drawing as DXF instead.');
-    else if (msg === 'DWG_READ') failed('Couldn’t read this DWG — it may be damaged or from a version LibreDWG doesn’t know yet. Save it as DXF from your CAD app and drop that.');
-    else failed(msg.split('\n')[0]);
+    toast(String(err.message || err).split('\n')[0], true);
   }
 }
 
-let inlineLast = null;
-async function inline() {
-  const [{ analyse, analyseFiles }, { pack }, { dwgToDxf }] = await Promise.all([import('./pipeline.js'), import('./pack.js'), import('./dwg.js')]);
-  await new Promise((r) => setTimeout(r, 30));
-  const opts = { ...serialOpts(), onStage: (s) => busy(s) };
-  const files = [];
-  for (const f of state.files) files.push(f.dwg ? { name: f.name, text: await dwgToDxf(new Uint8Array(f.bin), (s) => busy(s)) } : f);
-  const r = files.length === 1 ? analyse(files[0].text, opts) : analyseFiles(files, opts);
-  inlineLast = r;
-  return pack(r);
-}
-
-/** The 3D parts of every floor (walls, openings…), built once per analysis, on first use. */
-let massJob = 0;
 async function ensureMass() {
   if (state.mass && state.massFor === state.result) return state.mass;
-  const forResult = state.result, id = 'm' + ++massJob;
+  const forResult = state.result;
   busy('Building the 3D model…');
   try {
-    let mass;
-    const w = makeWorker();
-    if (w && !inlineLast) {
-      mass = await new Promise((resolve, reject) => {
-        const onMsg = (e) => {
-          if (e.data.id !== id) return;
-          if (e.data.type === 'progress') { busy(e.data.stage); return; }
-          w.removeEventListener('message', onMsg);
-          if (e.data.type === 'mass') resolve(e.data.mass); else reject(new Error(e.data.message));
-        };
-        w.addEventListener('message', onMsg);
-        w.postMessage({ id, type: 'mass' });
-      });
-    } else {
-      const { massFloor } = await import('./massing.js');
-      mass = inlineLast.an.map((a) => massFloor(inlineLast.dx, inlineLast.roles, a));
-    }
+    const mass = await massRevision(state.P, state.REV, { onStage: (s) => busy(s) });
     if (state.result !== forResult) return null;
     state.mass = mass; state.massFor = forResult;
     return mass;
   } finally { busy(null); }
 }
 
-const sig = (i) => `${i.kind}:${i.upper}:${Math.round(i.at[0] * 5)}:${Math.round(i.at[1] * 5)}`;
-
-function onResult(r) {
+function onResult(r, { first = false } = {}) {
   busy(null);
-  r.issues.forEach((iss, i) => { iss.n = i + 1; iss.sig = sig(iss); });
-  const prevSel = state.selected && state.result ? (state.result.issues.find((i) => i.id === state.selected) || {}).sig : null;
+  const prevState = state.selected && state.result ? (state.result.issues.find((i) => i.id === state.selected) || {}).stateId : null;
   state.result = r;
-  if (!state.floorsEdited) state.floorsAll = r.floors.map((f) => ({ ...f }));
-  document.body.classList.toggle('has-result', true);
-  $('#empty')?.remove();
-
-  if (!r.floors.length) {
-    failed('No floor plans found in this drawing. Plumb looks for plans laid out side by side, each with a title like “FIRST FLOOR PLAN” — or drop one DXF per floor.');
-    renderAll();
-    return;
-  }
-  const same = prevSel && r.issues.find((i) => i.sig === prevSel);
+  if (!opts().floors) state.floorsAll = r.floors.map((f) => ({ ...f }));
+  else state.floorsAll = opts().floors;
+  if (!r.floors.length) { toast('No floor plans found. Titles like “FIRST FLOOR PLAN” under each plan help; see Help.', true); renderAll(); return; }
+  const same = prevState && r.issues.find((i) => i.stateId === prevState);
   state.selected = same ? same.id : null;
-  if (!same) {
-    const first = r.issues[0];
-    state.k = Math.min(Math.max(1, first ? first.upper : Math.min(state.k, r.floors.length - 1)), Math.max(0, r.floors.length - 1));
-    if (r.floors.length < 2) state.k = 0;
+  if (!same && !first) {
+    const firstIss = openIssues()[0];
+    state.k = Math.min(Math.max(1, firstIss ? firstIss.upper : Math.min(state.k, r.floors.length - 1)), Math.max(0, r.floors.length - 1));
   }
+  if (r.floors.length < 2) state.k = 0;
   state.mass = null;
   plan.setData(r);
   plan.setPair(state.k, false);
@@ -189,80 +121,17 @@ function onResult(r) {
   if (stack) { stack.setData(r); stack.setDismissed(dismissedIds()); stack.setSelected(state.selected); }
   renderAll();
   if (state.view === 'model') showModel();
-  if (r.floors.length === 1) toast('Only one floor found. Put every floor plan in the same DXF side by side with a title under each, or drop one DXF per floor.', true);
 }
 
-function dismissedIds() {
-  const out = new Set();
-  if (state.result) for (const i of state.result.issues) if (state.accepted.has(i.sig)) out.add(i.id);
-  return out;
-}
-
-// ------------------------------------------------------------------ files
-async function openFiles(list) {
-  const files = [...list].filter((f) => /\.(dxf|dwg)$/i.test(f.name));
-  if (!files.length) {
-    const other = [...list][0];
-    const ext = other ? (other.name.split('.').pop() || '').toLowerCase() : '';
-    toast(ext === 'pdf' ? 'Plumb reads CAD drawings, not PDFs — export DWG or DXF from your CAD app.' : 'Plumb reads DWG and DXF drawings (AutoCAD, BricsCAD, ZWCAD, DraftSight, LibreCAD, Revit exports…).', true);
-    return;
-  }
-  busy(`Opening ${files.length > 1 ? files.length + ' files' : files[0].name}…`);
-  const out = [];
-  for (const f of files) {
-    const bytes = new Uint8Array(await f.arrayBuffer());
-    if (/\.dwg$/i.test(f.name) || isDWG(bytes)) { out.push({ name: f.name, dwg: true, bin: bytes.buffer, stamp: f.lastModified }); continue; }
-    if (isBinaryDXF(bytes)) { out.push({ name: f.name, text: bytes }); continue; }
-    const text = decodeText(bytes);
-    if (!/SECTION|EOF/.test(text.slice(0, 20000))) { busy(null); toast(`${f.name} doesn't look like a DXF file.`, true); return; }
-    out.push({ name: f.name, text });
-  }
-  load(out, files.length > 1 ? `${files.length} files` : files[0].name, false);
-}
-/** DXF text is UTF-8 from AutoCAD 2007 on, the Windows codepage before that. */
-function decodeText(bytes) {
-  const t = new TextDecoder('utf-8').decode(bytes);
-  return t.includes('\uFFFD') ? new TextDecoder('windows-1252').decode(bytes) : t;
-}
-const isDWG = (b) => b.length > 6 && b[0] === 0x41 && b[1] === 0x43 && b[2] === 0x31 && b[3] === 0x30; // "AC10…"
-function isBinaryDXF(b) {
-  const sig = 'AutoCAD Binary DXF';
-  if (b.length < sig.length) return false;
-  for (let i = 0; i < sig.length; i++) if (b[i] !== sig.charCodeAt(i)) return false;
-  return true;
-}
-async function loadSample() {
-  busy('Opening the sample building…');
-  try {
-    const res = await fetch(SAMPLE.url);
-    if (!res.ok) throw new Error(res.status);
-    load([{ name: SAMPLE.name, text: await res.text() }], SAMPLE.name, true);
-  } catch {
-    busy(null);
-    toast('Could not load the sample drawing.', true);
-  }
-}
-function load(files, label, isSample) {
-  state.files = files;
-  state.label = label;
-  state.isSample = isSample;
-  state.opts = { roles: new Map(), types: new Map(), nudges: {}, unitMM: null };
-  state.floorsAll = null;
-  state.floorsEdited = false;
-  state.accepted = new Set();
-  state.selected = null;
-  state.filter = null;
-  state.nudging = null;
-  state.rfis = null;
-  plan.setNudge(null);
-  $('#banner').hidden = !isSample || store.get('bannerSeen') === '1';
-  runAnalysis();
-}
+const statusOf = (iss) => (iss.stateId && state.P.issueState[iss.stateId] ? state.P.issueState[iss.stateId].status : 'open');
+const isDone = (iss) => { const s = statusOf(iss); return s === 'accepted' || s === 'resolved'; };
+const openIssues = () => state.result.issues.filter((i) => !isDone(i));
+function dismissedIds() { return new Set(state.result ? state.result.issues.filter(isDone).map((i) => i.id) : []); }
 
 // ------------------------------------------------------------------ rendering
 function renderAll() {
-  renderDimBtn();
   renderHeader();
+  renderDimBtn();
   renderFloors();
   renderLayers();
   renderSummary();
@@ -270,25 +139,21 @@ function renderAll() {
   renderIssues();
   renderPairChip();
   renderLegend();
+  renderLevels();
 }
 
 function renderHeader() {
+  const P = state.P;
+  document.title = `${P.name} · Plumb`;
+  $('#wsName').textContent = P.name;
+  $('#wsRev').textContent = `${state.REV.label}${P.city ? ' · ' + P.city : ''}`;
+  $('#backBtn').href = `project.html?id=${encodeURIComponent(P.id)}`;
+  $('#allIssues').href = `issues.html?id=${encodeURIComponent(P.id)}`;
   const r = state.result;
-  $('#fileChip').hidden = !r;
   if (!r) return;
-  $('#fcName').textContent = state.label;
-  const units = [[1, 'mm'], [10, 'cm'], [1000, 'm'], [25.4, 'in'], [304.8, 'ft']];
   const cur = r.unit.mm;
-  const opts = units.map(([v, n]) => `<option value="${v}" ${Math.abs(v - cur) < 1e-9 ? 'selected' : ''}>${n}</option>`).join('');
   const src = r.unit.source === 'you' ? 'set by you' : r.unit.source;
-  $('#fcMeta').innerHTML = `<select id="unitSel" title="Drawing units (${esc(src)})">${opts}</select><span class="fc-src"> · ${esc(src)}</span>`;
-  $('#unitSel').onchange = (e) => {
-    state.opts.unitMM = +e.target.value;
-    state.floorsEdited = false;
-    state.floorsAll = null;
-    state.opts.nudges = {};
-    runAnalysis();
-  };
+  $('#unitsRow').innerHTML = `<span>Units</span><select id="unitSel" title="Drawing units · ${esc(src)}">${UNITS.map(([v, n]) => `<option value="${v}" ${Math.abs(v - cur) < 1e-9 ? 'selected' : ''}>${n}</option>`).join('')}</select><span class="faint">${esc(src)}</span>`;
 }
 
 function includedIndex(fa) {
@@ -302,8 +167,7 @@ function renderFloors() {
   const r = state.result, el = $('#floors');
   if (!r || !state.floorsAll) { el.innerHTML = ''; $('#floorsSub').textContent = ''; return; }
   const n = r.floors.length;
-  $('#floorsSub').textContent = n ? `${n} found · top first` : '';
-  // section extents in building x (after alignment)
+  $('#floorsSub').textContent = n ? `${n} · top first` : '';
   let gx0 = Infinity, gx1 = -Infinity;
   r.an.forEach((a, k) => { const T = r.transforms[k]; gx0 = Math.min(gx0, a.box[0] + T.tx); gx1 = Math.max(gx1, a.box[2] + T.tx); });
   const span = Math.max(1, gx1 - gx0);
@@ -315,7 +179,6 @@ function renderFloors() {
     let slab = '', meta = 'left out of the stack';
     if (k >= 0) {
       const a = r.an[k], T = r.transforms[k];
-      // true section: the floor plate's x-extent, so overhangs show as a longer slab
       const x0 = ((a.box[0] + T.tx - gx0) / span) * 100, x1 = ((a.box[2] + T.tx - gx0) / span) * 100;
       slab = `<div class="fl-slab"><i style="left:${x0.toFixed(1)}%;width:${(x1 - x0).toFixed(1)}%"></i></div>`;
       meta = `${a.rooms.length} rooms · ${a.columns.length} cols · ${a.footprintArea.toFixed(0)} m²`;
@@ -331,9 +194,8 @@ function renderFloors() {
       <span class="fl-meta">${esc(meta)}</span>
       ${slab}
     </li>`);
-    // the joint between this floor and the next included floor below it
     if (k > 0) {
-      const iss = r.issues.filter((i) => i.upper === k && !state.accepted.has(i.sig));
+      const iss = r.issues.filter((i) => i.upper === k && !isDone(i));
       const al = r.aligns[k];
       const dots = SEVERITIES.flatMap((s) => iss.filter((i) => i.severity === s).map(() => `<i class="dot" style="background:var(--${s})"></i>`)).slice(0, 9).join('');
       const how = al ? (al.method === 'columns' ? `${al.matched}/${al.of} col` : al.method.replace(' + nudge', ' +adj')) : '';
@@ -346,7 +208,7 @@ function renderFloors() {
   el.innerHTML = rows.join('');
   const weak = r.aligns.map((a, k) => ({ a, k })).filter(({ a }) => a && a.method !== 'columns' && !/nudge/.test(a.method));
   $('#alignNote').innerHTML = weak.length
-    ? `<b style="color:var(--medium)">Check alignment:</b> ${weak.map(({ a, k }) => `${esc(floorName(r.floors[k]))} was placed by its ${a.method === 'core' ? 'stair/lift core' : 'outline'}`).join('; ')} (too few matching columns). Use <em>Adjust</em> on the overlay if it's off.`
+    ? `<b style="color:var(--medium)">Check alignment:</b> ${weak.map(({ a, k }) => `${esc(floorName(r.floors[k]))} was placed by its ${a.method === 'core' ? 'stair/lift core' : 'outline'}`).join('; ')} (too few matching columns). Use <em>Adjust</em> on the plan if it's off.`
     : n > 1 ? 'Floors are stacked by matching their columns; columns that don\'t match are the findings.' : '';
 }
 
@@ -356,11 +218,11 @@ function renderLayers() {
   const content = (l) => (l.stats ? l.stats.segs + l.stats.arcs + l.stats.texts + l.stats.fills : 0);
   const layers = r.layers.filter((l) => content(l) > 0).sort((a, b) => ROLES.indexOf(a.role) - ROLES.indexOf(b.role) || content(b) - content(a));
   el.innerHTML = layers.map((l) => {
-    const opts = ROLES.map((ro) => `<option value="${ro}" ${ro === l.role ? 'selected' : ''}>${ROLE_LABEL[ro]}${ro === l.autoRole && !l.auto ? ' (auto)' : ''}</option>`).join('');
+    const o = ROLES.map((ro) => `<option value="${ro}" ${ro === l.role ? 'selected' : ''}>${ROLE_LABEL[ro]}${ro === l.autoRole && !l.auto ? ' (auto)' : ''}</option>`).join('');
     return `<div class="ly ${l.role === 'other' || l.role === 'text' || l.role === 'dim' ? 'ly-dim' : ''}">
       <span class="ly-sw" style="background:${ROLE_COLOR[l.role]}"></span>
       <span class="ly-name" title="${esc(l.name)}">${esc(l.name)}<small>${content(l)}</small></span>
-      <select data-layer="${esc(l.name)}" class="${l.auto ? '' : 'you'}" title="${l.auto ? 'Guessed from the layer name and what is drawn on it' : 'Set by you'}">${opts}</select>
+      <select data-layer="${esc(l.name)}" class="${l.auto ? '' : 'you'}" title="${l.auto ? 'Read from the layer name and what is drawn on it' : 'Set by you or your office standard'}">${o}</select>
     </div>`;
   }).join('') || '<p class="pane-note">No layers with content.</p>';
 }
@@ -368,18 +230,18 @@ function renderLayers() {
 function renderSummary() {
   const r = state.result, el = $('#summary');
   if (!r || !r.floors.length) { el.innerHTML = ''; return; }
-  const open = r.issues.filter((i) => !state.accepted.has(i.sig));
+  const open = openIssues();
   const n = { high: 0, medium: 0, low: 0 };
   for (const i of open) n[i.severity]++;
   const joints = Math.max(0, r.floors.length - 1);
-  const secs = (r.ms.total / 1000).toFixed(1);
+  const done = r.issues.length - open.length;
   const verdict = !open.length ? 'ok' : n.high ? '' : 'medium';
-  const title = r.floors.length < 2 ? 'Only one floor found' : !open.length ? (r.issues.length ? 'All accepted' : 'Everything stacks up') : `${open.length} thing${open.length > 1 ? 's' : ''} to check`;
+  const title = r.floors.length < 2 ? 'One floor plan' : !open.length ? (r.issues.length ? 'All closed' : 'Everything stacks up') : `${open.length} thing${open.length > 1 ? 's' : ''} to check`;
   el.innerHTML = `
     <div class="sm-head">
       <span class="sm-verdict ${verdict}"><svg><use href="#${!open.length ? 'i-check' : 'i-alert'}"/></svg></span>
       <div><div class="sm-title">${title}</div>
-      <div class="sm-sub">${r.floors.length} floor${r.floors.length > 1 ? 's' : ''} · ${joints} joint${joints === 1 ? '' : 's'} checked · read in ${secs} s${state.accepted.size ? ` · ${r.issues.length - open.length} accepted` : ''}</div></div>
+      <div class="sm-sub">${r.floors.length} floor${r.floors.length > 1 ? 's' : ''} · ${joints} joint${joints === 1 ? '' : 's'} checked${done ? ` · ${done} closed` : ''}</div></div>
     </div>
     <div class="sm-bars">${SEVERITIES.map((s) => `<div class="sm-bar ${s} ${n[s] ? '' : 'zero'}" title="${SEV_LABEL[s]}"><span>${s}</span><b>${n[s]}</b></div>`).join('')}</div>`;
 }
@@ -400,7 +262,7 @@ function renderIssues() {
   const r = state.result, el = $('#issues');
   if (!r) { el.innerHTML = ''; return; }
   if (r.floors.length < 2) {
-    el.innerHTML = `<li class="issues-empty">Plumb compares each floor with the one below it, so it needs at least two floor plans.<br><br>Put every plan in one DXF side by side, each with a title like <b>FIRST FLOOR PLAN</b> under it — or drop one DXF per floor (name them <i>ground.dxf</i>, <i>first.dxf</i>…).</li>`;
+    el.innerHTML = `<li class="issues-empty">Plumb compares each floor with the one below it, so the checks need at least two floor plans. Upload the other floors as a revision, or put every plan in one drawing with a title under each.</li>`;
     return;
   }
   const list = r.issues.filter((i) => !state.filter || (KIND[i.kind] || {}).group === state.filter);
@@ -414,18 +276,18 @@ function renderIssues() {
     if (!g.length) continue;
     out.push(`<li class="ig-h">${s} · ${SEV_LABEL[s].toLowerCase()} <span>${g.length}</span></li>`);
     for (const i of g) {
-      const acc = state.accepted.has(i.sig);
+      const st = statusOf(i), done = isDone(i);
       const lo = r.floors[i.lower], up = r.floors[i.upper];
-      out.push(`<li class="iss ${i.id === state.selected ? 'on' : ''} ${acc ? 'dismissed' : ''}" data-id="${i.id}" tabindex="0">
+      out.push(`<li class="iss ${i.id === state.selected ? 'on' : ''} ${done ? 'dismissed' : ''}" data-id="${i.id}" tabindex="0">
         <span class="iss-n ${i.severity}">${i.n}</span>
         <div class="iss-title">${esc(i.title)}</div>
-        <div class="iss-where"><span class="fchip">${esc(levelTag(lo))}→${esc(levelTag(up))}</span>${esc(floorName(up))} · ${esc(i.where)}</div>
+        <div class="iss-where"><span class="fchip">${esc(levelTag(lo))}→${esc(levelTag(up))}</span>${esc(floorName(up))} · ${esc(i.where)}${st === 'review' ? ' · <b style="color:var(--medium)">in review</b>' : ''}</div>
         <div class="iss-body">
           <p class="iss-detail">${esc(i.detail)}</p>
           <div class="iss-actions">
             <button data-act="zoom"><svg><use href="#i-eye"/></svg>Show me</button>
-            <button data-act="accept"><svg><use href="#${acc ? 'i-x' : 'i-check'}"/></svg>${acc ? 'Reopen' : 'Looks fine'}</button>
-            <span style="margin-left:auto;font:11px var(--mono);color:var(--faint);align-self:center">${esc((KIND[i.kind] || {}).who || '')}</span>
+            <button data-act="accept"><svg><use href="#${done ? 'i-x' : 'i-check'}"/></svg>${done ? 'Reopen' : 'Accept as drawn'}</button>
+            <a data-act="more" href="issues.html?id=${encodeURIComponent(state.P.id)}&issue=${encodeURIComponent(i.stateId || '')}"><svg><use href="#i-issues"/></svg>Notes &amp; status</a>
           </div>
         </div>
       </li>`);
@@ -438,18 +300,11 @@ function renderPairChip() {
   const r = state.result, el = $('#pairChip');
   if (!r || !r.floors.length) { el.innerHTML = ''; return; }
   if (state.view === '3d') {
-    el.innerHTML = `<span class="pc-f"><svg><use href="#i-layers"/></svg>${r.floors.length} floors</span><span class="pc-how">drag to orbit · scroll to zoom · click a number</span>`;
+    el.innerHTML = `<span class="pc-f"><svg><use href="#i-xray"/></svg>${r.floors.length} floors</span><span class="pc-how">drag to orbit · scroll to zoom · click a number</span>`;
     return;
   }
-  if (state.view === 'model') {
-    const h = model ? model.h : { floor: 3 };
-    el.innerHTML = `<span class="pc-f"><svg><use href="#i-home"/></svg>3D model · ${r.floors.length} floor${r.floors.length > 1 ? 's' : ''}</span><span class="pc-how">${h.floor.toFixed(2)} m floor to floor · drag to orbit, right-drag to pan</span>`;
-    return;
-  }
-  if (r.floors.length < 2) {
-    el.innerHTML = `<span class="pc-f"><i style="background:var(--ink)"></i>${esc(floorName(r.floors[0]))}</span>`;
-    return;
-  }
+  if (state.view === 'model') { el.innerHTML = ''; return; }
+  if (r.floors.length < 2) { el.innerHTML = `<span class="pc-f"><i style="background:var(--ink)"></i>${esc(floorName(r.floors[0]))}</span>`; return; }
   const k = state.k, lo = r.floors[k - 1], up = r.floors[k], al = r.aligns[k];
   if (state.nudging) {
     const nd = state.nudging;
@@ -466,27 +321,25 @@ function renderPairChip() {
     <span class="pc-how">${esc(how)}</span>
     <span class="pc-step"><button data-act="pair-down" title="Pair below" ${k <= 1 ? 'disabled' : ''}><svg><use href="#i-down"/></svg></button><button data-act="pair-up" title="Pair above" ${k >= r.floors.length - 1 ? 'disabled' : ''}><svg><use href="#i-up"/></svg></button></span>
     <button class="pc-btn" data-act="nudge" title="Line the two floors up by hand"><svg><use href="#i-move"/></svg>Adjust</button>
-    ${state.opts.nudges[k] ? '<button class="pc-btn" data-act="nudge-reset" title="Back to the automatic alignment">Reset</button>' : ''}`;
+    ${opts().nudges && opts().nudges[k] ? '<button class="pc-btn" data-act="nudge-reset" title="Back to the automatic alignment">Reset</button>' : ''}`;
 }
 const fmtMM = (m) => (m >= 0 ? '+' : '−') + Math.abs(Math.round(m * 1000));
 
 function renderLegend() {
   const el = $('#legend');
   const r = state.result;
-  $('#mixWrap').hidden = state.view !== '2d' || !r || r.floors.length < 2;
-  $('#explodeWrap').hidden = state.view !== '3d' || !r;
-  $('#hud2d').hidden = state.view !== '2d' || !r;
-  $('#modelBar').hidden = state.view !== 'model' || !r;
+  const v = state.view;
+  $('#mixWrap').hidden = v !== '2d' || !r || r.floors.length < 2;
+  $('#explodeWrap').hidden = v !== '3d' || !r;
+  $('#hud2d').hidden = v !== '2d' || !r;
+  for (const id of ['levels', 'presets', 'dock']) $('#' + id).hidden = v !== 'model' || !r;
+  if (v !== 'model') { $('#cutPop').hidden = true; $('#heightsPop').hidden = true; }
   if (!r || !r.floors.length) { el.innerHTML = ''; return; }
-  if (state.view === 'model') {
-    const on = !model || model.roomColors;
-    el.innerHTML = on ? ['bedroom', 'living', 'toilet', 'kitchen', 'circulation', 'balcony'].map((t) => `<span class="lg opt"><i style="background:${TYPE_COLOR[t]}"></i>${TYPE_LABEL[t]}</span>`).join('') : '';
-    return;
-  }
-  if (state.view === '3d') {
+  if (v === 'model') { el.innerHTML = ''; return; }
+  if (v === '3d') {
     const types = ['toilet', 'kitchen', 'bedroom', 'living', 'circulation', 'duct', 'stair'];
     el.innerHTML = types.map((t) => `<span class="lg"><i style="background:${TYPE_COLOR[t]}"></i>${TYPE_LABEL[t]}</span>`).join('') +
-      `<span class="lg"><i style="background:var(--high)"></i>Problem column / shaft</span><span class="lg opt"><i class="line" style="background:var(--high)"></i>Plumb line with nothing below</span>`;
+      `<span class="lg"><i style="background:var(--high)"></i>Problem column / shaft</span>`;
     return;
   }
   if (r.floors.length < 2) { el.innerHTML = ''; return; }
@@ -499,6 +352,15 @@ function renderLegend() {
     <span class="lg toggle ${on.overhang ? '' : 'off'}" data-show="overhang" title="Slab beyond the floor below — click to toggle"><i class="hatch" style="color:var(--medium)"></i>Overhang</span>
     <span class="lg toggle opt ${on.labels ? '' : 'off'}" data-show="labels" title="Click to toggle">Aa Names</span>
     ${on.dims ? '<span class="lg toggle" data-show="dims" title="The dimensions drawn in the CAD file — click to hide"><svg style="width:14px;height:14px"><use href="#i-ruler"/></svg>Dimensions</span>' : ''}`;
+}
+
+/** The 3D model's levels strip: top floor first, plus "All". */
+function renderLevels() {
+  const r = state.result, el = $('#levels');
+  if (!r) { el.innerHTML = ''; return; }
+  const focus = model ? model.focus : -1;
+  el.innerHTML = `<button data-lv="-1" class="${focus < 0 ? 'on' : ''}" title="Whole building">All</button>` +
+    r.floors.map((f, k) => ({ f, k })).reverse().map(({ f, k }) => `<button data-lv="${k}" class="${focus === k ? 'on' : ''}" title="Up to ${esc(floorName(f))}">${esc(levelTag(f))}</button>`).join('');
 }
 
 function toggleDims() {
@@ -524,8 +386,9 @@ function select(id, { scroll = false, fly = true } = {}) {
   const iss = id ? r.issues.find((i) => i.id === id) : null;
   if (iss && iss.upper !== state.k) { state.k = iss.upper; plan.setPair(state.k, false); }
   plan.setSelected(id);
-  if (iss && fly) plan.focusIssue(iss);
+  if (iss && fly && state.view === '2d') plan.focusIssue(iss);
   if (stack) { stack.setSelected(id); if (iss && fly && state.view === '3d') stack.focusIssue(iss); }
+  if (model && model.data) { model.setIssue(iss); if (iss && fly && state.view === 'model') focusModelIssue(iss); }
   renderIssues();
   renderFloors();
   renderPairChip();
@@ -544,10 +407,12 @@ function setPair(k) {
   renderFloors();
   renderPairChip();
 }
-function toggleAccept(id) {
+async function toggleAccept(id) {
   const iss = state.result.issues.find((i) => i.id === id);
-  if (!iss) return;
-  if (state.accepted.has(iss.sig)) state.accepted.delete(iss.sig); else state.accepted.add(iss.sig);
+  if (!iss || !iss.stateId) return;
+  setStatus(state.P, iss.stateId, isDone(iss) ? 'open' : 'accepted', '', state.REV.label);
+  state.P.summary = summarize(state.result, state.P);
+  await saveProject(state.P);
   const d = dismissedIds();
   plan.setDismissed(d);
   if (stack) stack.setDismissed(d);
@@ -563,16 +428,14 @@ function startNudge() {
   renderPairChip();
   toast('Drag the violet (upper) floor until the walls turn white. Arrow keys nudge.');
 }
-function cancelNudge() {
-  state.nudging = null;
-  plan.setNudge(null);
-  renderPairChip();
-}
+function cancelNudge() { state.nudging = null; plan.setNudge(null); renderPairChip(); }
 function applyNudge() {
   const n = state.nudging;
   if (!n) return;
-  const prev = state.opts.nudges[n.k] || [0, 0];
-  state.opts.nudges = { ...state.opts.nudges, [n.k]: [prev[0] + n.dx, prev[1] + n.dy] };
+  const nudges = { ...(opts().nudges || {}) };
+  const prev = nudges[n.k] || [0, 0];
+  nudges[n.k] = [prev[0] + n.dx, prev[1] + n.dy];
+  opts().nudges = nudges;
   state.nudging = null;
   plan.setNudge(null);
   runAnalysis();
@@ -591,17 +454,21 @@ function openRoomPicker(pr) {
   pop.id = 'picker';
   const named = !!(room.label && room.label.trim());
   pop.innerHTML = `<h4>${esc(room.name)} <span style="color:var(--muted);font-weight:400">· ${esc(floorName(f))}</span></h4>
-    <p>${fmtArea(room.area)}${room.sizeText ? ' · ' + esc(room.sizeText) : ''} · read as <b>${esc(TYPE_LABEL[room.type])}</b>. ${named ? `Wrong? Pick what every room called “${esc(room.label.trim())}” is:` : 'This space has no name in the drawing, so it can’t be re-typed here — label it in CAD.'}</p>
+    <p>${fmtArea(room.area)}${room.sizeText ? ' · ' + esc(room.sizeText) : ''} · read as <b>${esc(TYPE_LABEL[room.type])}</b>. ${named ? `Wrong? Pick what every room called “${esc(room.label.trim())}” is:` : 'This space has no name in the drawing, so it can’t be re-typed here. Label it in CAD.'}</p>
     ${named ? `<div class="types">${ROOM_TYPES.map((t) => `<button data-type="${t}" class="${t === room.type ? 'on' : ''}"><i style="background:${TYPE_COLOR[t]}"></i>${TYPE_LABEL[t]}</button>`).join('')}</div>` : ''}`;
   stage.appendChild(pop);
   const W = stage.clientWidth, H = stage.clientHeight;
   const pw = pop.offsetWidth, ph = pop.offsetHeight;
   pop.style.left = Math.min(W - pw - 8, Math.max(8, pr.sx + 12)) + 'px';
   pop.style.top = Math.min(H - ph - 8, Math.max(8, pr.sy + 12)) + 'px';
-  pop.addEventListener('click', (e) => {
+  pop.addEventListener('click', async (e) => {
     const b = e.target.closest('button[data-type]');
     if (!b) return;
-    state.opts.types.set(normName(room.label), b.dataset.type);
+    const key = normName(room.label);
+    const types = new Map(opts().types || []);
+    types.set(key, b.dataset.type);
+    opts().types = [...types];
+    state.SET = await saveSettings({ roomTypes: { ...(state.SET.roomTypes || {}), [key]: b.dataset.type } });
     closePicker();
     toast(`“${room.label.trim()}” is now read as ${TYPE_LABEL[b.dataset.type].toLowerCase()}. Re-checking…`);
     runAnalysis();
@@ -614,8 +481,8 @@ function showTip(pr) {
   const tip = $('#tip');
   if (!pr || $('#picker')) { tip.hidden = true; return; }
   const rows = [];
-  const room = (r) => r ? `${esc(r.name)}<small>${fmtArea(r.area)}</small>` : '<span style="color:var(--faint)">—</span>';
-  const col = (c) => c ? `<small>column ${Math.round(c.w * 1000)}×${Math.round(c.h * 1000)}</small>` : '';
+  const room = (r) => (r ? `${esc(r.name)}<small>${fmtArea(r.area)}</small>` : '<span style="color:var(--faint)">—</span>');
+  const col = (c) => (c ? `<small>column ${Math.round(c.w * 1000)}×${Math.round(c.h * 1000)}</small>` : '');
   if (state.result.floors.length > 1) {
     rows.push(`<div class="t-row"><span class="t-k above">Above</span><span class="t-v">${room(pr.above)}${col(pr.colAbove)}</span></div>`);
     rows.push(`<div class="t-row"><span class="t-k below">Below</span><span class="t-v">${room(pr.below)}${col(pr.colBelow)}</span></div>`);
@@ -634,69 +501,84 @@ function showTip(pr) {
 }
 function hideTip() { $('#tip').hidden = true; }
 
-// ------------------------------------------------------------------ view switch, theme, chrome
+// ------------------------------------------------------------------ panels
+const panelPref = (v) => { try { return localStorage.getItem('plumb.ws.panels.' + v); } catch { return null; } };
+const setPanelPref = (v, s) => { try { localStorage.setItem('plumb.ws.panels.' + v, s); } catch { /* private mode */ } };
+function applyPanels() {
+  const v = state.view;
+  const wide = innerWidth > 980;
+  const saved = panelPref(v);
+  const def = v === 'model' ? '' : v === '3d' ? 'r' : wide ? 'lr' : '';
+  const s = saved ?? def;
+  document.body.classList.toggle('no-left', !s.includes('l'));
+  document.body.classList.toggle('no-right', !s.includes('r'));
+  $('#leftToggle').setAttribute('aria-pressed', String(s.includes('l')));
+  $('#rightToggle').setAttribute('aria-pressed', String(s.includes('r')));
+  requestAnimationFrame(() => { plan._resize(); plan.request(); if (stack) { stack._resize(); stack.request(); } if (model) { model._resize(); model.request(); } });
+}
+function togglePanel(side) {
+  const cur = (document.body.classList.contains('no-left') ? '' : 'l') + (document.body.classList.contains('no-right') ? '' : 'r');
+  const next = cur.includes(side) ? cur.replace(side, '') : cur + side;
+  setPanelPref(state.view, next);
+  applyPanels();
+}
+
+// ------------------------------------------------------------------ view switch
 async function setView(v) {
   state.view = v;
   document.querySelectorAll('#viewSeg button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+  document.body.dataset.view = v;
   $('#plan').hidden = v !== '2d';
   $('#view3d').hidden = v !== '3d';
   $('#model3d').hidden = v !== 'model';
-  $('#heightsPop').hidden = true;
   hideTip(); closePicker();
-  if (v === 'model') {
-    if (state.nudging) cancelNudge();
-    renderPairChip(); renderLegend();
-    await showModel();
-    return;
-  }
+  document.body.classList.remove('hide-ui');
+  $('#hideHint').hidden = true;
+  const hash = v === '2d' ? '#plan' : v === '3d' ? '#stack' : '#model';
+  if (location.hash !== hash) history.replaceState(null, '', location.pathname + location.search + hash);
+  applyPanels();
+  renderPairChip();
+  renderLegend();
+  if (!state.result) return;
+  if (v === 'model') { if (state.nudging) cancelNudge(); await showModel(); return; }
   if (v === '3d') {
     if (state.nudging) cancelNudge();
     const s = await getStack();
-    if (state.result && s.data !== state.result) { s.setData(state.result); s.setDismissed(dismissedIds()); s.setSelected(state.selected); }
+    if (s.data !== state.result) { s.setData(state.result); s.setDismissed(dismissedIds()); s.setSelected(state.selected); }
     s._resize();
     const iss = state.selected && state.result.issues.find((i) => i.id === state.selected);
     if (iss) s.focusIssue(iss);
     s.request();
-  } else {
-    plan._resize();
-    plan.request();
-  }
-  renderPairChip();
-  renderLegend();
+  } else { plan._resize(); plan.request(); }
 }
 
-// ------------------------------------------------------------------ the 3D model
-let model = null;
-async function getModel() {
-  if (model) return model;
-  const { Model3D } = await import('./model3d.js');
-  model = new Model3D($('#model3d'));
-  model.setTheme(state.theme);
-  model.setHeights(loadHeights());
-  return model;
-}
-function loadHeights() { try { return JSON.parse(store.get('heights') || '{}'); } catch { return {}; } }
 async function showModel() {
   if (!state.result || !state.result.floors.length) return;
   const [m, mass] = await Promise.all([getModel(), ensureMass()]);
   if (!mass || state.view !== 'model') return;
-  if (m.data !== state.result || m.mass !== mass) {
-    m.setData(state.result, mass);
-    renderModelBar();
-  }
+  if (m.data !== state.result || m.mass !== mass) m.setData(state.result, mass);
   m._resize();
+  const iss = state.selected && state.result.issues.find((i) => i.id === state.selected);
+  m.setIssue(iss);
+  if (iss) focusModelIssue(iss);
   m.request();
+  renderLevels();
+  syncDock();
 }
-function renderModelBar() {
-  const r = state.result;
-  if (!r || !model) return;
-  const sel = $('#mFloor');
-  const cur = model.focus;
-  sel.innerHTML = `<option value="-1">All floors</option>` + r.floors.map((f, k) => `<option value="${k}">Up to ${esc(levelTag(f))} · ${esc(floorName(f))}</option>`).join('');
-  sel.value = String(cur < r.floors.length ? cur : -1);
-  $('#mRoof').setAttribute('aria-pressed', String(model.roof));
-  $('#mColors').setAttribute('aria-pressed', String(model.roomColors));
-  $('#mCut').value = String(Math.round(model.cut * 100));
+/** Open the model up to the issue's floor, cut into it, and fly to the pin. */
+function focusModelIssue(iss) {
+  model.focusIssue(iss);
+  $('#mCut').value = Math.round(model.cut * 100);
+  $('#cutPop').hidden = false;
+  renderLevels();
+  syncDock();
+}
+function syncDock() {
+  if (!model) return;
+  $('#dkRoof').setAttribute('aria-pressed', String(model.roof));
+  $('#dkColors').setAttribute('aria-pressed', String(model.roomColors));
+  $('#dkCut').setAttribute('aria-pressed', String(model.cut < 0.999));
+  $('#cutVal').textContent = model.cut < 0.999 ? `${(model.cut * (model.h.floor - model.h.slab)).toFixed(1)} m` : '';
 }
 function openHeights() {
   const pop = $('#heightsPop');
@@ -706,23 +588,19 @@ function openHeights() {
 }
 
 function setTheme(t) {
-  state.theme = t;
-  document.documentElement.dataset.theme = t;
-  store.set('theme', t);
-  $('#themeBtn use').setAttribute('href', t === 'dark' ? '#i-sun' : '#i-moon');
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', t === 'dark' ? '#0b0d10' : '#f8f7f3');
+  applyTheme(t);
   plan.setTheme(t);
   if (stack) stack.setTheme(t);
   if (model) model.setTheme(t);
 }
 
+// ------------------------------------------------------------------ chrome
 let busyTimer = 0;
 function busy(text) {
   const el = $('#busy');
   clearTimeout(busyTimer);
   if (!text) { el.hidden = true; return; }
   $('#busyText').textContent = text;
-  // don't flash the spinner for instant work
   if (el.hidden) busyTimer = setTimeout(() => { el.hidden = false; }, 120); else el.hidden = false;
 }
 let toastTimer = 0;
@@ -734,79 +612,94 @@ function toast(msg, bad = false) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), bad ? 6500 : 3200);
 }
-function failed(msg) { toast(msg, true); }
+
+function menu() {
+  document.querySelector('.menu')?.remove();
+  const m = document.createElement('div');
+  m.className = 'popover menu';
+  const pid = encodeURIComponent(state.P.id);
+  m.innerHTML = `<a href="project.html?id=${pid}">Project overview</a><a href="issues.html?id=${pid}">All issues</a><a href="import.html?project=${pid}">Upload a revision…</a>
+    <hr /><button data-m="dxf">Markups DXF</button><button data-m="csv">Issue log CSV</button><button data-m="report">Printable report</button>
+    <hr /><button data-m="rfi">Draft RFIs with AI…</button><button data-m="naming">Ask AI about layer names…</button>
+    <hr /><a href="settings.html">Settings</a><a href="help.html">Help</a><a href="./">All projects</a>`;
+  document.body.appendChild(m);
+  const r = $('#menuBtn').getBoundingClientRect();
+  m.style.position = 'fixed';
+  m.style.top = r.bottom + 6 + 'px';
+  m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.right - m.offsetWidth)) + 'px';
+  m.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-m]');
+    if (!b) return;
+    m.remove();
+    ({ dxf: exportDXF, csv: exportCSV, report: printReport, rfi: () => openAI('rfi'), naming: () => openAI('naming') })[b.dataset.m]();
+  });
+  setTimeout(() => document.addEventListener('pointerdown', function close(e) { if (!m.contains(e.target) && e.target !== $('#menuBtn')) { m.remove(); document.removeEventListener('pointerdown', close); } }), 0);
+}
 
 // ------------------------------------------------------------------ exports
-function baseName() { return (state.label || 'drawing').replace(/\.dxf$/i, '').replace(/[^\w.-]+/g, '-'); }
+const baseName = () => `${state.P.name}-${state.REV.label}`.replace(/[^\w.-]+/g, '-');
 function exportDXF() {
-  if (!state.result || !state.result.issues.length) { toast('Nothing to mark up — no issues found.'); return; }
-  const text = markupsDXF(state.result, dismissedIds(), { file: state.label, date: new Date().toISOString().slice(0, 10) });
-  download(`${baseName()}-plumb-markups.dxf`, text, 'application/dxf');
-  toast('Markups saved. XREF (or insert) at 0,0 over your drawing — each issue is ringed on both floors, on PLUMB-* layers.');
+  if (!state.result || !state.result.issues.length) { toast('Nothing to mark up. No issues found.'); return; }
+  download(`${baseName()}-markups.dxf`, markupsDXF(state.result, dismissedIds(), { file: state.P.name, date: new Date().toISOString().slice(0, 10) }), 'application/dxf');
+  toast('Markups saved. XREF (or insert) at 0,0 over your drawing; each open issue is ringed on both floors, on PLUMB-* layers.');
 }
-function exportCSV() {
-  if (!state.result) return;
-  download(`${baseName()}-plumb-issues.csv`, issuesCSV(state.result, dismissedIds()), 'text/csv');
-}
+function exportCSV() { if (state.result) download(`${baseName()}-issues.csv`, issuesCSV(state.result, dismissedIds()), 'text/csv'); }
 function printReport() {
   if (!state.result) return;
   const units = { 1: 'mm', 10: 'cm', 1000: 'm', 25.4: 'in', 304.8: 'ft' }[state.result.unit.mm] || `${state.result.unit.mm} mm`;
-  $('#printSheet').innerHTML = reportHTML(state.result, dismissedIds(), { file: state.label, date: new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }), units, rfis: state.rfis }, (iss) => plan.snapshot(iss));
+  $('#printSheet').innerHTML = reportHTML(state.result, dismissedIds(), { file: `${state.P.name} · ${state.REV.label}`, date: new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }), units, rfis: state.rfis }, (iss) => plan.snapshot(iss));
   setTimeout(() => window.print(), 60);
 }
 
-// ------------------------------------------------------------------ Claude assist (optional, your key)
+// ------------------------------------------------------------------ AI assist (optional, your key)
 function openAI(mode) {
   const r = state.result;
   if (!r || !r.floors.length) return;
-  const open = r.issues.filter((i) => !state.accepted.has(i.sig));
+  const open = openIssues();
   if (mode === 'rfi' && !open.length) { toast('No open findings to write up.'); return; }
   state.ai = { mode, abort: null, naming: null };
   const nLayers = r.layers.filter((l) => l.stats && l.stats.segs + l.stats.arcs + l.stats.texts + l.stats.fills > 0).length;
   const nLabels = new Set(r.an.flatMap((a) => a.rooms.map((q) => (q.label || '').trim()).filter(Boolean))).size;
   $('#aiTitle').textContent = mode === 'naming' ? 'Read my drawing’s naming' : 'Draft RFIs for each consultant';
   $('#aiIntro').innerHTML = mode === 'naming'
-    ? 'Plumb reads layers and room labels with rules. Office layer codes, abbreviations (<i>M.B.R., K.T., T&amp;B</i>) or labels in another language can trip it up. Claude reads the names and suggests corrections; you pick which to apply.'
-    : `Claude turns the ${open.length} open finding${open.length > 1 ? 's' : ''} into one RFI per consultant (structure, plumbing, lifts), ready to paste into an email or your RFI log. They also go into the printed report.`;
+    ? 'Plumb reads layers and room labels with rules. Office layer codes, abbreviations (<i>M.B.R., K.T., T&amp;B</i>) or labels in Gujarati or Hindi can trip it up. The AI reads the names and suggests corrections; you pick which to apply.'
+    : `The AI turns the ${open.length} open finding${open.length > 1 ? 's' : ''} into one RFI per consultant (structure, plumbing, lifts), ready to paste into an email. They also go into the printed report.`;
   $('#aiWhat').textContent = mode === 'naming'
     ? `Sent: ${nLayers} layer names with counts of what’s drawn on each, and ${nLabels} room labels. No geometry.`
-    : 'Sent: the findings (titles, floors, positions in words) and the file name. No geometry.';
+    : 'Sent: the findings (titles, floors, positions in words) and the project name. No geometry.';
   $('#aiGoText').textContent = mode === 'naming' ? 'Read the names' : 'Draft RFIs';
-  $('#aiKey').value = state.apiKey;
-  $('#aiRemember').checked = !!store.get('key');
+  $('#aiKey').value = state.SET.ai.key || '';
   aiStatus('');
   $('#aiOut').innerHTML = mode === 'rfi' && state.rfis ? rfiHTML(state.rfis) : '';
   $('#aiDlg').showModal();
-  if (!state.apiKey) $('#aiKey').focus();
+  if (!state.SET.ai.key) $('#aiKey').focus();
 }
-
 let aiTimer = 0;
 function aiStatus(text, bad = false, spin = false) {
   const el = $('#aiStatus');
   el.classList.toggle('bad', bad);
   el.innerHTML = (spin ? '<span class="spinner"></span>' : '') + esc(text);
 }
-
 async function runAI(e) {
   e.preventDefault();
   const ai = state.ai;
   if (!ai || ai.abort) return;
   const key = $('#aiKey').value.trim();
   if (!/^sk-ant-[\w-]{10,}$/.test(key)) { aiStatus('That doesn’t look like an Anthropic API key (it starts with sk-ant-).', true); return; }
-  state.apiKey = key;
-  if ($('#aiRemember').checked) store.set('key', key); else store.del('key');
+  if ($('#aiRemember').checked && key !== state.SET.ai.key) state.SET = await saveSettings({ ai: { ...state.SET.ai, key, enabled: true } });
   ai.abort = new AbortController();
   $('#aiGo').disabled = true;
   const t0 = performance.now();
-  const say = () => aiStatus(`${ai.mode === 'naming' ? 'Claude is reading the names' : 'Claude is drafting'}… ${Math.round((performance.now() - t0) / 1000)} s`, false, true);
+  const say = () => aiStatus(`${ai.mode === 'naming' ? 'Reading the names' : 'Drafting the RFIs'}… ${Math.round((performance.now() - t0) / 1000)} s`, false, true);
   say();
   aiTimer = setInterval(say, 1000);
   try {
+    const { readNaming, draftRFIs } = await import('./ai.js');
     if (ai.mode === 'naming') {
       ai.naming = await readNaming(key, state.result, ai.abort.signal);
       $('#aiOut').innerHTML = namingHTML(ai.naming);
     } else {
-      state.rfis = await draftRFIs(key, state.result, dismissedIds(), { file: state.label }, ai.abort.signal);
+      state.rfis = await draftRFIs(key, state.result, dismissedIds(), { file: state.P.name }, ai.abort.signal);
       $('#aiOut').innerHTML = rfiHTML(state.rfis);
     }
     aiStatus(`Done in ${Math.round((performance.now() - t0) / 1000)} s.`);
@@ -818,11 +711,10 @@ async function runAI(e) {
     $('#aiGo').disabled = false;
   }
 }
-
 function namingHTML(out) {
   const n = out.layers.length + out.rooms.length;
   const note = out.notes ? `<p class="ai-note">${esc(out.notes)}</p>` : '';
-  if (!n) return `${note}<p class="ai-note">Claude checked ${out.sent.layers} layers and ${out.sent.rooms} room labels and agrees with how Plumb read them.</p>`;
+  if (!n) return `${note}<p class="ai-note">The AI checked ${out.sent.layers} layers and ${out.sent.rooms} room labels and agrees with how Plumb read them.</p>`;
   const rows = (items, kind) => items.map((it, i) => `<tr>
       <td><label><input type="checkbox" checked data-kind="${kind}" data-i="${i}" /> ${esc(kind === 'layer' ? it.name : it.label)}</label></td>
       <td><span class="from">${esc(kind === 'layer' ? ROLE_LABEL[it.from] : TYPE_LABEL[it.from])}</span> → <span class="to">${esc(kind === 'layer' ? ROLE_LABEL[it.role] : TYPE_LABEL[it.type])}</span></td>
@@ -832,86 +724,48 @@ function namingHTML(out) {
     ${out.rooms.length ? `<table class="ai-table"><thead><tr><th>Room label</th><th>Type</th><th>Why</th></tr></thead><tbody>${rows(out.rooms, 'room')}</tbody></table>` : ''}
     <button class="btn primary" data-act="apply-naming"><svg><use href="#i-check"/></svg>Apply and re-check</button>`;
 }
-
-function applyNaming() {
+async function applyNaming() {
   const nm = state.ai && state.ai.naming;
   if (!nm) return;
+  const roles = new Map(opts().roles || []), types = new Map(opts().types || []);
   let n = 0;
   for (const cb of document.querySelectorAll('#aiOut input[type=checkbox]:checked')) {
     const it = (cb.dataset.kind === 'layer' ? nm.layers : nm.rooms)[+cb.dataset.i];
     if (!it) continue;
-    if (cb.dataset.kind === 'layer') state.opts.roles.set(it.name, it.role);
-    else state.opts.types.set(normName(it.label), it.type);
+    if (cb.dataset.kind === 'layer') roles.set(it.name, it.role); else types.set(normName(it.label), it.type);
     n++;
   }
   $('#aiDlg').close();
   if (!n) return;
-  toast(`Applied ${n} correction${n > 1 ? 's' : ''} from Claude. Re-checking…`);
+  opts().roles = [...roles]; opts().types = [...types];
+  toast(`Applied ${n} correction${n > 1 ? 's' : ''} from AI. Re-checking…`);
   runAnalysis();
 }
-
 function rfiHTML(rfis) {
   if (!rfis.length) return '<p class="ai-note">Nothing to send.</p>';
   return `<div style="display:flex;justify-content:flex-end;margin:0 0 8px"><button class="btn small" data-act="copy-all"><svg><use href="#i-dl"/></svg>Copy all</button></div>` +
-    rfis.map((r, i) => `<div class="rfi">
-      <div class="rfi-head"><span class="rfi-to">${esc(r.to)}</span><button class="btn small" data-act="copy" data-i="${i}">Copy</button></div>
-      <div class="rfi-subject">${esc(r.subject)}</div>
-      <p class="rfi-body">${esc(r.body)}</p>
-    </div>`).join('');
+    rfis.map((r, i) => `<div class="rfi"><div class="rfi-head"><span class="rfi-to">${esc(r.to)}</span><button class="btn small" data-act="copy" data-i="${i}">Copy</button></div>
+      <div class="rfi-subject">${esc(r.subject)}</div><p class="rfi-body">${esc(r.body)}</p></div>`).join('');
 }
 const rfiText = (r) => `To: ${r.to}\nSubject: ${r.subject}\n\n${r.body}\n`;
-async function copyText(t) {
-  try { await navigator.clipboard.writeText(t); toast('Copied.'); } catch { toast('Couldn’t copy — select the text instead.', true); }
-}
+async function copyText(t) { try { await navigator.clipboard.writeText(t); toast('Copied.'); } catch { toast('Couldn’t copy. Select the text instead.', true); } }
 
 // ------------------------------------------------------------------ events
 function wire() {
-  $('#fileInput').addEventListener('change', (e) => { if (e.target.files.length) openFiles(e.target.files); e.target.value = ''; });
-  $('#openBtn').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#fileInput').click(); } });
-  $('#sampleBtn').addEventListener('click', loadSample);
   $('#viewSeg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setView(b.dataset.v); });
-  $('#themeBtn').addEventListener('click', () => setTheme(state.theme === 'dark' ? 'light' : 'dark'));
-  $('#helpBtn').addEventListener('click', () => $('#helpDlg').showModal());
-  $('#helpClose').addEventListener('click', () => $('#helpDlg').close());
-  $('#helpDlg').addEventListener('click', (e) => { if (e.target === $('#helpDlg')) $('#helpDlg').close(); });
-  $('#bannerX').addEventListener('click', () => { $('#banner').hidden = true; store.set('bannerSeen', '1'); });
+  $('#themeBtn').addEventListener('click', () => setTheme(themeNow() === 'dark' ? 'light' : 'dark'));
+  $('#menuBtn').addEventListener('click', menu);
+  $('#leftToggle').addEventListener('click', () => togglePanel('l'));
+  $('#rightToggle').addEventListener('click', () => togglePanel('r'));
   $('#zoomIn').addEventListener('click', () => plan.zoomBy(1.4));
   $('#zoomOut').addEventListener('click', () => plan.zoomBy(1 / 1.4));
   $('#zoomFit').addEventListener('click', () => plan.fit(true));
   $('#dimBtn').addEventListener('click', toggleDims);
-  $('#mFloor').addEventListener('change', (e) => { model && model.setFocus(+e.target.value); });
-  $('#mCut').addEventListener('input', (e) => { model && model.setCut(+e.target.value / 100); });
-  $('#mRoof').addEventListener('click', () => { if (!model) return; model.setRoof(!model.roof); renderModelBar(); });
-  $('#mColors').addEventListener('click', () => { if (!model) return; model.setRoomColors(!model.roomColors); renderModelBar(); renderLegend(); });
-  $('#mHeights').addEventListener('click', () => model && openHeights());
-  $('#hpReset').addEventListener('click', async () => {
-    const { DEFAULT_HEIGHTS } = await import('./model3d.js');
-    store.del('heights'); model.setHeights(DEFAULT_HEIGHTS); $('#heightsPop').hidden = true; renderPairChip();
-  });
-  $('#heightsPop').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const f = e.target, h = {};
-    for (const k of ['floor', 'slab', 'door', 'sill', 'head', 'parapet']) { const v = parseFloat(f.elements[k].value); if (Number.isFinite(v)) h[k] = v; }
-    h.head = Math.max(h.head ?? model.h.head, (h.sill ?? model.h.sill) + 0.3);
-    model.setHeights(h);
-    store.set('heights', JSON.stringify(model.h));
-    f.hidden = true;
-    renderPairChip();
-  });
-  $('#mExport').addEventListener('click', async () => {
-    if (!model || !model.data) return;
-    busy('Packing the model…');
-    try { download(`${baseName()}-model.glb`, await model.exportGLB()); toast('Saved a .glb — opens in Blender, SketchUp (glTF importer), Rhino 8, Windows 3D Viewer or any glTF viewer.'); }
-    catch (err) { console.error(err); toast('Couldn’t export the model.', true); }
-    finally { busy(null); }
-  });
   $('#mix').addEventListener('input', (e) => plan.setMix(+e.target.value / 100));
   $('#explode').addEventListener('input', async (e) => (await getStack()).setExplode(+e.target.value / 100));
   $('#exportDxf').addEventListener('click', exportDXF);
-  $('#exportCsv').addEventListener('click', exportCSV);
   $('#printBtn').addEventListener('click', printReport);
   $('#aiNaming').addEventListener('click', () => openAI('naming'));
-  $('#aiRfi').addEventListener('click', () => openAI('rfi'));
   $('#aiForm').addEventListener('submit', runAI);
   $('#aiClose').addEventListener('click', () => $('#aiDlg').close());
   $('#aiDlg').addEventListener('close', () => { if (state.ai && state.ai.abort) state.ai.abort.abort(); });
@@ -924,11 +778,62 @@ function wire() {
     if (b.dataset.act === 'copy-all') copyText(state.rfis.map(rfiText).join('\n---\n\n'));
   });
 
+  // 3D model controls
+  $('#levels').addEventListener('click', (e) => { const b = e.target.closest('[data-lv]'); if (b && model) { model.setFocus(+b.dataset.lv); renderLevels(); } });
+  $('#presets').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-view]');
+    if (!b || !model) return;
+    document.querySelectorAll('#presets button').forEach((q) => q.classList.toggle('on', q === b));
+    model.viewPreset(b.dataset.view);
+  });
+  $('#dkFit').addEventListener('click', () => model && model.fit(true));
+  $('#dkCut').addEventListener('click', () => {
+    if (!model) return;
+    const on = model.cut >= 0.999;
+    model.setCut(on ? +$('#mCut').value / 100 : 1);
+    $('#cutPop').hidden = !on;
+    syncDock();
+  });
+  $('#mCut').addEventListener('input', (e) => { if (model) { model.setCut(+e.target.value / 100); syncDock(); } });
+  $('#dkRoof').addEventListener('click', () => { if (model) { model.setRoof(!model.roof); syncDock(); } });
+  $('#dkColors').addEventListener('click', () => { if (model) { model.setRoomColors(!model.roomColors); syncDock(); } });
+  $('#dkHeights').addEventListener('click', () => model && openHeights());
+  $('#dkShot').addEventListener('click', () => {
+    if (!model) return;
+    const url = model.snapshot();
+    fetch(url).then((r) => r.blob()).then((b) => download(`${baseName()}-3d.png`, b)).catch(() => toast('Couldn’t save the picture.', true));
+  });
+  $('#dkGlb').addEventListener('click', async () => {
+    if (!model || !model.data) return;
+    busy('Packing the model…');
+    try { download(`${baseName()}-model.glb`, await model.exportGLB()); toast('Saved a .glb: opens in Blender, SketchUp (glTF importer), Rhino 8 or any glTF viewer.'); }
+    catch (err) { console.error(err); toast('Couldn’t export the model.', true); }
+    finally { busy(null); }
+  });
+  $('#hpReset').addEventListener('click', async () => {
+    state.P.heights = null;
+    await saveProject(state.P);
+    model.setHeights(state.SET.heights);
+    $('#heightsPop').hidden = true;
+    syncDock();
+  });
+  $('#heightsPop').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target, h = {};
+    for (const k of ['floor', 'slab', 'door', 'sill', 'head', 'parapet']) { const v = parseFloat(f.elements[k].value); if (Number.isFinite(v)) h[k] = v; }
+    h.head = Math.max(h.head ?? model.h.head, (h.sill ?? model.h.sill) + 0.3);
+    model.setHeights(h);
+    state.P.heights = { ...model.h };
+    await saveProject(state.P);
+    f.hidden = true;
+    syncDock();
+    toast('Heights saved with this project.');
+  });
+
   $('#legend').addEventListener('click', (e) => {
     const t = e.target.closest('[data-show]');
     if (!t) return;
-    const key = t.dataset.show;
-    plan.setShow(key, !plan.show[key]);
+    plan.setShow(t.dataset.show, !plan.show[t.dataset.show]);
     renderLegend();
     renderDimBtn();
   });
@@ -941,7 +846,7 @@ function wire() {
     if (a === 'nudge') startNudge();
     if (a === 'nudge-cancel') cancelNudge();
     if (a === 'nudge-apply') applyNudge();
-    if (a === 'nudge-reset') { const nd = { ...state.opts.nudges }; delete nd[state.k]; state.opts.nudges = nd; runAnalysis(); }
+    if (a === 'nudge-reset') { const nd = { ...(opts().nudges || {}) }; delete nd[state.k]; opts().nudges = nd; runAnalysis(); }
   });
   $('#floors').addEventListener('click', (e) => {
     const joint = e.target.closest('.joint');
@@ -956,8 +861,8 @@ function wire() {
       else if (a === 'down' && p > 0) [all[p], all[p - 1]] = [all[p - 1], all[p]];
       else if (a === 'toggle') all[p].excluded = !all[p].excluded;
       else return;
-      state.floorsEdited = true;
-      state.opts.nudges = {};
+      opts().floors = all;
+      opts().nudges = {};
       state.selected = null;
       runAnalysis();
       return;
@@ -965,11 +870,21 @@ function wire() {
     const k = includedIndex(all[p]);
     if (k >= 0 && state.result.floors.length > 1) setPair(Math.max(1, k));
   });
-  $('#layers').addEventListener('change', (e) => {
+  $('#layers').addEventListener('change', async (e) => {
     const s = e.target.closest('select[data-layer]');
     if (!s) return;
     const l = state.result.layers.find((q) => q.name === s.dataset.layer);
-    if (l && s.value === l.autoRole) state.opts.roles.delete(l.name); else state.opts.roles.set(s.dataset.layer, s.value);
+    const roles = new Map(opts().roles || []);
+    if (l && s.value === l.autoRole) roles.delete(l.name); else roles.set(s.dataset.layer, s.value);
+    opts().roles = [...roles];
+    state.SET = await saveSettings({ layerRoles: { ...(state.SET.layerRoles || {}), [s.dataset.layer]: s.value } });
+    runAnalysis();
+  });
+  $('#unitsRow').addEventListener('change', (e) => {
+    if (e.target.id !== 'unitSel') return;
+    opts().unitMM = +e.target.value;
+    opts().floors = null;
+    opts().nudges = {};
     runAnalysis();
   });
   $('#filters').addEventListener('click', (e) => {
@@ -981,30 +896,30 @@ function wire() {
   $('#issues').addEventListener('click', (e) => {
     const li = e.target.closest('.iss');
     if (!li) return;
-    const btn = e.target.closest('button[data-act]');
+    const btn = e.target.closest('[data-act]');
+    if (btn && btn.dataset.act === 'more') return;
     if (btn && btn.dataset.act === 'accept') { toggleAccept(li.dataset.id); return; }
     if (btn && btn.dataset.act === 'zoom') { select(li.dataset.id); return; }
     select(li.dataset.id === state.selected && !btn ? null : li.dataset.id);
   });
-  $('#issues').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && e.target.classList.contains('iss')) select(e.target.dataset.id);
-  });
+  $('#issues').addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.classList.contains('iss')) select(e.target.dataset.id); });
 
-  // drag & drop anywhere
+  // a new revision can be dropped straight onto the workspace
   let depth = 0;
   window.addEventListener('dragenter', (e) => { if ([...(e.dataTransfer?.types || [])].includes('Files')) { depth++; $('#dropveil').hidden = false; } });
   window.addEventListener('dragleave', () => { depth = Math.max(0, depth - 1); if (!depth) $('#dropveil').hidden = true; });
   window.addEventListener('dragover', (e) => e.preventDefault());
-  window.addEventListener('drop', (e) => {
+  window.addEventListener('drop', async (e) => {
     e.preventDefault();
     depth = 0; $('#dropveil').hidden = true;
-    if (e.dataTransfer?.files?.length) openFiles(e.dataTransfer.files);
+    if (await pendDrawings(e.dataTransfer?.files || [])) location.href = `import.html?project=${encodeURIComponent(state.P.id)}`;
+    else toast('Plumb reads DWG and DXF drawings.', true);
   });
 
   document.addEventListener('pointerdown', (e) => {
     if (!(e.target instanceof Element)) return;
     if ($('#picker') && !e.target.closest('#picker') && e.target !== $('#plan')) closePicker();
-    if (!$('#heightsPop').hidden && !e.target.closest('#heightsPop, #mHeights')) $('#heightsPop').hidden = true;
+    if (!$('#heightsPop').hidden && !e.target.closest('#heightsPop, #dkHeights')) $('#heightsPop').hidden = true;
   });
   window.addEventListener('keydown', (e) => {
     if (e.target instanceof Element && e.target.closest('input, select, textarea, dialog[open]')) return;
@@ -1015,9 +930,9 @@ function wire() {
       if (e.key === 'Enter') { applyNudge(); return; }
       if (e.key === 'Escape') { cancelNudge(); return; }
     }
-    if (e.key === 'Escape') { closePicker(); if (state.selected) select(null, { fly: false }); return; }
+    if (e.key === 'Escape') { closePicker(); if (document.body.classList.contains('hide-ui')) { document.body.classList.remove('hide-ui'); $('#hideHint').hidden = true; } if (state.selected) select(null, { fly: false }); return; }
     if (!state.result) return;
-    if (e.key === 'j' || e.key === 'k' || ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && e.target.closest('#issues'))) {
+    if (e.key === 'j' || e.key === 'k' || ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && e.target instanceof Element && e.target.closest('#issues'))) {
       const list = [...document.querySelectorAll('#issues .iss')].map((li) => li.dataset.id);
       if (!list.length) return;
       e.preventDefault();
@@ -1031,13 +946,45 @@ function wire() {
     if (e.key === 'm') setView('model');
     if (e.key === 'f') { if (state.view === '2d') plan.fit(true); else if (state.view === 'model') model && model.fit(true); else stack && stack.fit(true); }
     if (e.key === 'd' && state.view === '2d') toggleDims();
+    if (e.key === 'h' && state.view === 'model') {
+      const on = document.body.classList.toggle('hide-ui');
+      $('#hideHint').hidden = !on;
+      requestAnimationFrame(() => { if (model) { model._resize(); model.request(); } });
+    }
   });
+  window.addEventListener('resize', () => applyPanels());
+  window.addEventListener('plumb:theme', (e) => { plan.setTheme(e.detail); if (stack) stack.setTheme(e.detail); if (model) model.setTheme(e.detail); });
 }
 
 // ------------------------------------------------------------------ boot
-window.plumb = { state, plan, get stack() { return stack; }, get model() { return model; }, select, setView, setPair, openAI, namingHTML, rfiHTML }; // handy from the console
+window.plumb = { state, plan, get stack() { return stack; }, get model() { return model; }, select, setView, setPair };
 wire();
-setTheme(state.theme);
-setView('2d');
-renderAll();
-loadSample();
+(async () => {
+  const id = qs('id');
+  if (!id) { location.replace('./'); return; }
+  const want = location.hash === '#model' ? 'model' : location.hash === '#stack' ? '3d' : '2d';
+  state.view = want;
+  document.body.dataset.view = want;
+  applyPanels();
+  try {
+    state.SET = await getSettings();
+    const { project, rev, result } = await openProject(id, (s) => busy(s));
+    state.P = project; state.REV = rev;
+    rev.opts ||= { roles: [], types: [], nudges: {}, unitMM: null, floors: null };
+    plan.setTheme(themeNow());
+    // where to start: a requested issue or floor, else the busiest pair
+    const wantIss = qs('issue') && result.issues.find((i) => i.stateId === qs('issue'));
+    const wantFloor = qs('floor') != null ? Math.max(1, Math.min(result.floors.length - 1, +qs('floor'))) : null;
+    const open = result.issues.filter((i) => { const s = project.issueState[i.stateId]; return !s || s.status === 'open' || s.status === 'review'; });
+    state.k = wantIss ? wantIss.upper : wantFloor != null ? wantFloor : Math.max(result.floors.length > 1 ? 1 : 0, open[0] ? open[0].upper : 1);
+    state.result = null;
+    onResult(result, { first: true });
+    await setView(want);
+    if (wantIss) select(wantIss.id, { scroll: true });
+    if (qs('report')) setTimeout(printReport, 400);
+  } catch (err) {
+    busy(null);
+    $('#wsName').textContent = 'Can’t open this project';
+    $('#stage').insertAdjacentHTML('beforeend', `<div class="ws-error"><h2>Can’t open this project</h2><p>${esc(err.message)}</p><a class="btn" href="./">All projects</a></div>`);
+  }
+})();

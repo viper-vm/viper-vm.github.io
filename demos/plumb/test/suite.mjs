@@ -144,11 +144,84 @@ function toBinaryDXF(text) {
   check('parseLevel: ordinals, words, basements, levels', L('SECOND FLOOR PLAN') === 2 && L('2ND FLOOR PLAN') === 2 && L('Stilt floor plan') === 0 && L('B2 PLAN') === -2 && L('LEVEL 5') === 5 && L('TERRACE PLAN') === 99 && L('TYPICAL FLOOR PLAN (3RD-7TH)') === 3);
   check('parseLevel: ignores sections, elevations, site plans', L('SECTION A-A') === null && L('FRONT ELEVATION') === null && L('SITE PLAN') === null);
   const F = (s) => { const v = levelFromName(s); return v ? v.level : null; };
-  check('levelFromName: ground / first-floor / L2 / B1 / 03 / rev3', F('ground.dxf') === 0 && F('first-floor.dxf') === 1 && F('L2.dxf') === 2 && F('B1_plan.dxf') === -1 && F('03.dxf') === 3 && F('project-rev3.dxf') === null);
+  check('levelFromName: ground / first-floor / L2 / B1 / 03 / rev3, .dxf or .dwg', F('ground.dxf') === 0 && F('first-floor.dxf') === 1 && F('L2.dxf') === 2 && F('B1_plan.dxf') === -1 && F('03.dxf') === 3 && F('project-rev3.dxf') === null && F('L2.dwg') === 2 && F('First-Floor.DWG') === 1);
+  check('levelFromName: office shorthand GF / FF / SF / TF, 4F, after the project name', F('GF.dxf') === 0 && F('Riverside FF.dwg') === 1 && F('SF plan.dxf') === 2 && F('TF.dxf') === 3 && F('4F.dxf') === 4 && F('Tower-2-B1.dwg') === -1 && levelFromName('L2.dxf').text === 'SECOND FLOOR' && levelFromName('12.dxf').text === '12TH FLOOR');
   const mid = textAnchor({ x: 5, y: 5, h: 0.2, text: 'BED ROOM', ha: 4, va: 0, rot: 0 });
   const left = textAnchor({ x: 5, y: 5, h: 0.2, text: 'BED ROOM', ha: 0, va: 0, rot: 0 });
   const mt = textAnchor({ x: 5, y: 5, h: 0.2, text: 'BED ROOM', mtext: true, attach: 1, rot: 0 });
   check('textAnchor: middle / left-baseline / MTEXT top-left', mid[0] === 5 && mid[1] === 5 && left[0] > 5.4 && left[1] > 5 && mt[0] > 5.4 && mt[1] < 5);
+}
+
+// ------------------------------------------------------------------ projects: revisions and issue history
+{
+  const { newProject, newRevision, nextLabel, storeys, reconcile, attachOrAdd, setStatus, summarize } = await import(base + 'shell/model.js');
+  const p0 = pack(analyse(readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8')));
+  const fresh = () => structuredClone(p0);
+  const rev = (P) => { const r = newRevision(P, []); P.revisions.push(r); P.current = r.id; return r; };
+  const P = newProject({ name: 'Test' });
+  check('project: Ahmedabad (CGDCR) by default', P.city === 'Ahmedabad' && P.region === 'IN-AMD');
+  check('storeys: G+3 / B+G+5 / B2+G', storeys(p0.floors) === 'G+3' && storeys([-1, 0, 1, 2, 3, 4, 5].map((level) => ({ level }))) === 'B+G+5' && storeys([{ level: -2 }, { level: -1 }, { level: 0 }]) === 'B2+G', storeys(p0.floors));
+
+  const A = rev(P), r1 = fresh(), c1 = reconcile(P, A, r1);
+  check('revisions: Rev A, then Rev B … Rev Z, Rev AA', A.label === 'Rev A' && nextLabel(P) === 'Rev B' && nextLabel({ revisions: new Array(26) }) === 'Rev AA', `${A.label} ${nextLabel(P)}`);
+  check('history: first revision → all 9 issues new and open', c1.added.length === 9 && r1.issues.every((i) => P.issueState[i.stateId].status === 'open'), JSON.stringify(c1));
+  const fc = r1.issues.find((i) => i.kind === 'floating-column');
+  const cv = r1.issues.find((i) => i.kind === 'cantilever');
+  setStatus(P, fc.stateId, 'accepted', 'transfer beam agreed', 'Rev A');
+  setStatus(P, cv.stateId, 'review');
+
+  const B = rev(P), r2 = fresh(), c2 = reconcile(P, B, r2);
+  check('history: same drawing as Rev B → 9 kept, none added or resolved', c2.kept.length === 9 && !c2.added.length && !c2.resolved.length, JSON.stringify(c2));
+  check('history: issues keep their ids, statuses and notes', r2.issues.find((i) => i.kind === 'floating-column').stateId === fc.stateId && P.issueState[fc.stateId].status === 'accepted' && /transfer beam/.test(P.issueState[fc.stateId].history.at(-1).text));
+
+  // Rev C loses the floating column (accepted) and the cantilever (in review)
+  const C = rev(P), r3 = fresh();
+  r3.issues = r3.issues.filter((i) => i.kind !== 'floating-column' && !(i.kind === 'cantilever' && i.at[0] === cv.at[0] && i.at[1] === cv.at[1]));
+  const c3 = reconcile(P, C, r3);
+  check('history: fixed in Rev C → resolved in C; accepted stays accepted', c3.resolved.length === 1 && c3.resolved[0] === cv.stateId && P.issueState[cv.stateId].resolvedIn === C.id && P.issueState[fc.stateId].status === 'accepted', JSON.stringify(c3));
+  check('summary: open counts leave out resolved and accepted', summarize(r3, P).issues.total === 7, summarize(r3, P).issues.total);
+
+  // Rev D brings the cantilever back
+  const D = rev(P), r4 = fresh(), c4 = reconcile(P, D, r4);
+  check('history: back in Rev D → reopened, same id', c4.reopened.length === 1 && c4.reopened[0] === cv.stateId && P.issueState[cv.stateId].status === 'open' && !P.issueState[cv.stateId].resolvedIn, JSON.stringify(c4));
+
+  // Rev E renames the floors ("FIRST FLOOR PLAN" → "1ST FLOOR"): same issues, matched by level
+  const E = rev(P), r6 = fresh();
+  r6.floors.forEach((f) => { f.title = `LEVEL ${f.level} (REVISED)`; });
+  const c6 = reconcile(P, E, r6);
+  check('history: floors renamed in Rev E → still the same 9 issues', c6.kept.length === 9 && !c6.added.length && !c6.resolved.length, JSON.stringify(c6));
+  const D2 = E;
+  // re-reading Rev E with other options: one finding moves, nothing gets resolved
+  const r5 = fresh();
+  const moved = r5.issues.find((i) => i.kind === 'duct-offset');
+  moved.at = [moved.at[0] + 5, moved.at[1]];
+  const before = Object.keys(P.issueState).length;
+  attachOrAdd(P, D2, r5);
+  check('re-read: new finding added as open; nothing marked resolved', Object.keys(P.issueState).length === before + 1 && P.issueState[moved.stateId].status === 'open' && Object.values(P.issueState).every((s) => s.status !== 'resolved'), Object.values(P.issueState).map((s) => s.status).join());
+}
+
+{
+  const { newProject, newRevision, reconcile } = await import(base + 'shell/model.js');
+  const P = newProject({ name: 'Lakeview' });
+  const rev = () => { const r = newRevision(P, []); P.revisions.push(r); P.current = r.id; return r; };
+  reconcile(P, rev(), pack(analyseFiles(lakeviewFiles())));
+  const two = lakeviewFiles().filter((f) => f.name !== 'L2.dxf');
+  const c = reconcile(P, rev(), pack(analyseFiles(two)));
+  check('history: next revision without the L2 file → G→L1 issues kept, the 3 on L2 resolved', c.kept.length === 2 && c.resolved.length === 3 && !c.added.length, JSON.stringify(c));
+  const r3 = pack(analyseFiles(two.reverse()));
+  const c3 = reconcile(P, rev(), r3);
+  check('history: same files in another order → nothing new, nothing resolved', c3.kept.length === 2 && !c3.added.length && !c3.resolved.length, JSON.stringify(c3));
+  // a single-file drawing whose plans were moved in model space: matched from the plan's corner
+  const Q = newProject({ name: 'Moved' });
+  const revQ = () => { const r = newRevision(Q, []); Q.revisions.push(r); Q.current = r.id; return r; };
+  const text = readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8');
+  const a1 = pack(analyse(text));
+  reconcile(Q, revQ(), a1);
+  const a2 = structuredClone(a1);
+  a2.floors.forEach((f) => { f.box = [f.box[0] + 40, f.box[1] - 25, f.box[2] + 40, f.box[3] - 25]; });
+  a2.issues.forEach((i) => { i.at = [i.at[0] + 40, i.at[1] - 25]; delete i.stateId; });
+  const cq = reconcile(Q, revQ(), a2);
+  check('history: plans moved in the drawing → still the same 9 issues', cq.kept.length === 9 && !cq.added.length, JSON.stringify(cq));
 }
 
 console.log(fails ? `\n${fails} of ${n} FAILED` : `\nALL ${n} PASS`);

@@ -11,7 +11,7 @@
   {
     "id": "plumb",
     "title": "Plumb",
-    "summary": "Does your building stack up? Drop the DWG or DXF floor plans you already have and Plumb lines every floor up on the one below, then finds what 2D drawings hide between sheets: floating columns, columns that jog, toilets over bedrooms, ducts and lift wells that shift, deep cantilevers. Registration-colour overlay with the drawing's own dimensions, a 3D X-ray stack, and a full 3D building model (section cut, storey heights, .glb export) — plus markups DXF back to CAD, a printable report and optional Claude assist.",
+    "summary": "Does your building stack up? Drop the DWG or DXF floor plans you already have and Plumb lines every floor up on the one below, then finds what 2D drawings hide between sheets: floating columns, columns that jog, toilets over bedrooms, ducts and lift wells that shift, deep cantilevers. A project library with an import wizard and issue tracking across revisions, a registration-colour overlay with the drawing's own dimensions, a 3D X-ray stack and a full 3D building model (section cut, issue pins, .glb export), plus markups DXF back to CAD, a printable report and optional AI assist. Set up for Ahmedabad first.",
     "category": "CAD / Architecture",
     "emoji": "🏗️",
     "demo_url": "/demos/plumb/",

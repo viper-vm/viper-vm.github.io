@@ -5,7 +5,7 @@
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { TYPE_COLOR, levelTag, floorName } from './style.js';
+import { TYPE_COLOR, PALETTES, levelTag, floorName } from './style.js';
 
 export const DEFAULT_HEIGHTS = { floor: 3.0, slab: 0.15, door: 2.1, sill: 0.9, head: 2.1, parapet: 1.05 };
 
@@ -26,6 +26,7 @@ export class Model3D {
     this.roof = true;
     this.data = null;
     this.mass = null;
+    this.issue = null;     // the issue pinned in the model, if any
 
     const r = (this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }));
     r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
@@ -69,6 +70,22 @@ export class Model3D {
   setCut(v) { this.cut = v; this.applyVisibility(); }
   setRoomColors(on) { this.roomColors = on; if (this.data) this.build(); }
   setRoof(on) { this.roof = on; this.applyVisibility(); }
+  /** Pin an issue in the building (or null to clear): a ring on its floor and a numbered marker, seen through walls. */
+  setIssue(iss) { this.issue = iss || null; if (this.data) this.placePin(); this.request(); }
+
+  /** Open the building up to the issue's floor, cut through that storey, and look down at the spot. */
+  focusIssue(iss) {
+    if (!iss || !this.data) return;
+    this.focus = iss.upper;
+    if (this.cut >= 0.999) this.cut = 0.55;
+    this.applyVisibility();
+    const at = this.pinAt(iss);
+    const bb = new THREE.Box3();
+    for (const f of this.floors) if (f.g.visible) bb.expandByObject(f.g);
+    const span = bb.isEmpty() ? 30 : bb.getSize(new THREE.Vector3()).length();
+    const dir = new THREE.Vector3(-0.75, 1.15, 1.05).normalize();
+    this.flyTo(at, at.clone().add(dir.multiplyScalar(Math.max(14, span * 0.55))));
+  }
   request() { if (this._raf) return; this._raf = requestAnimationFrame((t) => { this._raf = 0; this.frame(t); }); }
   renderNow() { this.frame(performance.now()); }
 
@@ -87,6 +104,27 @@ export class Model3D {
     const dir = new THREE.Vector3(-0.85, 0.75, 1.15).normalize();
     this.flyTo(c, c.clone().add(dir.multiplyScalar(dist)), animate);
   }
+
+  /** Look from a standard direction: 'iso' | 'top' | 'front' | 'side'. */
+  viewPreset(name) {
+    if (!this.data) return;
+    const b = new THREE.Box3();
+    for (const f of this.floors) if (f.g.visible) b.expandByObject(f.g);
+    if (this.roofG && this.roofG.visible) b.expandByObject(this.roofG);
+    if (b.isEmpty()) return;
+    if (name === 'iso') { this.fit(true); return; }
+    const size = b.getSize(new THREE.Vector3()), c = b.getCenter(new THREE.Vector3());
+    const vf = (this.camera.fov * Math.PI) / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * this.camera.aspect);
+    const fitD = (w, h) => Math.max((h / 2) / Math.tan(vf / 2), (w / 2) / Math.tan(hf / 2)) * 1.15;
+    let pos;
+    if (name === 'top') pos = new THREE.Vector3(c.x, c.y + size.y / 2 + fitD(size.x, size.z), c.z + 0.001);
+    else if (name === 'front') pos = new THREE.Vector3(c.x, c.y, c.z + size.z / 2 + fitD(size.x, size.y));
+    else pos = new THREE.Vector3(c.x + size.x / 2 + fitD(size.z, size.y), c.y, c.z);
+    this.flyTo(c, pos, true);
+  }
+
+  /** A PNG of what's on screen (the renderer keeps its last frame). */
+  snapshot() { this.renderNow(); return this.renderer.domElement.toDataURL('image/png'); }
 
   /** The model (not the ground/grid) as a binary glTF. */
   async exportGLB() {
@@ -130,6 +168,7 @@ export class Model3D {
     });
     this.root.clear();
     this.floors = [];
+    this.pin = null;
   }
 
   build() {
@@ -239,7 +278,32 @@ export class Model3D {
     const sc = this.sun.shadow.camera;
     sc.left = -R * 1.3; sc.right = R * 1.3; sc.top = R * 1.3; sc.bottom = -R * 1.3; sc.near = 1; sc.far = R * 6 + size.y * 3;
     sc.updateProjectionMatrix();
+    this.placePin();
     this.applyVisibility();
+  }
+
+  /** Where an issue sits in the scene: its spot on the upper floor, at that floor's level. */
+  pinAt(iss) {
+    const T = this.data.transforms[iss.upper];
+    return new THREE.Vector3(iss.at[0] + T.tx - this.cx, iss.upper * this.h.floor + 0.05, this.cy - (iss.at[1] + T.ty));
+  }
+  placePin() {
+    if (this.pin) { this.root.remove(this.pin); this.pin.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); this.pin = null; }
+    const iss = this.issue;
+    if (!iss || !this.data || !this.data.floors[iss.upper]) return;
+    const col = PALETTES[this.theme][iss.severity] || PALETTES[this.theme].high;
+    const over = { depthTest: false, depthWrite: false, transparent: true };
+    const g = (this.pin = new THREE.Group());
+    g.userData.helper = true; // not part of the exported model
+    g.position.copy(this.pinAt(iss));
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.5, 0.72, 48), new THREE.MeshBasicMaterial({ color: col, side: THREE.DoubleSide, opacity: 0.95, ...over }));
+    ring.rotation.x = -Math.PI / 2;
+    const up = this.h.floor * 0.8;
+    const stem = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, up, 0)]), new THREE.LineBasicMaterial({ color: col, opacity: 0.9, ...over }));
+    const head = pinSprite(iss.n ? String(iss.n) : '!', col);
+    head.position.y = up + 0.6;
+    for (const o of [ring, stem, head]) { o.renderOrder = 20; g.add(o); }
+    this.root.add(g);
   }
 
   /** Floors above the focus hidden; the cut plane slices the top visible storey. */
@@ -248,6 +312,7 @@ export class Model3D {
     const n = this.data.floors.length, h = this.h;
     const topK = this.focus < 0 ? n - 1 : Math.min(this.focus, n - 1);
     this.floors.forEach((f, k) => { f.g.visible = k <= topK; f.lab.visible = k <= topK; });
+    if (this.pin) this.pin.visible = !!this.issue && this.issue.upper <= topK;
     const cutting = this.cut < 0.999;
     this.roofG.visible = this.roof && topK === n - 1 && !cutting;
     this.clip.constant = cutting ? topK * h.floor + Math.max(0.2, this.cut * (h.floor - h.slab)) : 1e6;
@@ -262,6 +327,21 @@ function inside(x, y, pts) {
     if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) c = !c;
   }
   return c;
+}
+
+/** A round marker with the issue's number. */
+function pinSprite(text, color) {
+  const c = document.createElement('canvas');
+  c.width = c.height = 96;
+  const x = c.getContext('2d');
+  x.fillStyle = color; x.beginPath(); x.arc(48, 48, 44, 0, Math.PI * 2); x.fill();
+  x.lineWidth = 6; x.strokeStyle = 'rgba(255,255,255,0.9)'; x.stroke();
+  x.fillStyle = '#fff'; x.font = `700 ${text.length > 1 ? 40 : 48}px 'IBM Plex Sans', system-ui, sans-serif`;
+  x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, 48, 51);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, depthWrite: false, transparent: true }));
+  sp.scale.set(1.3, 1.3, 1);
+  return sp;
 }
 
 function textSprite(text, color) {

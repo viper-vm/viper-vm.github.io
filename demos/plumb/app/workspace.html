@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Workspace · Plumb</title>
+  <meta name="description" content="A building's floor plans over each other, stacked in 3D, and as a 3D model." />
+  <meta name="theme-color" content="#0b0d10" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230d0f12'/%3E%3Cpath d='M16 4v9' stroke='%23e8b04b' stroke-width='2'/%3E%3Cpath d='M16 13l-5 6 5 9 5-9z' fill='%23e8b04b'/%3E%3C/svg%3E" />
+  <script>try{document.documentElement.dataset.theme=localStorage.getItem('plumb.theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark')}catch(e){}</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="../css/base.css" rel="stylesheet" />
+  <link href="../css/app.css" rel="stylesheet" />
+  <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+    } }
+  </script>
+</head>
+<body class="ws">
+  <header class="top ws-top">
+    <a class="icon-btn" id="backBtn" href="./" title="Back to the project">
+      <svg><use href="#i-back"/></svg>
+    </a>
+    <div class="ws-title"><b id="wsName">…</b><span id="wsRev"></span></div>
+    <span class="ws-spacer"></span>
+    <button class="icon-btn" id="leftToggle" title="Floors and layers" aria-pressed="true"><svg><use href="#i-panel-l"/></svg></button>
+    <div class="seg" id="viewSeg" role="group" aria-label="View">
+      <button data-v="2d" class="on" title="Each floor over the one below (2)"><svg><use href="#i-2d"/></svg><span>Plan</span></button>
+      <button data-v="3d" title="Floors pulled apart: what continues (3)"><svg><use href="#i-xray"/></svg><span>Stack</span></button>
+      <button data-v="model" title="The building in 3D (M)"><svg><use href="#i-home"/></svg><span>3D model</span></button>
+    </div>
+    <button class="icon-btn" id="rightToggle" title="Issues" aria-pressed="true"><svg><use href="#i-panel-r"/></svg></button>
+    <span class="ws-spacer"></span>
+    <button class="icon-btn" id="menuBtn" title="More" aria-haspopup="menu"><svg><use href="#i-dots"/></svg></button>
+    <button class="icon-btn" id="themeBtn" title="Light / dark"><svg><use data-theme-icon href="#i-sun"/></svg></button>
+  </header>
+
+  <main class="work" id="work">
+    <aside class="left" id="leftPanel" aria-label="Floors and layers">
+      <section class="pane">
+        <h2 class="pane-h">Floors <span class="pane-sub" id="floorsSub"></span></h2>
+        <ol class="floors" id="floors"></ol>
+        <p class="pane-note" id="alignNote"></p>
+      </section>
+      <section class="pane grow">
+        <h2 class="pane-h">Layers <span class="pane-sub">what each layer holds</span><button class="ai-link" id="aiNaming" title="Ask AI to read unusual layer names and room labels (your API key)"><svg><use href="#i-spark"/></svg>Ask AI</button></h2>
+        <div class="units-row" id="unitsRow"></div>
+        <div class="layers" id="layers"></div>
+      </section>
+    </aside>
+
+    <section class="stage" id="stage">
+      <canvas id="plan" class="plan"></canvas>
+      <div class="view3d" id="view3d" hidden></div>
+      <div class="view3d" id="model3d" hidden></div>
+      <div class="hud-top">
+        <div class="pairchip" id="pairChip"></div>
+      </div>
+      <div class="hud-tools" id="hud2d">
+        <button class="icon-btn" id="zoomIn" title="Zoom in"><svg><use href="#i-plus"/></svg></button>
+        <button class="icon-btn" id="zoomOut" title="Zoom out"><svg><use href="#i-minus"/></svg></button>
+        <button class="icon-btn" id="zoomFit" title="Fit (F)"><svg><use href="#i-fit"/></svg></button>
+        <button class="icon-btn toggle" id="dimBtn" title="Show the drawing's own dimensions (D)" aria-pressed="false"><svg><use href="#i-ruler"/></svg></button>
+      </div>
+
+      <!-- 3D model: a levels strip, view presets, and one dock. Everything else is behind a button. -->
+      <div class="levels" id="levels" hidden></div>
+      <div class="presets" id="presets" hidden role="group" aria-label="View from">
+        <button data-view="iso" class="on">3D</button><button data-view="top">Top</button><button data-view="front">Front</button><button data-view="side">Side</button>
+      </div>
+      <div class="dock" id="dock" hidden>
+        <button class="dk" id="dkFit" title="Fit (F)"><svg><use href="#i-fit"/></svg><span>Fit</span></button>
+        <button class="dk" id="dkCut" title="Section cut" aria-pressed="false"><svg><use href="#i-cut"/></svg><span>Section</span></button>
+        <button class="dk" id="dkRoof" title="Roof" aria-pressed="true"><svg><use href="#i-home"/></svg><span>Roof</span></button>
+        <button class="dk" id="dkColors" title="Room colours" aria-pressed="true"><svg><use href="#i-drop"/></svg><span>Rooms</span></button>
+        <button class="dk" id="dkHeights" title="Storey heights"><svg><use href="#i-sliders"/></svg><span>Heights</span></button>
+        <button class="dk" id="dkShot" title="Save a picture"><svg><use href="#i-camera"/></svg><span>Picture</span></button>
+        <button class="dk" id="dkGlb" title="Download the model (.glb) for Blender, SketchUp, Rhino…"><svg><use href="#i-dl"/></svg><span>.glb</span></button>
+      </div>
+      <div class="cutpop" id="cutPop" hidden><span>Cut</span><input type="range" id="mCut" min="8" max="100" value="45" aria-label="Section height" /><span id="cutVal" class="num"></span></div>
+      <div class="hidehint" id="hideHint" hidden>Press <kbd>H</kbd> to show the controls</div>
+
+      <div class="hud-bottom" id="hudBottom">
+        <div class="legend" id="legend"></div>
+        <label class="slider" id="mixWrap"><span>Floor below</span><input type="range" id="mix" min="0" max="100" value="55" /><span>Floor above</span></label>
+        <label class="slider" id="explodeWrap" hidden><span>Stacked</span><input type="range" id="explode" min="0" max="100" value="45" /><span>Exploded</span></label>
+      </div>
+      <form class="popover heights" id="heightsPop" hidden>
+        <h4>Storey heights</h4>
+        <p>Plans don't carry heights, so the model uses these. They're saved with this project.</p>
+        <label>Floor to floor <input type="number" step="0.05" min="2.2" max="8" name="floor" /> m</label>
+        <label>Slab <input type="number" step="0.01" min="0.08" max="0.6" name="slab" /> m</label>
+        <label>Door head <input type="number" step="0.05" min="1.8" max="4" name="door" /> m</label>
+        <label>Window sill <input type="number" step="0.05" min="0" max="2" name="sill" /> m</label>
+        <label>Window head <input type="number" step="0.05" min="1" max="4" name="head" /> m</label>
+        <label>Parapet <input type="number" step="0.05" min="0.6" max="2" name="parapet" /> m</label>
+        <div class="hp-actions"><button type="button" class="btn small ghost" id="hpReset">Office default</button><button type="submit" class="btn small primary">Apply</button></div>
+      </form>
+      <div class="tip" id="tip" hidden></div>
+      <div class="dropveil" id="dropveil" hidden><div><svg><use href="#i-upload"/></svg><strong>Drop the new revision</strong><span>DWG or DXF · it becomes the next revision of this project</span></div></div>
+      <div class="busy" id="busy" hidden><span class="spinner"></span><span id="busyText">Reading…</span></div>
+    </section>
+
+    <aside class="right" id="rightPanel" aria-label="Issues">
+      <section class="summary" id="summary"></section>
+      <div class="filters" id="filters"></div>
+      <ol class="issues" id="issues"></ol>
+      <footer class="right-foot">
+        <a class="btn small" id="allIssues" href="#"><svg><use href="#i-issues"/></svg>All issues</a>
+        <button class="btn small" id="exportDxf" title="Issue markers as a DXF you can XREF over your drawing"><svg><use href="#i-dl"/></svg>Markups DXF</button>
+        <button class="btn small" id="printBtn"><svg><use href="#i-print"/></svg>Report</button>
+      </footer>
+    </aside>
+  </main>
+
+  <dialog class="help ai" id="aiDlg">
+    <div class="help-inner">
+      <button class="icon-btn help-x" id="aiClose" aria-label="Close"><svg><use href="#i-x"/></svg></button>
+      <p class="eyebrow"><svg><use href="#i-spark"/></svg> AI assist · optional</p>
+      <h2 id="aiTitle">Read my drawing’s naming</h2>
+      <p id="aiIntro"></p>
+      <form class="ai-key" id="aiForm" autocomplete="off">
+        <label class="ai-field"><span>Anthropic API key</span><input type="password" id="aiKey" placeholder="sk-ant-…" spellcheck="false" autocomplete="off" /></label>
+        <label class="ai-check"><input type="checkbox" id="aiRemember" checked /> Remember on this device</label>
+        <div class="ai-go"><button class="btn primary" id="aiGo" type="submit"><svg><use href="#i-spark"/></svg><span id="aiGoText">Ask AI</span></button><span class="ai-status" id="aiStatus" role="status"></span></div>
+      </form>
+      <div class="ai-out" id="aiOut"></div>
+      <p class="fine">Sent from your browser straight to the AI provider (Anthropic’s API) with your own key. Plumb has no server and never sees your key or your drawing. <span id="aiWhat"></span></p>
+    </div>
+  </dialog>
+
+  <div class="print-sheet" id="printSheet" aria-hidden="true"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="../js/workspace.js"></script>
+</body>
+</html>

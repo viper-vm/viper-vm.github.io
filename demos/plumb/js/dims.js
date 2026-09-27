@@ -118,3 +118,28 @@ export function floorDims(dx, roles, boxes, unitMM) {
 }
 
 const pickText = (t) => ({ x: t.x, y: t.y, h: t.h, rot: t.rot || 0, text: t.text, ha: t.ha || 0, va: t.va || 0, mtext: !!t.mtext, attach: t.attach || 0 });
+
+/**
+ * A few linear dimensions with what they say and what they measure, in drawing units, so a
+ * wrong unit shows at a glance ("says 3600, measures 3600" vs "says 3600, measures 360").
+ */
+export function dimChecks(dx, unitMM, n = 8) {
+  const out = [];
+  for (const d of dx.dims) {
+    if (out.length >= n) break;
+    if (!((d.type === 0 || d.type === 1) && d.p13 && d.p14)) continue;
+    const mm = d.mm || unitMM, k = mm / 1000;
+    const dir = d.type === 0 ? [Math.cos((d.rot * Math.PI) / 180), Math.sin((d.rot * Math.PI) / 180)] : unit(sub(d.p14, d.p13));
+    const measured = Math.abs(dot(sub(d.p14, d.p13), dir)) / k;
+    if (measured < 1e-6) continue;
+    let label = '';
+    if (d.drawn) { const [t0, t1] = d.ranges[1]; for (let i = t0; i < t1 && !label; i++) label = String(dx.dimTexts[i].text || '').trim(); }
+    else label = labelOf(d, measured, mm);
+    if (out.some((o) => o.label === label && Math.abs(o.measured - measured) < 1e-6)) continue; // a repeated dimension proves nothing new
+    const said = parseFloat(String(label).replace(/[^0-9.]/g, ''));
+    if (!Number.isFinite(said) || /'/.test(label)) { out.push({ label, measured, match: null }); continue; }
+    const r = said / measured;
+    out.push({ label, measured, match: Math.abs(r - 1) < 0.02 ? 'ok' : [10, 0.1, 100, 0.01, 1000, 0.001, 25.4, 1 / 25.4, 304.8, 1 / 304.8].find((f) => Math.abs(r / f - 1) < 0.02) || 'off' });
+  }
+  return out;
+}

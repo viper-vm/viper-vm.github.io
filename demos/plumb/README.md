@@ -15,7 +15,32 @@ the site finds them:
 | **Overhangs** | slab beyond the floor below — balconies, cantilevers — with depth and area |
 
 No BIM model needed. Drop one drawing with every plan laid out side by side (each titled like
-“FIRST FLOOR PLAN”), or one file per floor (`ground.dxf`, `first-floor.dwg`, `L2.dxf` …).
+“FIRST FLOOR PLAN”), or one file per floor (`ground.dxf`, `first-floor.dwg`, `L2.dxf`, and the
+office shorthand common in India: `GF`, `FF`, `SF`, `TF`, `B1`, `4F`, also after the project's
+name, e.g. `Riverside GF.dwg`).
+
+Set up for **India, starting with Ahmedabad** (AMC/AUDA, Gujarat CGDCR 2017): mm or ft-in, m² and
+ft² side by side, Indian room abbreviations. Area statements (RERA carpet area, FSI) and bye-law
+checks are the next phases.
+
+## Pages
+
+| Page | What it's for |
+|---|---|
+| `index.html` | Landing page: what it checks, the 3D model, revisions, files, privacy, FAQ; drop drawings or open the sample |
+| `app/` | All projects: grid or list, search, starred/archived, status, the sample building |
+| `app/import.html` | Import wizard: files → floors (order, rename, leave out, typical ×N) → units (with evidence) → layer roles (with *Ask AI*) → review. Also takes a new revision (`?project=`) |
+| `app/project.html` | Project overview: open issues, the stack, most urgent, what changed since the last revision, hand-back files, floors, revisions, activity |
+| `app/issues.html` | Every issue across revisions: filters, a snapshot, status (open, in review, resolved, accepted), who it's for, notes, history, CSV/DXF, RFIs |
+| `app/workspace.html` | Plan overlay, Stack and 3D model with collapsible panels; the model has a levels strip, view presets, one dock, section cut and issue pins |
+| `app/settings.html` | Region, units, office storey heights, learnt layer standards and room names, AI key, theme, data on this device |
+| `app/help.html` | Preparing drawings, supported files, what every check means, Ahmedabad and CGDCR 2017, shortcuts |
+
+Projects are **local-first**: stored in the browser's IndexedDB (projects, the original drawing
+files, cached analyses, settings). Every issue is matched across revisions by its kind, its floors
+(by title, or by level when renamed) and its place (in each file's own coordinates, or from the
+plan's corner if the plan was moved), so statuses and notes carry over and fixed issues are marked
+resolved in the revision that fixed them.
 
 **Formats:** DWG (AutoCAD R13 → 2025, read with [LibreDWG](https://www.gnu.org/software/libredwg/)
 via the `@mlightcad/libredwg-web` WebAssembly build — GPL-3.0, fetched from jsDelivr only the first
@@ -46,17 +71,23 @@ time a DWG is opened), DXF ASCII (R12 → 2018+) and binary DXF. Several files a
    own units and coordinates — XREF it at 0,0), a CSV issue log, and a printable coordination report
    with a snapshot per issue.
 
-**Optional Claude assist** (your own Anthropic API key, called directly from the browser): *Ask Claude*
+**Optional AI assist** (your own Anthropic API key, saved in Settings, called directly from the browser): *Ask AI*
 reads layer names and room labels the rules miss (office codes, other languages) and proposes
 corrections you approve; *RFIs* drafts one request per consultant from the findings. Only names and
-findings are sent, never geometry. Uses Claude Opus 5 with server-side refusal fallback.
+findings are sent, never geometry. Uses Anthropic’s API (Opus 5, with server-side refusal fallback).
 
 Everything else runs locally in a Web Worker. Drawings never leave the computer.
 
 ## Files
 
 ```
-index.html, css/app.css
+index.html        landing page (css/landing.css, js/pages/landing.js, img/hero-*.webp)
+app/*.html        the app's pages (css/base.css shared tokens + components, css/shell.css pages,
+                  css/app.css workspace)
+js/pages/         one script per page: library, import, project, issues, settings, help, landing
+js/workspace.js   plan / stack / 3D model workspace
+js/shell/         store.js (IndexedDB), model.js (projects, revisions, issue history; pure),
+                  engine.js (worker + caching), projects.js, thumbs.js, ui.js, icons.js
 js/dxf.js         DXF reader (R12–2018: LINE/(LW)POLYLINE+bulges/ARC/CIRCLE/ELLIPSE/SPLINE/TEXT/MTEXT/
                   SOLID/HATCH/INSERT with nested, mirrored and arrayed blocks; paper space skipped)
 js/recognize.js   units, layer roles, floor detection, per-floor rooms/columns/footprint (raster topology)
@@ -71,7 +102,7 @@ js/model3d.js     three.js building model, section cut, heights, GLB export
 js/dims.js        the drawing's dimensions per floor (from *D blocks, or rebuilt), unit-aware labels
 js/dwg.js         DWG → DXF with LibreDWG (lazy-loaded WebAssembly)
 js/export.js      markups DXF (R12), CSV, report; js/dxfwrite.js R12 writer
-js/ai.js          optional Claude assist (naming, RFIs)
+js/ai.js          optional AI assist (naming, RFIs)
 samples/          riverside-residency.dxf (G+3, five planted problems)
 tools/            make-sample.mjs (regenerates the sample), png.mjs (debug renderer)
 test/             suite.mjs + fixtures.mjs (a second building drafted in the opposite style)
@@ -83,11 +114,13 @@ test/             suite.mjs + fixtures.mjs (a second building drafted in the opp
 node demos/plumb/test/suite.mjs
 ```
 
-36 checks: the shipped sample must yield exactly its 9 planted issues; *Lakeview Court* (metres,
+51 checks: the shipped sample must yield exactly its 9 planted issues; *Lakeview Court* (metres,
 floors stacked vertically, walls as polylines on a meaningless layer name, door blocks inserted
 rotated and mirrored, hatched columns, multi-line MTEXT tags, block-less DIMENSIONs, one floor drawn
 off-grid) must yield exactly its 5 — as one file and as one file per floor; dimensions read from
 blocks and rebuilt from points; a binary-DXF round trip gives identical results; the 3D model finds
-every door, window and parapet; plus markup coordinates, level parsing and text anchoring.
+every door, window and parapet; issue history across revisions (kept, resolved, reopened; floors
+renamed, files added or dropped or reordered, plans moved); plus markup coordinates, level parsing
+(including `GF`/`FF`/`SF`/`TF` file names) and text anchoring.
 
 Plumb is a coordination aid, not a structural or services design check.
