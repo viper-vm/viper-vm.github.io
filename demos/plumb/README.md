@@ -14,8 +14,12 @@ the site finds them:
 | **Shafts & cores** | ducts, lift wells and stairs that jog or stop (with the shift in mm and % overlap) |
 | **Overhangs** | slab beyond the floor below — balconies, cantilevers — with depth and area |
 
-No BIM model needed. Drop one DXF with every plan laid out side by side (each titled like
-“FIRST FLOOR PLAN”), or one DXF per floor (`ground.dxf`, `first-floor.dxf`, `L2.dxf` …).
+No BIM model needed. Drop one drawing with every plan laid out side by side (each titled like
+“FIRST FLOOR PLAN”), or one file per floor (`ground.dxf`, `first-floor.dwg`, `L2.dxf` …).
+
+**Formats:** DWG (AutoCAD R13 → 2025, read with [LibreDWG](https://www.gnu.org/software/libredwg/)
+via the `@mlightcad/libredwg-web` WebAssembly build — GPL-3.0, fetched from jsDelivr only the first
+time a DWG is opened), DXF ASCII (R12 → 2018+) and binary DXF. Several files at once, in any mix.
 
 ## What it does
 
@@ -26,8 +30,18 @@ No BIM model needed. Drop one DXF with every plan laid out side by side (each ti
 2. **Stacks the floors** — each floor is aligned on the one below by RANSAC over column pairs (the
    columns that *don't* match are the findings), with core/outline fallbacks and a hand-adjust mode.
 3. **Checks** every floor pair cell by cell.
-4. **Shows it** — a registration-colour overlay (floor below cyan, floor above violet; where they agree
-   the lines add up to white), and a 3D exploded “X-ray” stack with plumb lines dropped from every column.
+4. **Shows it** three ways:
+   - **Overlay** — registration colours (floor below cyan, floor above violet; where they agree the
+     lines add up to white). The ruler button shows the drawing's own **dimensions** — DIMENSION
+     entities drawn from their blocks exactly as on the sheet (or rebuilt from their definition points),
+     plus anything on dimension layers — with the dimension text as written (mm, m or ft-in).
+   - **Stack** — an exploded 3D “X-ray” with plumb lines dropped from every column.
+   - **Model** — the plans turned into a 3D building: walls to full height (the space between a
+     wall's two lines becomes solid wall, however it was drawn), lintels over every door swing,
+     sill + glass + lintel in every window, slabs with lift/duct shafts left open, low parapets round
+     balconies, stair treads and a roof. Show the building up to any floor, slide a section cut
+     through it like a dollhouse, set storey heights, tint rooms by type, and download a **.glb**
+     (Blender, SketchUp with a glTF importer, Rhino 8, Windows 3D Viewer…).
 5. **Hands it back** — a markups DXF (rings + tags on both floors, `PLUMB-*` layers, in the drawing's
    own units and coordinates — XREF it at 0,0), a CSV issue log, and a printable coordination report
    with a snapshot per issue.
@@ -52,6 +66,10 @@ js/pipeline.js    one file or one file per floor → analysis
 js/worker.js, js/pack.js   off-main-thread analysis, compact transferable results
 js/view2d.js      registration overlay (canvas), pins, hover X-ray, hand alignment
 js/view3d.js      three.js exploded stack
+js/massing.js     plan → 3D parts: solid walls, parapets, door openings, windows (fine raster + contours)
+js/model3d.js     three.js building model, section cut, heights, GLB export
+js/dims.js        the drawing's dimensions per floor (from *D blocks, or rebuilt), unit-aware labels
+js/dwg.js         DWG → DXF with LibreDWG (lazy-loaded WebAssembly)
 js/export.js      markups DXF (R12), CSV, report; js/dxfwrite.js R12 writer
 js/ai.js          optional Claude assist (naming, RFIs)
 samples/          riverside-residency.dxf (G+3, five planted problems)
@@ -65,10 +83,11 @@ test/             suite.mjs + fixtures.mjs (a second building drafted in the opp
 node demos/plumb/test/suite.mjs
 ```
 
-25 checks: the shipped sample must yield exactly its 9 planted issues; *Lakeview Court* (metres,
+36 checks: the shipped sample must yield exactly its 9 planted issues; *Lakeview Court* (metres,
 floors stacked vertically, walls as polylines on a meaningless layer name, door blocks inserted
-rotated and mirrored, hatched columns, multi-line MTEXT tags, one floor drawn off-grid) must yield
-exactly its 5 — as one file and as one file per floor — plus markup coordinates, level parsing and
-text anchoring.
+rotated and mirrored, hatched columns, multi-line MTEXT tags, block-less DIMENSIONs, one floor drawn
+off-grid) must yield exactly its 5 — as one file and as one file per floor; dimensions read from
+blocks and rebuilt from points; a binary-DXF round trip gives identical results; the 3D model finds
+every door, window and parapet; plus markup coordinates, level parsing and text anchoring.
 
 Plumb is a coordination aid, not a structural or services design check.

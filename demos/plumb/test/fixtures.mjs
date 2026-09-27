@@ -39,6 +39,16 @@ export const ARC = (cx, cy, r, a0, a1, l) => [[0, 'ARC'], [8, l], [10, cx], [20,
 export const INSERT = (name, x, y, sx, sy, rot, l) => [[0, 'INSERT'], [8, l], [2, name], [10, x], [20, y], [30, 0], [41, sx], [42, sy], [43, 1], [50, rot]];
 export const MTEXT = (x, y, h, text, l, attach = 5) => [[0, 'MTEXT'], [8, l], [10, x], [20, y], [30, 0], [40, h], [71, attach], [1, text]];
 export const HATCH = (pts, l) => [[0, 'HATCH'], [8, l], [10, 0], [20, 0], [30, 0], [2, 'SOLID'], [70, 1], [71, 0], [91, 1], [92, 2], [72, 0], [73, 1], [93, pts.length], ...pts.flatMap((p) => [[10, p[0]], [20, p[1]]]), [97, 0], [75, 0], [76, 1], [98, 0]];
+/** A DIMENSION with no *D block (some exporters write none): only definition points + measurement. */
+export const DIM = (p1, p2, at, rot, value, l) => {
+  const r = (rot * Math.PI) / 180, d = [Math.cos(r), Math.sin(r)];
+  const t2 = (p2[0] - at[0]) * d[0] + (p2[1] - at[1]) * d[1];
+  const f2 = [at[0] + d[0] * t2, at[1] + d[1] * t2];
+  const t1 = (p1[0] - at[0]) * d[0] + (p1[1] - at[1]) * d[1];
+  const mid = [at[0] + d[0] * (t1 + t2) / 2 - d[1] * 0.25, at[1] + d[1] * (t1 + t2) / 2 + d[0] * 0.25];
+  return [[0, 'DIMENSION'], [8, l], [100, 'AcDbEntity'], [100, 'AcDbDimension'], [2, ''], [10, f2[0]], [20, f2[1]], [30, 0], [11, mid[0]], [21, mid[1]], [31, 0],
+    [70, 0], [1, ''], [42, value], [100, 'AcDbAlignedDimension'], [13, p1[0]], [23, p1[1]], [33, 0], [14, p2[0]], [24, p2[1]], [34, 0], [50, rot], [100, 'AcDbRotatedDimension']];
+};
 const rect = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
 
 // ---------------------------------------------------------------------------- Lakeview Court
@@ -145,6 +155,9 @@ function emit(dx, f, ox, oy, title) {
   const L = f.lift;
   dx.add(LINE(ox + L[0] + 0.15, oy + L[1] + 0.15, ox + L[2] - 0.15, oy + L[3] - 0.15, 'LIFT')).add(LINE(ox + L[0] + 0.15, oy + L[3] - 0.15, ox + L[2] - 0.15, oy + L[1] + 0.15, 'LIFT'));
   for (let y = 6.6; y <= 10.2; y += 0.28) { dx.add(LINE(ox + 13.8, oy + y, ox + 15.6, oy + y, 'STAIR')); dx.add(LINE(ox + 15.9, oy + y, ox + 17.7, oy + y, 'STAIR')); }
+  // grid dimensions, block-less (rebuilt by Plumb from their definition points)
+  for (let i = 0; i + 1 < GX.length; i++) dx.add(DIM([ox + GX[i], oy + 11], [ox + GX[i + 1], oy + 11], [ox, oy + 12], 0, GX[i + 1] - GX[i], 'DIMS'));
+  for (let i = 0; i + 1 < GY.length; i++) dx.add(DIM([ox, oy + GY[i]], [ox, oy + GY[i + 1]], [ox - 1.2, oy], 90, GY[i + 1] - GY[i], 'DIMS'));
   // tags: "{\fArial|b1;NAME}\P4.4 x 5.4"
   for (const t of f.tags) dx.add(MTEXT(ox + t.x, oy + t.y, 0.2, `{\\fArial|b1|i0|c0|p34;${t.name}}${t.size ? `\\P${t.size}` : ''}`, 'ROOM-TAGS', 5));
   if (title) dx.add(MTEXT(ox, oy + 12.8, 0.5, title, 'TITLES', 7)).add(MTEXT(ox, oy + 12.2, 0.25, 'SCALE 1:100', 'TITLES', 7));
@@ -152,7 +165,7 @@ function emit(dx, f, ox, oy, title) {
 
 function base() {
   const dx = new ModernDxf(6);
-  for (const [n, c] of [['L-01', 7], ['GLAZING', 4], ['DOORS', 3], ['COL', 1], ['SHAFT', 5], ['LIFT', 8], ['STAIR', 8], ['ROOM-TAGS', 2], ['TITLES', 7]]) dx.layer(n, c);
+  for (const [n, c] of [['L-01', 7], ['GLAZING', 4], ['DOORS', 3], ['COL', 1], ['SHAFT', 5], ['LIFT', 8], ['STAIR', 8], ['ROOM-TAGS', 2], ['TITLES', 7], ['DIMS', 6]]) dx.layer(n, c);
   dx.block('DR900', [LINE(0, 0, 0, 0.9, '0'), ARC(0, 0, 0.9, 0, 90, '0')]);
   return dx;
 }

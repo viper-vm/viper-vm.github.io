@@ -46,6 +46,13 @@ export function toMetres(dxf, mm) {
     texts: dxf.texts.map((t) => ({ ...t, x: S(t.x), y: S(t.y), h: S(t.h) })),
     fills: dxf.fills.map((f) => ({ ...f, pts: f.pts.map((p) => [S(p[0]), S(p[1])]) })),
     inserts: dxf.inserts.map((i) => ({ ...i, x: S(i.x), y: S(i.y) })),
+    dims: (dxf.dims || []).map((d) => {
+      const P = (q) => (q ? [S(q[0]), S(q[1])] : null);
+      return { ...d, p10: P(d.p10), p11: P(d.p11), p13: P(d.p13), p14: P(d.p14), p15: P(d.p15), p16: P(d.p16), mm };
+    }),
+    dimSegs: (dxf.dimSegs || []).map((s) => [S(s[0]), S(s[1]), S(s[2]), S(s[3]), s[4]]),
+    dimTexts: (dxf.dimTexts || []).map((t) => ({ ...t, x: S(t.x), y: S(t.y), h: S(t.h) })),
+    dimFills: (dxf.dimFills || []).map((f) => ({ ...f, pts: f.pts.map((p) => [S(p[0]), S(p[1])]) })),
     bounds: { x0: S(dxf.bounds.x0), y0: S(dxf.bounds.y0), x1: S(dxf.bounds.x1), y1: S(dxf.bounds.y1) },
   };
 }

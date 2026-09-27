@@ -269,12 +269,13 @@ function emitFloor(dw, fl, ox, oy, title) {
       dw.text(cx, cy - 170, 150, `${ftin(l.x1 - l.x0 - INT)} X ${ftin(l.y1 - l.y0 - INT)}`, 'A-ANNO-ROOM', 'middle');
     }
   }
-  // overall dimensions (lines + text on a dim layer)
-  dw.line(ox, oy - 3000, ox + PLATE_W, oy - 3000, 'A-DIMS');
-  for (const x of [0, PLATE_W]) dw.line(ox + x, oy - 3200, ox + x, oy - 2800, 'A-DIMS');
-  dw.text(ox + PLATE_W / 2, oy - 2850, 180, `${PLATE_W}`, 'A-DIMS', 'center');
-  dw.line(ox - 1500, oy, ox - 1500, oy + PLATE_H, 'A-DIMS');
-  dw.text(ox - 1650, oy + PLATE_H / 2, 180, `${PLATE_H}`, 'A-DIMS', 'center', 90);
+  // dimension strings, as an architect draws them: grid-to-grid chains and overall sizes
+  const D = (x1, y1, x2, y2, ax, ay, rot) => dw.dimLinear([ox + x1, oy + y1], [ox + x2, oy + y2], [ox + ax, oy + ay], rot, 'A-DIMS', { h: 180 });
+  for (let i = 0; i + 1 < COLS_X.length; i++) D(COLS_X[i], PLATE_H, COLS_X[i + 1], PLATE_H, 0, PLATE_H + 1300, 0);
+  D(0, PLATE_H, PLATE_W, PLATE_H, 0, PLATE_H + 2300, 0);
+  for (let i = 0; i + 1 < COLS_Y.length; i++) D(0, COLS_Y[i], 0, COLS_Y[i + 1], -1300, 0, 90);
+  D(0, 0, 0, PLATE_H, -2300, 0, 90);
+  D(0, 0, PLATE_W, 0, 0, -3100, 0);
   // title under the plan
   dw.text(ox + PLATE_W / 2, oy - 4700, 450, title, 'A-ANNO-TTLB', 'center');
   dw.text(ox + PLATE_W / 2, oy - 5400, 250, 'SCALE 1:100', 'A-ANNO-TTLB', 'center');

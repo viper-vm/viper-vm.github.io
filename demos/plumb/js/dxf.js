@@ -20,6 +20,48 @@ function pairs(text) {
 
 const num = (v) => parseFloat(v);
 
+// ---------------------------------------------------------------------------- binary DXF
+const SENTINEL = 'AutoCAD Binary DXF\r\n\x1a\x00';
+const toU8 = (b) => (b instanceof Uint8Array ? b : new Uint8Array(b.buffer ? b.buffer : b, b.byteOffset || 0, b.byteLength));
+export function isBinaryDXF(b) {
+  if (!b || typeof b === 'string') return false;
+  const u = toU8(b);
+  if (u.length < 22) return false;
+  for (let i = 0; i < 22; i++) if (u[i] !== SENTINEL.charCodeAt(i)) return false;
+  return true;
+}
+const inRange = (c, ranges) => ranges.some(([a, z]) => c >= a && c <= z);
+const DBL = [[10, 59], [110, 149], [210, 239], [460, 469], [1010, 1059]];
+const I16 = [[60, 79], [170, 179], [270, 289], [370, 389], [400, 409], [1060, 1070]];
+const I32 = [[90, 99], [420, 429], [440, 449], [1071, 1071]];
+const I64 = [[160, 169]];
+const BOOL = [[290, 299]];
+const BIN = [[310, 319], [1004, 1004]];
+/** Binary DXF → the same [code, string] pairs the text reader makes (R12 1-byte and R13+ 2-byte codes). */
+function pairsBinary(u) {
+  const dv = new DataView(u.buffer, u.byteOffset, u.byteLength);
+  const dec = new TextDecoder();
+  const wide = u[22] === 0 && u[23] === 0; // R13+: every group code is 2 bytes
+  const out = [];
+  let i = 22;
+  while (i < u.length - 1) {
+    let code;
+    if (wide) { code = dv.getUint16(i, true); i += 2; }
+    else { code = u[i]; i += 1; if (code === 255) { code = dv.getUint16(i, true); i += 2; } }
+    let v;
+    if (inRange(code, DBL)) { v = String(dv.getFloat64(i, true)); i += 8; }
+    else if (inRange(code, I16)) { v = String(dv.getInt16(i, true)); i += 2; }
+    else if (inRange(code, I32)) { v = String(dv.getInt32(i, true)); i += 4; }
+    else if (inRange(code, I64)) { v = String(dv.getBigInt64(i, true)); i += 8; }
+    else if (inRange(code, BOOL)) { v = String(u[i]); i += 1; }
+    else if (inRange(code, BIN)) { const n = u[i]; i += 1 + n; v = ''; }
+    else { let j = i; while (j < u.length && u[j] !== 0) j++; v = dec.decode(u.subarray(i, j)); i = j + 1; }
+    out.push([code, v]);
+    if (code === 0 && v === 'EOF') break;
+  }
+  return out;
+}
+
 /** Split a pair list into entities: each starts at a code-0 record. */
 function records(ps, start, end) {
   const out = [];
@@ -62,8 +104,8 @@ export function cleanText(s, mtext = false) {
 
 // ---------------------------------------------------------------------------
 
-export function parseDXF(text) {
-  const ps = pairs(text);
+export function parseDXF(input) {
+  const ps = typeof input === 'string' ? pairs(input) : isBinaryDXF(input) ? pairsBinary(toU8(input)) : pairs(new TextDecoder().decode(toU8(input)));
   // sections
   const sections = {};
   for (let i = 0; i < ps.length; i++) {
@@ -134,9 +176,15 @@ export function parseDXF(text) {
     texts: [],    // {x,y,h,rot,text,layer}
     fills: [],    // {pts:[[x,y]...], layer, solid:true}   filled areas (SOLID, solid HATCH)
     inserts: [],  // {name,x,y,layer}  top-level + nested (for block-name hints)
+    dims: [],     // DIMENSION entities: {type, p10, p11, p13, p14, p15, rot, value, label, layer, drawn}
+    dimSegs: [], dimTexts: [], dimFills: [], // what the dimensions look like on the sheet
     counts: {},
   };
   const count = (t) => { out.counts[t] = (out.counts[t] || 0) + 1; };
+  // dimension graphics (the *D blocks) go to their own arrays: an extension line must never
+  // be mistaken for a wall
+  const dimSink = { segs: out.dimSegs, arcs: [], circles: [], texts: out.dimTexts, fills: out.dimFills, inserts: [] };
+  let S = out; // current sink
 
   const emit = (recs, M, inherited, depth) => {
     for (const r of recs) {
@@ -148,7 +196,7 @@ export function parseDXF(text) {
       switch (r.type) {
         case 'LINE': {
           const p = M.apply(getNum(r, 10), getNum(r, 20)), q = M.apply(getNum(r, 11), getNum(r, 21));
-          out.segs.push([p[0], p[1], q[0], q[1], layer]);
+          S.segs.push([p[0], p[1], q[0], q[1], layer]);
           break;
         }
         case 'LWPOLYLINE': case 'POLYLINE': {
@@ -166,7 +214,7 @@ export function parseDXF(text) {
         case 'CIRCLE': {
           const c = M.apply(getNum(r, 10), getNum(r, 20));
           const rr = getNum(r, 40) * M.scale;
-          out.circles.push({ cx: c[0], cy: c[1], r: rr, layer });
+          S.circles.push({ cx: c[0], cy: c[1], r: rr, layer });
           tessCircle(c, rr, layer);
           break;
         }
@@ -181,7 +229,7 @@ export function parseDXF(text) {
             const t = t0 + ((t1 - t0) * k) / n;
             const x = cx + mx * Math.cos(t) + mx2 * Math.sin(t), y = cy + my * Math.cos(t) + my2 * Math.sin(t);
             const p = M.apply(x, y);
-            if (prev) out.segs.push([prev[0], prev[1], p[0], p[1], layer]);
+            if (prev) S.segs.push([prev[0], prev[1], p[0], p[1], layer]);
             prev = p;
           }
           break;
@@ -219,22 +267,46 @@ export function parseDXF(text) {
             if (get(r, 11, null) !== null) rot = (Math.atan2(dy, dx) * 180) / Math.PI;
           }
           const text = cleanText(s, r.type === 'MTEXT');
-          if (text) out.texts.push({ x: p[0], y: p[1], h, rot: rot + M.rotDeg, text, layer, mtext: r.type === 'MTEXT', ha, va, attach: r.type === 'MTEXT' ? getNum(r, 71, 1) : 0 });
+          if (text) S.texts.push({ x: p[0], y: p[1], h, rot: rot + M.rotDeg, text, layer, mtext: r.type === 'MTEXT', ha, va, attach: r.type === 'MTEXT' ? getNum(r, 71, 1) : 0 });
           break;
         }
         case 'SOLID': case 'TRACE': {
           const q = [[getNum(r, 10), getNum(r, 20)], [getNum(r, 11), getNum(r, 21)], [getNum(r, 13), getNum(r, 23)], [getNum(r, 12), getNum(r, 22)]];
           const pts = q.map((p) => M.apply(p[0], p[1]));
-          out.fills.push({ pts, layer, solid: true });
-          for (let k = 0; k < 4; k++) { const a = pts[k], b = pts[(k + 1) % 4]; if (a[0] !== b[0] || a[1] !== b[1]) out.segs.push([a[0], a[1], b[0], b[1], layer]); }
+          S.fills.push({ pts, layer, solid: true });
+          for (let k = 0; k < 4; k++) { const a = pts[k], b = pts[(k + 1) % 4]; if (a[0] !== b[0] || a[1] !== b[1]) S.segs.push([a[0], a[1], b[0], b[1], layer]); }
           break;
         }
         case 'HATCH': {
           const solid = getNum(r, 70, 0) === 1;
           for (const loop of hatchLoops(r)) {
             const pts = loop.map((p) => M.apply(p[0], p[1]));
-            if (pts.length >= 3) out.fills.push({ pts, layer, solid });
+            if (pts.length >= 3) S.fills.push({ pts, layer, solid });
           }
+          break;
+        }
+        case 'DIMENSION': {
+          const P = (cx, cy) => (get(r, cx, null) === null ? null : M.apply(getNum(r, cx), getNum(r, cy)));
+          const flags = getNum(r, 70, 0);
+          const d = {
+            type: flags & 7, layer,
+            p10: P(10, 20), p11: P(11, 21), p13: P(13, 23), p14: P(14, 24), p15: P(15, 25), p16: P(16, 26),
+            rot: getNum(r, 50, 0) + M.rotDeg,
+            value: get(r, 42, null) === null ? null : getNum(r, 42) * M.scale,
+            label: get(r, 1, ''),
+            drawn: false,
+          };
+          const bl = blocks.get(get(r, 2, '').trim());
+          const at = [out.dimSegs.length, out.dimTexts.length, out.dimFills.length];
+          if (bl && bl.ents.length && depth <= 12) {
+            const keep = S;
+            S = dimSink;
+            emit(bl.ents, M.mul(Mat.insert(0, 0, 1, 1, 0, bl.base)), layer, depth + 1);
+            S = keep;
+            d.drawn = out.dimSegs.length + out.dimTexts.length > at[0] + at[1];
+          }
+          d.ranges = [[at[0], out.dimSegs.length], [at[1], out.dimTexts.length], [at[2], out.dimFills.length]];
+          out.dims.push(d);
           break;
         }
         case 'INSERT': {
@@ -245,7 +317,7 @@ export function parseDXF(text) {
           const cols = Math.max(1, getNum(r, 70, 1)), rows = Math.max(1, getNum(r, 71, 1));
           const dcol = getNum(r, 44, 0), drow = getNum(r, 45, 0);
           const wp = M.apply(ix, iy);
-          out.inserts.push({ name, x: wp[0], y: wp[1], layer, sx, sy, rot: rotI + M.rotDeg });
+          S.inserts.push({ name, x: wp[0], y: wp[1], layer, sx, sy, rot: rotI + M.rotDeg });
           if (!bl || depth > 12) break;
           for (let ci = 0; ci < cols; ci++) for (let ri = 0; ri < rows; ri++) {
             const local = Mat.insert(ix, iy, sx, sy, rotI, bl.base, ci * dcol, ri * drow);
@@ -281,7 +353,7 @@ export function parseDXF(text) {
         emitArc([cx, cy], rr, a0, a1, M, layer);
       } else {
         const p = M.apply(a[0], a[1]), q = M.apply(b[0], b[1]);
-        out.segs.push([p[0], p[1], q[0], q[1], layer]);
+        S.segs.push([p[0], p[1], q[0], q[1], layer]);
       }
     }
   }
@@ -296,13 +368,13 @@ export function parseDXF(text) {
     let w0 = Math.atan2(pa[1] - wc[1], pa[0] - wc[0]), w1 = Math.atan2(pb[1] - wc[1], pb[0] - wc[0]);
     if (cw) { const t = w0; w0 = w1; w1 = t; }
     while (w1 <= w0) w1 += Math.PI * 2;
-    out.arcs.push({ cx: wc[0], cy: wc[1], r: wr, a0: w0, a1: w1, layer });
+    S.arcs.push({ cx: wc[0], cy: wc[1], r: wr, a0: w0, a1: w1, layer });
     const n = Math.max(2, Math.ceil(((w1 - w0) / (Math.PI * 2)) * 48));
     let prev = null;
     for (let k = 0; k <= n; k++) {
       const t = w0 + ((w1 - w0) * k) / n;
       const p = [wc[0] + wr * Math.cos(t), wc[1] + wr * Math.sin(t)];
-      if (prev) out.segs.push([prev[0], prev[1], p[0], p[1], layer]);
+      if (prev) S.segs.push([prev[0], prev[1], p[0], p[1], layer]);
       prev = p;
     }
   }
@@ -311,7 +383,7 @@ export function parseDXF(text) {
     const n = 32;
     for (let k = 0; k < n; k++) {
       const t0 = (k / n) * Math.PI * 2, t1 = ((k + 1) / n) * Math.PI * 2;
-      out.segs.push([c[0] + rr * Math.cos(t0), c[1] + rr * Math.sin(t0), c[0] + rr * Math.cos(t1), c[1] + rr * Math.sin(t1), layer]);
+      S.segs.push([c[0] + rr * Math.cos(t0), c[1] + rr * Math.sin(t0), c[0] + rr * Math.cos(t1), c[1] + rr * Math.sin(t1), layer]);
     }
   }
 

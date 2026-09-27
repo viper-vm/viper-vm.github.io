@@ -2,7 +2,7 @@
 // Lines that agree blend to white (ink on paper); lines that don't leave a coloured fringe.
 
 import { PALETTES } from './style.js';
-import { WET, DRY_HABITABLE } from './recognize.js';
+import { WET, DRY_HABITABLE, textAnchor } from './recognize.js';
 
 const ROLE_STYLE = {
   hatch: { w: 0.6, a: 0.18 },
@@ -33,7 +33,7 @@ export class Plan2D {
     this.mix = 0.55;
     this.theme = 'dark';
     this.view = { cx: 0, cy: 0, s: 20 };
-    this.show = { wet: true, overhang: true, labels: true };
+    this.show = { wet: true, overhang: true, labels: true, dims: false };
     this.selected = null;
     this.hoverIssue = null;
     this.dismissed = new Set();
@@ -83,6 +83,12 @@ export class Plan2D {
     for (const fi of this.pairFloors(k)) {
       const b = this.data.an[fi].box, T = this.offset(fi);
       x0 = Math.min(x0, b[0] + T.tx); y0 = Math.min(y0, b[1] + T.ty); x1 = Math.max(x1, b[2] + T.tx); y1 = Math.max(y1, b[3] + T.ty);
+      // dimension strings sit outside the plan: keep them in frame when they're shown
+      const dm = this.show.dims && this.data.geometry[fi].dims;
+      if (dm) for (let i = 0; i < dm.segs.length; i += 2) {
+        const x = dm.segs[i] + T.tx, y = dm.segs[i + 1] + T.ty;
+        if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+      }
     }
     return [x0, y0, x1, y1];
   }
@@ -234,6 +240,27 @@ export class Plan2D {
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
 
+    // 3b. the drawing's own dimensions (toggle), in each floor's colour
+    if (this.show.dims) {
+      for (const fi of floors) {
+        const dm = this.data.geometry[fi].dims, a = alphaOf(fi);
+        if (!dm || a <= 0.05) continue;
+        const T = this.offset(fi);
+        ctx.setTransform(S, 0, 0, -S, ox + (T.tx - view.cx) * S, oy + (view.cy - T.ty) * S);
+        ctx.strokeStyle = colorOf(fi); ctx.fillStyle = colorOf(fi);
+        ctx.globalAlpha = 0.9 * a;
+        ctx.lineWidth = (0.9 * dpr) / S;
+        const path = this._dimPath(fi, dm);
+        if (path) ctx.stroke(path);
+        for (const f of dm.fills) {
+          ctx.beginPath();
+          f.pts.forEach((q, i) => (i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])));
+          ctx.closePath(); ctx.fill();
+        }
+      }
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+
     // 4. columns: below = solid, above = outline over a light fill
     for (const fi of floors) {
       const an = this.data.an[fi], T = this.offset(fi), a = alphaOf(fi);
@@ -331,6 +358,49 @@ export class Plan2D {
       ctx.globalAlpha = 1;
     }
 
+    // 6b. dimension text, at the size and angle it has on the sheet
+    if (this.show.dims) {
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.lineJoin = 'round';
+      const drawn = []; // screen boxes, so zoomed-out chains don't pile their numbers on top of each other
+      // a number both floors carry at the same spot reads in ink (white), like their shared lines
+      const keyOf = (t, T) => { const [ax, ay] = textAnchor(t); return `${t.text}|${Math.round((ax + T.tx) * 10)}|${Math.round((ay + T.ty) * 10)}`; };
+      const keys = floors.map((fi) => new Set(((this.data.geometry[fi].dims || {}).texts || []).map((t) => keyOf(t, this.offset(fi)))));
+      for (const fi of [...floors].reverse()) {
+        const dm = this.data.geometry[fi].dims, a = alphaOf(fi);
+        if (!dm || a <= 0.05) continue;
+        const T = this.offset(fi);
+        for (const t of dm.texts) {
+          // as drawn when zoomed in; never smaller than readable when zoomed out
+          const px = Math.min(Math.max(t.h * S, 9.5 * dpr), 40 * dpr);
+          if (t.h * S < 1.5 * dpr) continue;
+          const [ax, ay] = textAnchor(t);
+          const lines = String(t.text).split('\n');
+          ctx.font = `500 ${px.toFixed(1)}px 'IBM Plex Mono', ui-monospace, monospace`;
+          const tw = Math.max(...lines.map((ln) => ctx.measureText(ln).width)), th = px * 1.25 * lines.length;
+          const sx = X(ax + T.tx), sy = Y(ay + T.ty);
+          const vert = Math.abs(Math.sin(((t.rot || 0) * Math.PI) / 180)) > 0.7;
+          const bw = vert ? th : tw, bh = vert ? tw : th;
+          const box = [sx - bw / 2, sy - bh / 2, sx + bw / 2, sy + bh / 2];
+          if (drawn.some((q) => box[0] < q[2] && box[2] > q[0] && box[1] < q[3] && box[3] > q[1])) continue;
+          drawn.push(box);
+          ctx.save();
+          ctx.translate(sx, sy);
+          ctx.rotate((-(t.rot || 0) * Math.PI) / 180);
+          ctx.globalAlpha = a;
+          lines.forEach((ln, i) => {
+            const y = (i - (lines.length - 1) / 2) * px * 1.25;
+            ctx.lineWidth = 3 * dpr; ctx.strokeStyle = pal.halo; ctx.strokeText(ln, 0, y);
+            ctx.fillStyle = floors.length > 1 && keys.every((set) => set.has(keyOf(t, T))) && aL > 0.5 && aU > 0.5 ? pal.ink : colorOf(fi);
+            ctx.fillText(ln, 0, y);
+          });
+          ctx.restore();
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
     // 7. pins, placed so neighbours don't cover each other
     const placed = new Map();
     const gap = (2 * PIN_R + 4) * dpr;
@@ -416,6 +486,17 @@ export class Plan2D {
     if (arr && arr.length) {
       p = new Path2D();
       for (let i = 0; i < arr.length; i += 4) { p.moveTo(arr[i], arr[i + 1]); p.lineTo(arr[i + 2], arr[i + 3]); }
+    }
+    this.paths.set(key, p);
+    return p;
+  }
+  _dimPath(fi, dm) {
+    const key = fi + ':dims';
+    if (this.paths.has(key)) return this.paths.get(key);
+    let p = null;
+    if (dm.segs.length) {
+      p = new Path2D();
+      for (let i = 0; i < dm.segs.length; i += 4) { p.moveTo(dm.segs[i], dm.segs[i + 1]); p.lineTo(dm.segs[i + 2], dm.segs[i + 3]); }
     }
     this.paths.set(key, p);
     return p;

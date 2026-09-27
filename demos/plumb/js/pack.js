@@ -1,7 +1,10 @@
 // Plumb — turn an analysis into what the page draws (small, transferable, no parser state).
 
+import { floorDims } from './dims.js';
+
 /** Only what the page needs (the parsed entity lists are large; keep the metric ones). */
 export function pack(r) {
+  const dims = floorDims(r.dx, r.roles, r.floors.map((f) => f.box), r.unit.mm);
   return {
     unit: r.unit,
     ms: r.ms,
@@ -14,18 +17,12 @@ export function pack(r) {
     transforms: r.transforms,
     aligns: r.aligns,
     issues: r.issues,
-    geometry: r.floors.map((f) => floorGeometry(r.dx, r.roles, f.box)),
+    geometry: r.floors.map((f, k) => ({ ...floorGeometry(r.dx, r.roles, f.box), dims: dims[k] })),
     an: r.an.map((a) => ({
       box: a.box, res: a.res, grid: a.grid, rooms: a.rooms, columns: a.columns, doors: a.doors, outlines: a.outlines,
       footprintArea: a.footprintArea, roomAt: a.roomAt, inside: a.inside,
     })),
   };
-}
-
-export function transferables(r) {
-  const out = [];
-  for (const a of r.an) { out.push(a.roomAt.buffer, a.inside.buffer); }
-  return out;
 }
 
 /** Line work of one floor, grouped by role, as flat Float64Arrays [x1,y1,x2,y2,…] (fast to draw). */

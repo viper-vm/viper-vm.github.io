@@ -12,6 +12,7 @@ const { parseDXF } = await import(base + 'dxf.js');
 const { pack } = await import(base + 'pack.js');
 const { markupsDXF, issuesCSV } = await import(base + 'export.js');
 const { lakeviewSingle, lakeviewFiles } = await import(new URL('./fixtures.mjs', import.meta.url).href);
+const { massFloor } = await import(base + 'massing.js');
 
 let fails = 0, n = 0;
 const check = (name, ok, got = '') => { n++; if (!ok) fails++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok || got === '' ? '' : `   → got ${got}`}`); };
@@ -77,6 +78,64 @@ const sig = (r) => r.issues.map((i) => `${i.kind}:${i.lower}>${i.upper}:${i.seve
   // the 2nd-floor lift (plan 15.2, 3.6) lives at (−34.8, 33.6) in L2.dxf, whose plan origin is (−50, 30)
   const ring = back.circles.find((c) => c.layer === 'PLUMB-L2-HIGH' && near(c.cx, -34.8, 0.1) && near(c.cy, 33.6, 0.1));
   check('lakeview files: markups on per-floor layers, in each file\'s own coordinates', !!ring, JSON.stringify(back.circles.filter((c) => /L2/.test(c.layer))));
+}
+
+// ------------------------------------------------------------------ dimensions + binary DXF
+{
+  const text = readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8');
+  const p = pack(analyse(text));
+  const d0 = p.geometry[0].dims;
+  const labels = d0.texts.map((t) => t.text).sort().join(' ');
+  check('dimensions: sample DIMENSIONs drawn from their *D blocks, 13 per floor', p.geometry.every((g) => g.dims.count === 13), p.geometry.map((g) => g.dims.count).join());
+  check('dimensions: grid chain + overall read as drawn (2700 … 21000)', /2700/.test(labels) && /21000/.test(labels) && /12000/.test(labels), labels);
+  check('dimensions: never mistaken for walls (issues unchanged)', p.issues.length === 9, p.issues.length);
+  const lv = pack(analyse(lakeviewSingle()));
+  const t = lv.geometry[1].dims.texts;
+  check('dimensions: block-less DIMENSIONs rebuilt from definition points (metres)', lv.geometry[1].dims.count === 6 && t.filter((q) => q.text === '4.50').length === 4 && t.some((q) => q.text === '5.50' && q.rot === 90), t.map((q) => q.text + '@' + q.rot).join());
+
+  // binary DXF: same drawing, same answer
+  const bin = toBinaryDXF(text);
+  const a = parseDXF(text), b = parseDXF(bin);
+  check('binary DXF: same entities as the ASCII file', a.segs.length === b.segs.length && a.texts.length === b.texts.length && a.dims.length === b.dims.length && a.fills.length === b.fills.length, `${b.segs.length}/${a.segs.length} segs`);
+  const rb = analyse(bin);
+  check('binary DXF: same 9 issues', rb.issues.length === 9, rb.issues.length);
+}
+
+// ------------------------------------------------------------------ 3D model parts
+{
+  const text = readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8');
+  const r = analyse(text);
+  const m = massFloor(r.dx, r.roles, r.an[1]);
+  const wallArea = m.walls.reduce((a, w) => a + Math.abs(area(w.outer)) - w.holes.reduce((b, h) => b + Math.abs(area(h)), 0), 0);
+  check('model: sample first floor → 12 door openings, 15 windows, 2 balcony parapets', m.doors.length === 12 && m.windows.length === 15 && m.parapets.length === 2, `${m.doors.length} doors, ${m.windows.length} windows, ${m.parapets.length} parapets`);
+  check('model: windows all on the outside walls (x = 0/21 m, y = 0/12 m)', m.windows.every((w) => near(w.cx - 33, 0, 0.2) || near(w.cx - 33, 21, 0.2) || near(w.cy, 0, 0.2) || near(w.cy, 12, 0.2)));
+  check(`model: wall footprint is solid, not two lines (${wallArea.toFixed(1)} m²)`, wallArea > 20 && wallArea < 45, wallArea.toFixed(1));
+  const doorW = m.doors.map((d) => Math.hypot(d.x1 - d.x0, d.y1 - d.y0));
+  check('model: door openings as wide as their leaves (0.75–1.0 m)', doorW.every((w) => w > 0.7 && w < 1.05), doorW.map((w) => w.toFixed(2)).join());
+  const lv = analyse(lakeviewSingle());
+  const ml = massFloor(lv.dx, lv.roles, lv.an[1]);
+  check('model: Lakeview first floor (mirrored/rotated door blocks) → 10 doors, 7 windows, 1 parapet', ml.doors.length === 10 && ml.windows.length === 7 && ml.parapets.length === 1, `${ml.doors.length} doors, ${ml.windows.length} windows, ${ml.parapets.length} parapets`);
+}
+function area(pts) { let a = 0; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) a += (pts[j][0] + pts[i][0]) * (pts[j][1] - pts[i][1]); return a / 2; }
+
+/** ASCII DXF → binary DXF (R13+ layout: 2-byte group codes), for the round-trip test. */
+function toBinaryDXF(text) {
+  const lines = text.split(/\r?\n/);
+  const chunks = [Buffer.from('AutoCAD Binary DXF\r\n\x1a\x00', 'latin1')];
+  const R = (c, rs) => rs.some(([a, z]) => c >= a && c <= z);
+  for (let i = 0; i + 1 < lines.length; i += 2) {
+    const code = parseInt(lines[i].trim(), 10), v = lines[i + 1];
+    if (Number.isNaN(code)) continue;
+    const head = Buffer.alloc(2); head.writeUInt16LE(code);
+    let body;
+    if (R(code, [[10, 59], [110, 149], [210, 239], [460, 469], [1010, 1059]])) { body = Buffer.alloc(8); body.writeDoubleLE(parseFloat(v)); }
+    else if (R(code, [[60, 79], [170, 179], [270, 289], [370, 389], [400, 409], [1060, 1070]])) { body = Buffer.alloc(2); body.writeInt16LE(parseInt(v, 10)); }
+    else if (R(code, [[90, 99], [420, 429], [440, 449], [1071, 1071]])) { body = Buffer.alloc(4); body.writeInt32LE(parseInt(v, 10)); }
+    else if (R(code, [[290, 299]])) { body = Buffer.from([parseInt(v, 10) ? 1 : 0]); }
+    else body = Buffer.concat([Buffer.from(v, 'utf8'), Buffer.from([0])]);
+    chunks.push(head, body);
+  }
+  return new Uint8Array(Buffer.concat(chunks));
 }
 
 // ------------------------------------------------------------------ units

@@ -13,7 +13,7 @@ import { alignPair, runChecks } from './checks.js';
 export function analyse(text, opts = {}) {
   const t0 = now();
   const stage = opts.onStage || (() => {});
-  const raw = typeof text === 'string' ? parseDXF(text) : text;
+  const raw = typeof text === 'string' || ArrayBuffer.isView(text) || text instanceof ArrayBuffer ? parseDXF(text) : text;
   const unit = opts.unitMM ? { mm: opts.unitMM, source: 'you' } : inferUnitMM(raw);
   const dx = toMetres(raw, unit.mm);
   stage('Sorting layers…');
@@ -34,7 +34,7 @@ export function analyseFiles(files, opts = {}) {
     return { f, raw, unit, dx: toMetres(raw, unit.mm) };
   });
   // lay the files out side by side so they never overlap, then merge
-  const merged = { layers: new Map(), segs: [], arcs: [], circles: [], texts: [], fills: [], inserts: [], counts: {}, header: {} };
+  const merged = { layers: new Map(), segs: [], arcs: [], circles: [], texts: [], fills: [], inserts: [], dims: [], dimSegs: [], dimTexts: [], dimFills: [], counts: {}, header: {} };
   const floors = [];
   let x = 0;
   parts.forEach((p, k) => {
@@ -45,6 +45,13 @@ export function analyseFiles(files, opts = {}) {
     for (const c of p.dx.circles) merged.circles.push({ ...c, cx: c.cx + ox, cy: c.cy + oy });
     for (const t of p.dx.texts) merged.texts.push({ ...t, x: t.x + ox, y: t.y + oy });
     for (const fl of p.dx.fills) merged.fills.push({ ...fl, pts: fl.pts.map((q) => [q[0] + ox, q[1] + oy]) });
+    // dimensions keep their graphics ranges, re-based onto the merged arrays
+    const base = [merged.dimSegs.length, merged.dimTexts.length, merged.dimFills.length];
+    const O = (q) => (q ? [q[0] + ox, q[1] + oy] : null);
+    for (const d of p.dx.dims) merged.dims.push({ ...d, p10: O(d.p10), p11: O(d.p11), p13: O(d.p13), p14: O(d.p14), p15: O(d.p15), p16: O(d.p16), ranges: d.ranges.map((r, i) => [r[0] + base[i], r[1] + base[i]]) });
+    for (const q of p.dx.dimSegs) merged.dimSegs.push([q[0] + ox, q[1] + oy, q[2] + ox, q[3] + oy, q[4]]);
+    for (const t of p.dx.dimTexts) merged.dimTexts.push({ ...t, x: t.x + ox, y: t.y + oy });
+    for (const fl of p.dx.dimFills) merged.dimFills.push({ ...fl, pts: fl.pts.map((q) => [q[0] + ox, q[1] + oy]) });
     const lv = levelFromName(p.f.name) || bestTitle(p.dx);
     floors.push({ id: k, title: lv ? cleanTitle(lv.text) : p.f.name.replace(/\.dxf$/i, ''), level: lv ? lv.level : k, typical: !!(lv && lv.typical), box: [b.x0 + ox, b.y0 + oy, b.x1 + ox, b.y1 + oy], file: p.f.name, origin: [ox, oy], k: p.dx.k });
     x += b.x1 - b.x0 + 30;

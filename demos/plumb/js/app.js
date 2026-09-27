@@ -108,16 +108,53 @@ async function runAnalysis() {
     if (id !== job) return;
     console.error(err);
     busy(null);
-    failed(String(err.message || err).split('\n')[0]);
+    const msg = String(err.message || err);
+    if (msg === 'DWG_LOAD') failed('Couldn’t load the DWG reader (needs internet the first time). Save the drawing as DXF instead.');
+    else if (msg === 'DWG_READ') failed('Couldn’t read this DWG — it may be damaged or from a version LibreDWG doesn’t know yet. Save it as DXF from your CAD app and drop that.');
+    else failed(msg.split('\n')[0]);
   }
 }
 
+let inlineLast = null;
 async function inline() {
-  const [{ analyse, analyseFiles }, { pack }] = await Promise.all([import('./pipeline.js'), import('./pack.js')]);
+  const [{ analyse, analyseFiles }, { pack }, { dwgToDxf }] = await Promise.all([import('./pipeline.js'), import('./pack.js'), import('./dwg.js')]);
   await new Promise((r) => setTimeout(r, 30));
   const opts = { ...serialOpts(), onStage: (s) => busy(s) };
-  const r = state.files.length === 1 ? analyse(state.files[0].text, opts) : analyseFiles(state.files, opts);
+  const files = [];
+  for (const f of state.files) files.push(f.dwg ? { name: f.name, text: await dwgToDxf(new Uint8Array(f.bin), (s) => busy(s)) } : f);
+  const r = files.length === 1 ? analyse(files[0].text, opts) : analyseFiles(files, opts);
+  inlineLast = r;
   return pack(r);
+}
+
+/** The 3D parts of every floor (walls, openings…), built once per analysis, on first use. */
+let massJob = 0;
+async function ensureMass() {
+  if (state.mass && state.massFor === state.result) return state.mass;
+  const forResult = state.result, id = 'm' + ++massJob;
+  busy('Building the 3D model…');
+  try {
+    let mass;
+    const w = makeWorker();
+    if (w && !inlineLast) {
+      mass = await new Promise((resolve, reject) => {
+        const onMsg = (e) => {
+          if (e.data.id !== id) return;
+          if (e.data.type === 'progress') { busy(e.data.stage); return; }
+          w.removeEventListener('message', onMsg);
+          if (e.data.type === 'mass') resolve(e.data.mass); else reject(new Error(e.data.message));
+        };
+        w.addEventListener('message', onMsg);
+        w.postMessage({ id, type: 'mass' });
+      });
+    } else {
+      const { massFloor } = await import('./massing.js');
+      mass = inlineLast.an.map((a) => massFloor(inlineLast.dx, inlineLast.roles, a));
+    }
+    if (state.result !== forResult) return null;
+    state.mass = mass; state.massFor = forResult;
+    return mass;
+  } finally { busy(null); }
 }
 
 const sig = (i) => `${i.kind}:${i.upper}:${Math.round(i.at[0] * 5)}:${Math.round(i.at[1] * 5)}`;
@@ -143,6 +180,7 @@ function onResult(r) {
     state.k = Math.min(Math.max(1, first ? first.upper : Math.min(state.k, r.floors.length - 1)), Math.max(0, r.floors.length - 1));
     if (r.floors.length < 2) state.k = 0;
   }
+  state.mass = null;
   plan.setData(r);
   plan.setPair(state.k, false);
   plan.fit(false);
@@ -150,6 +188,7 @@ function onResult(r) {
   plan.setDismissed(dismissedIds());
   if (stack) { stack.setData(r); stack.setDismissed(dismissedIds()); stack.setSelected(state.selected); }
   renderAll();
+  if (state.view === 'model') showModel();
   if (r.floors.length === 1) toast('Only one floor found. Put every floor plan in the same DXF side by side with a title under each, or drop one DXF per floor.', true);
 }
 
@@ -161,30 +200,36 @@ function dismissedIds() {
 
 // ------------------------------------------------------------------ files
 async function openFiles(list) {
-  const files = [...list];
-  const dwg = files.filter((f) => /\.dwg$/i.test(f.name));
-  const dxf = files.filter((f) => /\.dxf$/i.test(f.name));
-  if (!dxf.length) {
-    toast(dwg.length ? 'DWG is a closed format — in your CAD app use Save As → DXF (any version), then drop that here.' : 'Plumb reads DXF files. In your CAD app: Save As → DXF.', true);
+  const files = [...list].filter((f) => /\.(dxf|dwg)$/i.test(f.name));
+  if (!files.length) {
+    const other = [...list][0];
+    const ext = other ? (other.name.split('.').pop() || '').toLowerCase() : '';
+    toast(ext === 'pdf' ? 'Plumb reads CAD drawings, not PDFs — export DWG or DXF from your CAD app.' : 'Plumb reads DWG and DXF drawings (AutoCAD, BricsCAD, ZWCAD, DraftSight, LibreCAD, Revit exports…).', true);
     return;
   }
-  busy(`Opening ${dxf.length > 1 ? dxf.length + ' files' : dxf[0].name}…`);
-  const texts = await Promise.all(dxf.map((f) => readText(f)));
-  const bad = texts.findIndex((t) => !/SECTION/.test(t.slice(0, 4000)));
-  if (bad >= 0) {
-    busy(null);
-    toast(/^AutoCAD Binary DXF/.test(texts[bad]) ? `${dxf[bad].name} is a binary DXF — save it as ASCII DXF.` : `${dxf[bad].name} doesn't look like a DXF file.`, true);
-    return;
+  busy(`Opening ${files.length > 1 ? files.length + ' files' : files[0].name}…`);
+  const out = [];
+  for (const f of files) {
+    const bytes = new Uint8Array(await f.arrayBuffer());
+    if (/\.dwg$/i.test(f.name) || isDWG(bytes)) { out.push({ name: f.name, dwg: true, bin: bytes.buffer, stamp: f.lastModified }); continue; }
+    if (isBinaryDXF(bytes)) { out.push({ name: f.name, text: bytes }); continue; }
+    const text = decodeText(bytes);
+    if (!/SECTION|EOF/.test(text.slice(0, 20000))) { busy(null); toast(`${f.name} doesn't look like a DXF file.`, true); return; }
+    out.push({ name: f.name, text });
   }
-  load(dxf.map((f, i) => ({ name: f.name, text: texts[i] })), dxf.length > 1 ? `${dxf.length} files` : dxf[0].name, false);
+  load(out, files.length > 1 ? `${files.length} files` : files[0].name, false);
 }
-function readText(file) {
-  return new Promise((res, rej) => {
-    const fr = new FileReader();
-    fr.onload = () => res(String(fr.result));
-    fr.onerror = () => rej(fr.error);
-    fr.readAsText(file);
-  });
+/** DXF text is UTF-8 from AutoCAD 2007 on, the Windows codepage before that. */
+function decodeText(bytes) {
+  const t = new TextDecoder('utf-8').decode(bytes);
+  return t.includes('\uFFFD') ? new TextDecoder('windows-1252').decode(bytes) : t;
+}
+const isDWG = (b) => b.length > 6 && b[0] === 0x41 && b[1] === 0x43 && b[2] === 0x31 && b[3] === 0x30; // "AC10…"
+function isBinaryDXF(b) {
+  const sig = 'AutoCAD Binary DXF';
+  if (b.length < sig.length) return false;
+  for (let i = 0; i < sig.length; i++) if (b[i] !== sig.charCodeAt(i)) return false;
+  return true;
 }
 async function loadSample() {
   busy('Opening the sample building…');
@@ -216,6 +261,7 @@ function load(files, label, isSample) {
 
 // ------------------------------------------------------------------ rendering
 function renderAll() {
+  renderDimBtn();
   renderHeader();
   renderFloors();
   renderLayers();
@@ -395,6 +441,11 @@ function renderPairChip() {
     el.innerHTML = `<span class="pc-f"><svg><use href="#i-layers"/></svg>${r.floors.length} floors</span><span class="pc-how">drag to orbit · scroll to zoom · click a number</span>`;
     return;
   }
+  if (state.view === 'model') {
+    const h = model ? model.h : { floor: 3 };
+    el.innerHTML = `<span class="pc-f"><svg><use href="#i-home"/></svg>3D model · ${r.floors.length} floor${r.floors.length > 1 ? 's' : ''}</span><span class="pc-how">${h.floor.toFixed(2)} m floor to floor · drag to orbit, right-drag to pan</span>`;
+    return;
+  }
   if (r.floors.length < 2) {
     el.innerHTML = `<span class="pc-f"><i style="background:var(--ink)"></i>${esc(floorName(r.floors[0]))}</span>`;
     return;
@@ -425,7 +476,13 @@ function renderLegend() {
   $('#mixWrap').hidden = state.view !== '2d' || !r || r.floors.length < 2;
   $('#explodeWrap').hidden = state.view !== '3d' || !r;
   $('#hud2d').hidden = state.view !== '2d' || !r;
+  $('#modelBar').hidden = state.view !== 'model' || !r;
   if (!r || !r.floors.length) { el.innerHTML = ''; return; }
+  if (state.view === 'model') {
+    const on = !model || model.roomColors;
+    el.innerHTML = on ? ['bedroom', 'living', 'toilet', 'kitchen', 'circulation', 'balcony'].map((t) => `<span class="lg opt"><i style="background:${TYPE_COLOR[t]}"></i>${TYPE_LABEL[t]}</span>`).join('') : '';
+    return;
+  }
   if (state.view === '3d') {
     const types = ['toilet', 'kitchen', 'bedroom', 'living', 'circulation', 'duct', 'stair'];
     el.innerHTML = types.map((t) => `<span class="lg"><i style="background:${TYPE_COLOR[t]}"></i>${TYPE_LABEL[t]}</span>`).join('') +
@@ -440,7 +497,23 @@ function renderLegend() {
     <span class="lg opt" title="Where the two floors agree, their lines add up to white"><i class="line" style="background:var(--ink)"></i>Both</span>
     <span class="lg toggle ${on.wet ? '' : 'off'}" data-show="wet" title="Wet rooms above (hatched) over bedrooms &amp; living below (tint) — click to toggle"><i class="hatch" style="color:var(--above)"></i>Wet above <i style="background:color-mix(in srgb,var(--below) 40%,transparent)"></i>Dry below</span>
     <span class="lg toggle ${on.overhang ? '' : 'off'}" data-show="overhang" title="Slab beyond the floor below — click to toggle"><i class="hatch" style="color:var(--medium)"></i>Overhang</span>
-    <span class="lg toggle opt ${on.labels ? '' : 'off'}" data-show="labels" title="Click to toggle">Aa Names</span>`;
+    <span class="lg toggle opt ${on.labels ? '' : 'off'}" data-show="labels" title="Click to toggle">Aa Names</span>
+    ${on.dims ? '<span class="lg toggle" data-show="dims" title="The dimensions drawn in the CAD file — click to hide"><svg style="width:14px;height:14px"><use href="#i-ruler"/></svg>Dimensions</span>' : ''}`;
+}
+
+function toggleDims() {
+  if (!state.result) return;
+  plan.setShow('dims', !plan.show.dims);
+  renderDimBtn();
+  renderLegend();
+  if (!state.selected) plan.fit(true);
+}
+function renderDimBtn() {
+  const b = $('#dimBtn'), r = state.result;
+  const n = r ? r.geometry.reduce((a, g) => a + ((g.dims && g.dims.count) || 0), 0) : 0;
+  b.disabled = !n;
+  b.setAttribute('aria-pressed', String(!!(n && plan.show.dims)));
+  b.title = n ? `${plan.show.dims ? 'Hide' : 'Show'} the drawing's own dimensions — ${n} found (D)` : 'No dimensions found in this drawing';
 }
 
 // ------------------------------------------------------------------ selection
@@ -567,7 +640,15 @@ async function setView(v) {
   document.querySelectorAll('#viewSeg button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
   $('#plan').hidden = v !== '2d';
   $('#view3d').hidden = v !== '3d';
+  $('#model3d').hidden = v !== 'model';
+  $('#heightsPop').hidden = true;
   hideTip(); closePicker();
+  if (v === 'model') {
+    if (state.nudging) cancelNudge();
+    renderPairChip(); renderLegend();
+    await showModel();
+    return;
+  }
   if (v === '3d') {
     if (state.nudging) cancelNudge();
     const s = await getStack();
@@ -584,6 +665,46 @@ async function setView(v) {
   renderLegend();
 }
 
+// ------------------------------------------------------------------ the 3D model
+let model = null;
+async function getModel() {
+  if (model) return model;
+  const { Model3D } = await import('./model3d.js');
+  model = new Model3D($('#model3d'));
+  model.setTheme(state.theme);
+  model.setHeights(loadHeights());
+  return model;
+}
+function loadHeights() { try { return JSON.parse(store.get('heights') || '{}'); } catch { return {}; } }
+async function showModel() {
+  if (!state.result || !state.result.floors.length) return;
+  const [m, mass] = await Promise.all([getModel(), ensureMass()]);
+  if (!mass || state.view !== 'model') return;
+  if (m.data !== state.result || m.mass !== mass) {
+    m.setData(state.result, mass);
+    renderModelBar();
+  }
+  m._resize();
+  m.request();
+}
+function renderModelBar() {
+  const r = state.result;
+  if (!r || !model) return;
+  const sel = $('#mFloor');
+  const cur = model.focus;
+  sel.innerHTML = `<option value="-1">All floors</option>` + r.floors.map((f, k) => `<option value="${k}">Up to ${esc(levelTag(f))} · ${esc(floorName(f))}</option>`).join('');
+  sel.value = String(cur < r.floors.length ? cur : -1);
+  $('#mRoof').setAttribute('aria-pressed', String(model.roof));
+  $('#mColors').setAttribute('aria-pressed', String(model.roomColors));
+  $('#mCut').value = String(Math.round(model.cut * 100));
+}
+function openHeights() {
+  const pop = $('#heightsPop');
+  if (!pop.hidden) { pop.hidden = true; return; }
+  for (const [k, v] of Object.entries(model.h)) if (pop.elements[k]) pop.elements[k].value = v;
+  pop.hidden = false;
+}
+
 function setTheme(t) {
   state.theme = t;
   document.documentElement.dataset.theme = t;
@@ -592,6 +713,7 @@ function setTheme(t) {
   document.querySelector('meta[name="theme-color"]').setAttribute('content', t === 'dark' ? '#0b0d10' : '#f8f7f3');
   plan.setTheme(t);
   if (stack) stack.setTheme(t);
+  if (model) model.setTheme(t);
 }
 
 let busyTimer = 0;
@@ -756,6 +878,33 @@ function wire() {
   $('#zoomIn').addEventListener('click', () => plan.zoomBy(1.4));
   $('#zoomOut').addEventListener('click', () => plan.zoomBy(1 / 1.4));
   $('#zoomFit').addEventListener('click', () => plan.fit(true));
+  $('#dimBtn').addEventListener('click', toggleDims);
+  $('#mFloor').addEventListener('change', (e) => { model && model.setFocus(+e.target.value); });
+  $('#mCut').addEventListener('input', (e) => { model && model.setCut(+e.target.value / 100); });
+  $('#mRoof').addEventListener('click', () => { if (!model) return; model.setRoof(!model.roof); renderModelBar(); });
+  $('#mColors').addEventListener('click', () => { if (!model) return; model.setRoomColors(!model.roomColors); renderModelBar(); renderLegend(); });
+  $('#mHeights').addEventListener('click', () => model && openHeights());
+  $('#hpReset').addEventListener('click', async () => {
+    const { DEFAULT_HEIGHTS } = await import('./model3d.js');
+    store.del('heights'); model.setHeights(DEFAULT_HEIGHTS); $('#heightsPop').hidden = true; renderPairChip();
+  });
+  $('#heightsPop').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const f = e.target, h = {};
+    for (const k of ['floor', 'slab', 'door', 'sill', 'head', 'parapet']) { const v = parseFloat(f.elements[k].value); if (Number.isFinite(v)) h[k] = v; }
+    h.head = Math.max(h.head ?? model.h.head, (h.sill ?? model.h.sill) + 0.3);
+    model.setHeights(h);
+    store.set('heights', JSON.stringify(model.h));
+    f.hidden = true;
+    renderPairChip();
+  });
+  $('#mExport').addEventListener('click', async () => {
+    if (!model || !model.data) return;
+    busy('Packing the model…');
+    try { download(`${baseName()}-model.glb`, await model.exportGLB()); toast('Saved a .glb — opens in Blender, SketchUp (glTF importer), Rhino 8, Windows 3D Viewer or any glTF viewer.'); }
+    catch (err) { console.error(err); toast('Couldn’t export the model.', true); }
+    finally { busy(null); }
+  });
   $('#mix').addEventListener('input', (e) => plan.setMix(+e.target.value / 100));
   $('#explode').addEventListener('input', async (e) => (await getStack()).setExplode(+e.target.value / 100));
   $('#exportDxf').addEventListener('click', exportDXF);
@@ -781,6 +930,7 @@ function wire() {
     const key = t.dataset.show;
     plan.setShow(key, !plan.show[key]);
     renderLegend();
+    renderDimBtn();
   });
   $('#pairChip').addEventListener('click', (e) => {
     const b = e.target.closest('button[data-act]');
@@ -851,7 +1001,11 @@ function wire() {
     if (e.dataTransfer?.files?.length) openFiles(e.dataTransfer.files);
   });
 
-  document.addEventListener('pointerdown', (e) => { if ($('#picker') && e.target instanceof Element && !e.target.closest('#picker') && e.target !== $('#plan')) closePicker(); });
+  document.addEventListener('pointerdown', (e) => {
+    if (!(e.target instanceof Element)) return;
+    if ($('#picker') && !e.target.closest('#picker') && e.target !== $('#plan')) closePicker();
+    if (!$('#heightsPop').hidden && !e.target.closest('#heightsPop, #mHeights')) $('#heightsPop').hidden = true;
+  });
   window.addEventListener('keydown', (e) => {
     if (e.target instanceof Element && e.target.closest('input, select, textarea, dialog[open]')) return;
     if (state.nudging) {
@@ -874,12 +1028,14 @@ function wire() {
     }
     if (e.key === '2') setView('2d');
     if (e.key === '3') setView('3d');
-    if (e.key === 'f') { if (state.view === '2d') plan.fit(true); else stack && stack.fit(true); }
+    if (e.key === 'm') setView('model');
+    if (e.key === 'f') { if (state.view === '2d') plan.fit(true); else if (state.view === 'model') model && model.fit(true); else stack && stack.fit(true); }
+    if (e.key === 'd' && state.view === '2d') toggleDims();
   });
 }
 
 // ------------------------------------------------------------------ boot
-window.plumb = { state, plan, get stack() { return stack; }, select, setView, setPair, openAI, namingHTML, rfiHTML }; // handy from the console
+window.plumb = { state, plan, get stack() { return stack; }, get model() { return model; }, select, setView, setPair, openAI, namingHTML, rfiHTML }; // handy from the console
 wire();
 setTheme(state.theme);
 setView('2d');

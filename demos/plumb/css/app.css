@@ -253,6 +253,8 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 
 .hud-tools { position: absolute; right: 12px; top: 58px; display: flex; flex-direction: column; gap: 4px; padding: 4px; background: var(--glass); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .hud-tools .icon-btn { width: 30px; height: 30px; }
+.icon-btn.toggle[aria-pressed='true'] { background: var(--brass); color: #16191d; border-color: var(--brass); }
+.icon-btn:disabled { opacity: .35; cursor: default; }
 
 .hud-bottom {
   position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
@@ -329,6 +331,24 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
   .pc-btn span, .pc-f { font-size: 12px; }
   .legend .lg.opt { display: none; }
 }
+
+/* model toolbar */
+.modelbar {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 6px 8px; margin-left: auto;
+  background: var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--line); border-radius: 10px; font-size: 12px;
+}
+.modelbar label { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2); }
+.modelbar label svg { width: 15px; height: 15px; color: var(--muted); }
+.modelbar select {
+  border: 1px solid var(--line-2); background: var(--card); border-radius: 7px; padding: 3px 6px; font-size: 12px; color: var(--ink);
+}
+.modelbar input[type=range] { width: 110px; accent-color: var(--ink-2); }
+.modelbar .chip[aria-pressed='true'] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.popover.heights { right: 12px; bottom: 64px; width: 260px; display: grid; gap: 7px; }
+.popover.heights label { display: grid; grid-template-columns: 1fr 76px 14px; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
+.popover.heights input { width: 100%; border: 1px solid var(--line-2); background: var(--card); border-radius: 6px; padding: 3px 6px; font: 12.5px var(--mono); color: var(--ink); }
+.hp-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 4px; }
 
 /* empty state */
 .empty {
