@@ -439,6 +439,7 @@ function renderDetail(it) {
       <button class="btn primary" id="detZoom">Zoom to site</button>
       <a class="btn" target="_blank" rel="noopener" href="https://maps.apple.com/?ll=${it.location.lat},${it.location.lng}&q=${encodeURIComponent(it.location.name)}">Apple Maps</a>
       <a class="btn" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=${it.location.lat},${it.location.lng}">Google</a>
+      <a class="btn" target="_blank" rel="noopener" title="Every satellite capture of this spot since 2010 (Groundtruth)" href="../groundtruth/#spot=${it.location.lat.toFixed(5)},${it.location.lng.toFixed(5)},15">From orbit</a>
       <button class="btn" id="detShare">Copy link</button>
     </div>`;
   $("#detClose").onclick = deselect;

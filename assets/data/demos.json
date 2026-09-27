@@ -9,6 +9,15 @@
     "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos"
   },
   {
+    "id": "groundtruth",
+    "title": "Groundtruth",
+    "summary": "A satellite time machine for India's megaprojects — swipe, lens and blink through every satellite capture since 2010 of 33 sites (Navi Mumbai Airport, Atal Setu, Chenab Bridge, Khavda…), or scan any spot on Earth. Real capture dates, milestone timelines, 3D terrain, measuring, a watchlist that flags new imagery, and MP4 timelapse export.",
+    "category": "Maps / Satellite",
+    "emoji": "🌍",
+    "demo_url": "/demos/groundtruth/",
+    "repo": "https://github.com/viper-vm/viper-vm.github.io/tree/main/demos/groundtruth"
+  },
+  {
     "id": "infra-atlas",
     "title": "India Infra Atlas",
     "summary": "A living map of India's infrastructure, tech, energy & defense news — daily auto-updating pins and corridors on a full interactive map with 3D terrain, rail overlays, measuring tools and a timeline.",

@@ -1,0 +1,41 @@
+name: Groundtruth · refresh satellite captures
+
+on:
+  schedule:
+    # 02:00 UTC on the 12th of each month — Esri publishes a new Wayback release roughly monthly
+    - cron: "0 2 12 * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: groundtruth-bake
+  cancel-in-progress: false
+
+jobs:
+  bake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Re-scan the imagery archive for every curated project
+        run: node scripts/groundtruth/bake.mjs
+
+      - name: Commit changes
+        run: |
+          git config user.name "groundtruth-bot"
+          git config user.email "actions@github.com"
+          git add demos/groundtruth/data/captures.json
+          if git diff --cached --quiet; then
+            echo "No new captures this month."
+          else
+            git commit -m "Groundtruth: refresh satellite captures ($(date -u +%Y-%m-%d))"
+            git pull --rebase
+            git push
+          fi

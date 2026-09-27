@@ -1,0 +1,1255 @@
+{
+  "categories": {
+    "airport": {
+      "label": "Airports",
+      "color": "#ffb547"
+    },
+    "bridge": {
+      "label": "Bridges & sea links",
+      "color": "#4cc9f0"
+    },
+    "transport": {
+      "label": "Roads & rail",
+      "color": "#9b8cff"
+    },
+    "strategic": {
+      "label": "Ports & defence",
+      "color": "#ff6b6b"
+    },
+    "energy": {
+      "label": "Energy & water",
+      "color": "#7ae582"
+    },
+    "city": {
+      "label": "Cities & landmarks",
+      "color": "#f78fb3"
+    }
+  },
+  "projects": [
+    {
+      "id": "navi-mumbai-airport",
+      "name": "Navi Mumbai International Airport",
+      "short": "Navi Mumbai Airport",
+      "cat": "airport",
+      "state": "Maharashtra",
+      "status": "Operational",
+      "cost": "₹19,650 cr (Phase 1)",
+      "stat": "Built on a blasted-flat hill and a diverted river",
+      "summary": "Mumbai's second airport, built by Adani Airports with CIDCO on marshland at Ulwe. Before a runway could go down, the Ulwe hill was blasted flat, the Ulwe river was diverted and wetlands were filled. Phase 1 handles 20 million passengers a year; the design scales to 90 million.",
+      "watch": "Watch Ulwe hill disappear (2017–19) and the river channel get pushed around the airfield, then the lotus-shaped terminal fill in.",
+      "milestones": [
+        {
+          "d": "2018-02-18",
+          "t": "PM lays the foundation stone"
+        },
+        {
+          "d": "2024-10-11",
+          "t": "First test landing, by an IAF C-295"
+        },
+        {
+          "d": "2025-10-08",
+          "t": "Inaugurated by PM Modi"
+        },
+        {
+          "d": "2025-12-25",
+          "t": "Commercial flights begin"
+        }
+      ],
+      "view": {
+        "c": [
+          73.062,
+          18.992
+        ],
+        "z": 14.1
+      },
+      "focus": [
+        73.068,
+        18.99
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "navi mumbai (international )?airport|\\bnmia\\b"
+    },
+    {
+      "id": "noida-airport",
+      "name": "Noida International Airport, Jewar",
+      "short": "Noida Airport (Jewar)",
+      "cat": "airport",
+      "state": "Uttar Pradesh",
+      "status": "Operational",
+      "cost": "₹10,050 cr+ (Phase 1)",
+      "stat": "Farmland to a 3.9 km runway in five years",
+      "summary": "A greenfield airport in Gautam Buddha Nagar, built by YIAPL, a subsidiary of Zurich Airport. Phase 1 has one 3.9 km runway and room for 12 million passengers a year, with later phases planned to make it one of India's largest airports.",
+      "watch": "Farm plots give way to the runway strip in 2022–23; then the terminal roof, apron and approach roads fill in.",
+      "milestones": [
+        {
+          "d": "2021-11-25",
+          "t": "PM lays the foundation stone"
+        },
+        {
+          "d": "2024-12-09",
+          "t": "First validation flight lands"
+        },
+        {
+          "d": "2026-06-15",
+          "t": "Commercial operations begin"
+        }
+      ],
+      "view": {
+        "c": [
+          77.607,
+          28.178
+        ],
+        "z": 14.3
+      },
+      "focus": [
+        77.605,
+        28.175
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "noida (international )?airport|jewar airport|\\bjewar\\b"
+    },
+    {
+      "id": "mopa-airport",
+      "name": "Manohar International Airport, Mopa",
+      "short": "Mopa Airport (Goa)",
+      "cat": "airport",
+      "state": "Goa",
+      "status": "Operational",
+      "cost": "₹2,870 cr (Phase 1)",
+      "stat": "Goa's second airport, carved into a laterite plateau",
+      "summary": "A greenfield airport built by GMR on the Mopa plateau in North Goa, taking pressure off the Navy-run Dabolim airport. Phase 1 handles 4.4 million passengers a year.",
+      "watch": "A bare plateau is levelled into a 3.75 km runway, with the terminal on its southern edge.",
+      "milestones": [
+        {
+          "d": "2016-11-13",
+          "t": "PM lays the foundation stone"
+        },
+        {
+          "d": "2022-12-11",
+          "t": "Inaugurated by PM Modi"
+        },
+        {
+          "d": "2023-01-05",
+          "t": "Commercial flights begin"
+        }
+      ],
+      "view": {
+        "c": [
+          73.867,
+          15.733
+        ],
+        "z": 14.2
+      },
+      "focus": [
+        73.867,
+        15.7305
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "mopa|manohar international"
+    },
+    {
+      "id": "bengaluru-t2",
+      "name": "Kempegowda Airport Terminal 2",
+      "short": "Bengaluru T2",
+      "cat": "airport",
+      "state": "Karnataka",
+      "status": "Operational",
+      "cost": "≈₹5,000 cr",
+      "stat": "A 'terminal in a garden', designed by SOM",
+      "summary": "Bengaluru airport's second terminal, designed by SOM with indoor forests, hanging gardens and bamboo-clad interiors. It opened to domestic flights in January 2023 and took over international flights later that year.",
+      "watch": "Construction fields around the old terminal turn into a second terminal, forecourt and multi-level car park.",
+      "milestones": [
+        {
+          "d": "2022-11-11",
+          "t": "Inaugurated by PM Modi"
+        },
+        {
+          "d": "2023-01-15",
+          "t": "Domestic operations begin"
+        },
+        {
+          "d": "2023-09-12",
+          "t": "International flights move to T2"
+        }
+      ],
+      "view": {
+        "c": [
+          77.716,
+          13.1985
+        ],
+        "z": 15.1
+      },
+      "focus": [
+        77.7176,
+        13.1978
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "kempegowda|bengaluru airport|\\bkia\\b.*terminal"
+    },
+    {
+      "id": "ayodhya-airport",
+      "name": "Maharishi Valmiki International Airport, Ayodhya",
+      "short": "Ayodhya Airport",
+      "cat": "airport",
+      "state": "Uttar Pradesh",
+      "status": "Operational",
+      "cost": "≈₹1,450 cr",
+      "stat": "An airstrip turned international airport in under two years",
+      "summary": "A small airstrip rebuilt into an international airport to serve pilgrims visiting the Ram Mandir. The terminal's façade draws on Nagara temple architecture.",
+      "watch": "The short old strip is lengthened, a new apron is laid and the terminal appears in 2023.",
+      "milestones": [
+        {
+          "d": "2023-12-30",
+          "t": "Inaugurated by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          82.152,
+          26.748
+        ],
+        "z": 14.8
+      },
+      "focus": [
+        82.151,
+        26.749
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "ayodhya airport|valmiki (international )?airport"
+    },
+    {
+      "id": "rajkot-airport",
+      "name": "Rajkot International Airport, Hirasar",
+      "short": "Rajkot Airport (Hirasar)",
+      "cat": "airport",
+      "state": "Gujarat",
+      "status": "Operational",
+      "cost": "≈₹1,405 cr",
+      "stat": "Greenfield airport on 1,025 hectares",
+      "summary": "A greenfield airport about 30 km from Rajkot that replaced the old city-centre airfield in 2023, with a runway long enough for wide-body jets.",
+      "watch": "Scrubland becomes a runway, taxiways and a terminal between 2019 and 2023.",
+      "milestones": [
+        {
+          "d": "2017-10-07",
+          "t": "PM lays the foundation stone"
+        },
+        {
+          "d": "2023-07-27",
+          "t": "Inaugurated by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          71.031,
+          22.37
+        ],
+        "z": 14.2
+      },
+      "focus": [
+        71.0317,
+        22.3695
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "hirasar|rajkot (international )?airport"
+    },
+    {
+      "id": "atal-setu",
+      "name": "Atal Setu — Mumbai Trans Harbour Link",
+      "short": "Atal Setu (MTHL)",
+      "cat": "bridge",
+      "state": "Maharashtra",
+      "status": "Operational",
+      "cost": "₹17,840 cr",
+      "stat": "21.8 km · India's longest sea bridge",
+      "summary": "A six-lane bridge across Mumbai harbour from Sewri to Chirle near Nhava Sheva, 16.5 km of it over water. Built by MMRDA with JICA funding, it cut the drive from south Mumbai to Navi Mumbai to about 20 minutes.",
+      "watch": "Follow the pier line marching out across the mudflats from both shores in 2019–22 until the deck closes.",
+      "milestones": [
+        {
+          "d": "2016-12-24",
+          "t": "Foundation stone laid"
+        },
+        {
+          "d": "2018-04-01",
+          "t": "Construction begins"
+        },
+        {
+          "d": "2024-01-12",
+          "t": "Opened by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          72.884,
+          18.99
+        ],
+        "z": 13.5
+      },
+      "focus": [
+        72.885,
+        18.9926
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "atal setu|trans ?harbour link|\\bmthl\\b"
+    },
+    {
+      "id": "chenab-bridge",
+      "name": "Chenab Rail Bridge",
+      "short": "Chenab Bridge",
+      "cat": "bridge",
+      "state": "Jammu & Kashmir",
+      "status": "Operational",
+      "cost": "≈₹1,486 cr",
+      "stat": "359 m above the river · world's highest railway arch bridge",
+      "summary": "A 1,315 m steel arch bridge on the Udhampur–Srinagar–Baramulla rail link, leaping 467 m across the Chenab gorge in Reasi district. Built by Afcons for Konkan Railway to withstand 260 km/h winds, it finally put the Kashmir valley on India's rail network.",
+      "watch": "The two half-arches creep out from the cliffs and meet in 2021; the deck follows, then trains.",
+      "milestones": [
+        {
+          "d": "2021-04-05",
+          "t": "Arch closure — the two halves meet"
+        },
+        {
+          "d": "2022-08-13",
+          "t": "'Golden joint' completes the deck"
+        },
+        {
+          "d": "2025-06-06",
+          "t": "Inaugurated by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          74.8828,
+          33.1507
+        ],
+        "z": 15.4
+      },
+      "focus": [
+        74.8828,
+        33.1507
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "chenab (rail )?bridge|\\busbrl\\b|udhampur.srinagar",
+      "a": 6984
+    },
+    {
+      "id": "new-pamban-bridge",
+      "name": "New Pamban Bridge",
+      "short": "New Pamban Bridge",
+      "cat": "bridge",
+      "state": "Tamil Nadu",
+      "status": "Operational",
+      "cost": "≈₹535 cr",
+      "stat": "India's first vertical-lift sea bridge",
+      "summary": "A 2.07 km railway bridge linking Rameswaram island to the mainland, built by RVNL beside the 1914 Scherzer rolling-lift bridge it replaces. Its 72.5 m navigation span lifts straight up to let ships through.",
+      "watch": "A new pier line rises alongside the century-old bridge, with the lift-span towers near mid-channel.",
+      "milestones": [
+        {
+          "d": "2019-03-01",
+          "t": "PM lays the foundation stone"
+        },
+        {
+          "d": "2022-12-23",
+          "t": "Old 1914 bridge closed to trains"
+        },
+        {
+          "d": "2025-04-06",
+          "t": "Inaugurated by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          79.2,
+          9.283
+        ],
+        "z": 14.6
+      },
+      "focus": [
+        79.2,
+        9.283
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "pamban"
+    },
+    {
+      "id": "sudarshan-setu",
+      "name": "Sudarshan Setu, Okha–Beyt Dwarka",
+      "short": "Sudarshan Setu",
+      "cat": "bridge",
+      "state": "Gujarat",
+      "status": "Operational",
+      "cost": "₹979 cr",
+      "stat": "2.32 km · India's longest cable-stayed bridge at opening",
+      "summary": "A four-lane cable-stayed bridge from Okha to Beyt Dwarka island, which until 2024 was reached only by boat. Its 900 m cable-stayed section hangs from two tall pylons in the Gulf of Kutch.",
+      "watch": "Two pylons rise out of the sea and the deck closes between them around 2023.",
+      "milestones": [
+        {
+          "d": "2017-10-07",
+          "t": "PM lays the foundation stone"
+        },
+        {
+          "d": "2024-02-25",
+          "t": "Inaugurated by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          69.0866,
+          22.4512
+        ],
+        "z": 14.6
+      },
+      "focus": [
+        69.0866,
+        22.4512
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "sudarshan setu|beyt dwarka|okha"
+    },
+    {
+      "id": "bogibeel-bridge",
+      "name": "Bogibeel Bridge",
+      "short": "Bogibeel Bridge",
+      "cat": "bridge",
+      "state": "Assam",
+      "status": "Operational",
+      "cost": "≈₹5,900 cr",
+      "stat": "4.94 km · India's longest rail-cum-road bridge",
+      "summary": "A double-deck bridge over the Brahmaputra near Dibrugarh, with a road on top and a double-line railway below. Sanctioned in 1997 and started in 2002, it opened in 2018, a vital link to Arunachal Pradesh's frontier.",
+      "watch": "The last spans are launched across the braided river channels before the 2018 opening.",
+      "milestones": [
+        {
+          "d": "2018-12-25",
+          "t": "Opened by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          94.762,
+          27.405
+        ],
+        "z": 13.3
+      },
+      "focus": [
+        94.762,
+        27.405
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "bogibeel"
+    },
+    {
+      "id": "mumbai-coastal-road",
+      "name": "Mumbai Coastal Road",
+      "short": "Mumbai Coastal Road",
+      "cat": "transport",
+      "state": "Maharashtra",
+      "status": "Operational",
+      "cost": "≈₹14,000 cr",
+      "stat": "10.58 km, much of it on land reclaimed from the sea",
+      "summary": "An expressway from Marine Drive to the Bandra–Worli Sea Link, running on land reclaimed from the Arabian Sea and through twin tunnels under Malabar Hill, India's first undersea road tunnels. The reclamation around Haji Ali is one of the largest in the city's history.",
+      "watch": "A whole new shoreline of interchanges, sea walls and promenade appears around the Haji Ali shrine from 2019.",
+      "milestones": [
+        {
+          "d": "2018-12-01",
+          "t": "Reclamation work begins"
+        },
+        {
+          "d": "2024-03-11",
+          "t": "First carriageway opens"
+        },
+        {
+          "d": "2024-09-12",
+          "t": "Linked to the Bandra–Worli Sea Link"
+        }
+      ],
+      "view": {
+        "c": [
+          72.81,
+          18.98
+        ],
+        "z": 15.0
+      },
+      "focus": [
+        72.81,
+        18.98
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "coastal road"
+    },
+    {
+      "id": "dwarka-expressway",
+      "name": "Dwarka Expressway",
+      "short": "Dwarka Expressway",
+      "cat": "transport",
+      "state": "Delhi / Haryana",
+      "status": "Operational",
+      "cost": "≈₹9,000 cr",
+      "stat": "India's first 8-lane elevated urban expressway",
+      "summary": "A 29 km access-controlled expressway from Shiv Murti near IGI Airport to Kherki Daula in Gurugram, built to take load off NH-48. Most of it runs on a single line of piers, with tunnels linking it to the airport.",
+      "watch": "A row of piers beside the rail line becomes a wide elevated ribbon with ramps and toll plazas.",
+      "milestones": [
+        {
+          "d": "2024-03-11",
+          "t": "Haryana section opened by PM Modi"
+        },
+        {
+          "d": "2025-08-17",
+          "t": "Delhi section opened by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          77.0557,
+          28.5456
+        ],
+        "z": 15.0
+      },
+      "focus": [
+        77.0557,
+        28.5456
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "dwarka expressway"
+    },
+    {
+      "id": "sabarmati-hsr-hub",
+      "name": "Sabarmati Multimodal Hub — Bullet Train Terminus",
+      "short": "Sabarmati Bullet Train Hub",
+      "cat": "transport",
+      "state": "Gujarat",
+      "status": "Hub built · line under construction",
+      "cost": null,
+      "stat": "Terminus of the 508 km Mumbai–Ahmedabad bullet train",
+      "summary": "India's first high-speed line will run 508 km from Mumbai's BKC to Sabarmati, where this hub ties the bullet-train station to Indian Railways, metro and BRTS. The line uses Japanese Shinkansen technology; all land has been acquired and the first Gujarat section is due around 2027.",
+      "watch": "The hub building and the elevated high-speed station deck rise over the old railway yard.",
+      "milestones": [
+        {
+          "d": "2017-09-14",
+          "t": "Bullet train foundation stone laid in Ahmedabad"
+        },
+        {
+          "d": "2026-09-25",
+          "t": "All land acquired; over 62% of work done"
+        }
+      ],
+      "view": {
+        "c": [
+          72.5895,
+          23.074
+        ],
+        "z": 16.0
+      },
+      "focus": [
+        72.5895,
+        23.074
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "bullet train|high.speed rail|\\bmahsr\\b|sabarmati"
+    },
+    {
+      "id": "vizhinjam-port",
+      "name": "Vizhinjam International Seaport",
+      "short": "Vizhinjam Port",
+      "cat": "strategic",
+      "state": "Kerala",
+      "status": "Operational (Phase 1)",
+      "cost": "≈₹8,870 cr (Phase 1)",
+      "stat": "India's first deep-water container transshipment port",
+      "summary": "Built by Adani Ports with the Kerala government near Thiruvananthapuram, a few nautical miles from the main East–West shipping lane, with about 20 m of natural depth. Its breakwater was built out into the open sea, and the port now takes the world's largest container ships.",
+      "watch": "The breakwater curls out into the sea year by year from 2016; container yards and cranes appear by 2024.",
+      "milestones": [
+        {
+          "d": "2015-12-05",
+          "t": "Construction begins"
+        },
+        {
+          "d": "2023-10-15",
+          "t": "First ship arrives, carrying cranes"
+        },
+        {
+          "d": "2024-07-11",
+          "t": "Trial operations with the first mother vessel"
+        },
+        {
+          "d": "2025-05-02",
+          "t": "Commissioned by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          76.995,
+          8.373
+        ],
+        "z": 14.3
+      },
+      "focus": [
+        76.995,
+        8.373
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "vizhinjam"
+    },
+    {
+      "id": "karwar-naval-base",
+      "name": "INS Kadamba, Karwar — Project Seabird",
+      "short": "Karwar Naval Base",
+      "cat": "strategic",
+      "state": "Karnataka",
+      "status": "Expanding",
+      "cost": null,
+      "stat": "Set to become Asia's largest naval base",
+      "summary": "The Navy's west-coast base at Karwar, built under Project Seabird to move warships and submarines away from crowded Mumbai. Phase IIA adds new piers, a covered dry berth and a naval air station.",
+      "watch": "New piers and berths extend the harbour, and more hulls appear alongside in recent frames.",
+      "milestones": [
+        {
+          "d": "2005-05-31",
+          "t": "INS Kadamba commissioned"
+        }
+      ],
+      "view": {
+        "c": [
+          74.14,
+          14.775
+        ],
+        "z": 14.4
+      },
+      "focus": [
+        74.14,
+        14.775
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "karwar|seabird|ins kadamba"
+    },
+    {
+      "id": "nyoma-airbase",
+      "name": "Mudh–Nyoma Airbase, Ladakh",
+      "short": "Nyoma Airbase",
+      "cat": "strategic",
+      "state": "Ladakh",
+      "status": "Upgraded",
+      "cost": "≈₹218 cr",
+      "stat": "A fighter-capable runway at ~13,700 ft, ~35 km from the LAC",
+      "summary": "An old advanced landing ground in eastern Ladakh, rebuilt by the Border Roads Organisation into a fighter-capable airbase with a new 2.7 km runway, one of the highest in the world.",
+      "watch": "The new paved runway appears beside the old strip on the Indus plain in 2024–25.",
+      "milestones": [
+        {
+          "d": "2023-09-12",
+          "t": "Foundation stone laid by the Defence Minister"
+        }
+      ],
+      "view": {
+        "c": [
+          78.7276,
+          33.1715
+        ],
+        "z": 14.0
+      },
+      "focus": [
+        78.7276,
+        33.1715
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "nyoma|mudh"
+    },
+    {
+      "id": "khavda-re-park",
+      "name": "Khavda Renewable Energy Park",
+      "short": "Khavda RE Park",
+      "cat": "energy",
+      "state": "Gujarat",
+      "status": "Under construction",
+      "cost": null,
+      "stat": "Planned 30 GW · the world's largest renewable energy park",
+      "summary": "A solar-and-wind park on barren salt desert in Kutch, close to the Pakistan border, spread over about 538 km², roughly five times the size of Paris. Adani Green is building most of it, alongside NTPC, GSECL and others, and the first capacity came online in late 2023.",
+      "watch": "Use the Sentinel-2 yearly layer: from 2022 the desert fills with a grid of panel blocks visible from space.",
+      "milestones": [
+        {
+          "d": "2023-12-01",
+          "t": "First solar capacity commissioned"
+        }
+      ],
+      "view": {
+        "c": [
+          69.44,
+          24.08
+        ],
+        "z": 11.2
+      },
+      "focus": [
+        69.44,
+        24.08
+      ],
+      "scanZ": 16,
+      "src": "s2",
+      "kw": "khavda"
+    },
+    {
+      "id": "bhadla-solar",
+      "name": "Bhadla Solar Park",
+      "short": "Bhadla Solar Park",
+      "cat": "energy",
+      "state": "Rajasthan",
+      "status": "Complete",
+      "cost": null,
+      "stat": "2,245 MW on ~56 km² of the Thar desert",
+      "summary": "One of the world's largest solar parks, in Jodhpur district, where summer temperatures pass 45°C. It was built in four phases between 2015 and 2020, with developers including Adani, NTPC, ACME and SB Energy.",
+      "watch": "In the Sentinel-2 years, dark blocks of panels spread across the sand from 2016 to 2019.",
+      "milestones": [
+        {
+          "d": "2020-03-01",
+          "t": "Park reaches its full 2,245 MW"
+        }
+      ],
+      "view": {
+        "c": [
+          71.93,
+          27.52
+        ],
+        "z": 12.4
+      },
+      "focus": [
+        71.93,
+        27.52
+      ],
+      "scanZ": 16,
+      "src": "s2",
+      "kw": "bhadla"
+    },
+    {
+      "id": "pavagada-solar",
+      "name": "Pavagada Solar Park (Shakti Sthala)",
+      "short": "Pavagada Solar Park",
+      "cat": "energy",
+      "state": "Karnataka",
+      "status": "Complete",
+      "cost": null,
+      "stat": "2,050 MW on 13,000 acres leased from farmers",
+      "summary": "Built on drought-hit land in Tumakuru district that farmers lease to the state instead of selling, earning an annual rent. Developed by the Karnataka Solar Power Development Corporation and fully commissioned in 2019.",
+      "watch": "Compare Sentinel-2 2016 with 2019: scrubland becomes a patchwork of solar blocks.",
+      "milestones": [
+        {
+          "d": "2018-03-01",
+          "t": "Park inaugurated (first 600 MW)"
+        },
+        {
+          "d": "2019-12-01",
+          "t": "Reaches its full 2,050 MW"
+        }
+      ],
+      "view": {
+        "c": [
+          77.43,
+          14.27
+        ],
+        "z": 12.4
+      },
+      "focus": [
+        77.43,
+        14.27
+      ],
+      "scanZ": 16,
+      "src": "s2",
+      "kw": "pavagada"
+    },
+    {
+      "id": "kudankulam-npp",
+      "name": "Kudankulam Nuclear Power Plant",
+      "short": "Kudankulam Nuclear",
+      "cat": "energy",
+      "state": "Tamil Nadu",
+      "status": "Units 1–2 running · 3–6 under construction",
+      "cost": null,
+      "stat": "6 × 1,000 MW VVER reactors when complete",
+      "summary": "India's largest nuclear station, on the coast near Kanyakumari, built by NPCIL with Russia's Rosatom. Units 1 and 2 have run since 2013 and 2016; units 3 to 6 are being built alongside them, taking the site to 6,000 MW.",
+      "watch": "New reactor buildings and turbine halls rise beside the two domed units already running.",
+      "milestones": [
+        {
+          "d": "2013-10-22",
+          "t": "Unit 1 connected to the grid"
+        },
+        {
+          "d": "2016-08-29",
+          "t": "Unit 2 connected to the grid"
+        },
+        {
+          "d": "2017-06-29",
+          "t": "Construction of Units 3–4 begins"
+        },
+        {
+          "d": "2021-06-29",
+          "t": "Construction of Units 5–6 begins"
+        }
+      ],
+      "view": {
+        "c": [
+          77.7128,
+          8.169
+        ],
+        "z": 15.0
+      },
+      "focus": [
+        77.7128,
+        8.1667
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "kudankulam"
+    },
+    {
+      "id": "polavaram-dam",
+      "name": "Polavaram Irrigation Project",
+      "short": "Polavaram Dam",
+      "cat": "energy",
+      "state": "Andhra Pradesh",
+      "status": "Under construction",
+      "cost": "≈₹55,000 cr",
+      "stat": "A national project across the Godavari",
+      "summary": "A multipurpose dam across the Godavari to irrigate lakhs of hectares, generate 960 MW and send water to the Krishna delta. The spillway was built first; the main rock-fill dam slipped after floods damaged its diaphragm wall in 2020, and the state now targets 2027.",
+      "watch": "The spillway rises on the bank and cofferdams choke the river channel from 2019.",
+      "milestones": [
+        {
+          "d": "2014-03-01",
+          "t": "Declared a national project"
+        },
+        {
+          "d": "2027-03-31",
+          "t": "State's target for completion"
+        }
+      ],
+      "view": {
+        "c": [
+          81.657,
+          17.275
+        ],
+        "z": 14.0
+      },
+      "focus": [
+        81.657,
+        17.272
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "polavaram"
+    },
+    {
+      "id": "central-vista",
+      "name": "Central Vista & the New Parliament",
+      "short": "Central Vista",
+      "cat": "city",
+      "state": "Delhi",
+      "status": "Largely complete",
+      "cost": null,
+      "stat": "A triangular Parliament beside the 1927 circular one",
+      "summary": "The rebuilding of Delhi's power corridor: a new triangular Parliament House next to the old circular one, a redone Kartavya Path (formerly Rajpath), and new Common Central Secretariat buildings replacing post-independence office blocks.",
+      "watch": "The triangle rises on the plot beside the old Parliament in 2021–22; later frames show ministry blocks being replaced.",
+      "milestones": [
+        {
+          "d": "2020-12-10",
+          "t": "New Parliament foundation stone"
+        },
+        {
+          "d": "2022-09-08",
+          "t": "Kartavya Path inaugurated"
+        },
+        {
+          "d": "2023-05-28",
+          "t": "New Parliament inaugurated"
+        },
+        {
+          "d": "2025-08-06",
+          "t": "First Kartavya Bhavan opens"
+        }
+      ],
+      "view": {
+        "c": [
+          77.211,
+          28.6155
+        ],
+        "z": 15.4
+      },
+      "focus": [
+        77.2096,
+        28.617
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "central vista|new parliament|kartavya (path|bhavan)"
+    },
+    {
+      "id": "statue-of-unity",
+      "name": "Statue of Unity",
+      "short": "Statue of Unity",
+      "cat": "city",
+      "state": "Gujarat",
+      "status": "Complete",
+      "cost": "≈₹2,989 cr",
+      "stat": "182 m · the world's tallest statue",
+      "summary": "A 182-metre statue of Sardar Vallabhbhai Patel on Sadhu Bet island, just downstream of the Sardar Sarovar dam on the Narmada. Built by L&T around concrete cores clad in bronze panels; a new tourism town, Ekta Nagar, grew up around it.",
+      "watch": "The earliest frames show a rocky islet; the cores rise by 2017 and a bridge reaches the island.",
+      "milestones": [
+        {
+          "d": "2018-10-31",
+          "t": "Unveiled by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          73.7191,
+          21.838
+        ],
+        "z": 16.2
+      },
+      "focus": [
+        73.7191,
+        21.838
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "statue of unity|ekta nagar|kevadia"
+    },
+    {
+      "id": "ram-mandir",
+      "name": "Shri Ram Janmabhoomi Mandir, Ayodhya",
+      "short": "Ram Mandir, Ayodhya",
+      "cat": "city",
+      "state": "Uttar Pradesh",
+      "status": "Complete",
+      "cost": null,
+      "stat": "A three-storey Nagara-style stone temple",
+      "summary": "A stone temple built by L&T, with Tata Consulting Engineers, for the Shri Ram Janmabhoomi Teerth Kshetra trust. The consecration (Pran Pratishtha) took place in January 2024 and the spire and flag were completed in November 2025.",
+      "watch": "The site is cleared and excavated in 2020–21, then the temple's plinth and courtyard walls take shape.",
+      "milestones": [
+        {
+          "d": "2020-08-05",
+          "t": "Bhoomi pujan"
+        },
+        {
+          "d": "2024-01-22",
+          "t": "Pran Pratishtha"
+        },
+        {
+          "d": "2025-11-25",
+          "t": "Flag hoisted atop the completed shikhara"
+        }
+      ],
+      "view": {
+        "c": [
+          82.1943,
+          26.7956
+        ],
+        "z": 16.6
+      },
+      "focus": [
+        82.1943,
+        26.7956
+      ],
+      "scanZ": 17,
+      "src": "hires",
+      "kw": "ram (mandir|temple)|ram janmabhoomi"
+    },
+    {
+      "id": "motera-stadium",
+      "name": "Narendra Modi Stadium, Motera",
+      "short": "Narendra Modi Stadium",
+      "cat": "city",
+      "state": "Gujarat",
+      "status": "Complete",
+      "cost": "≈₹800 cr",
+      "stat": "1,32,000 seats · world's largest cricket stadium",
+      "summary": "The old Sardar Patel Stadium at Motera was demolished and rebuilt by L&T as the world's largest cricket stadium, with a membrane roof and no pillars blocking views. It hosted the 2023 ODI World Cup final.",
+      "watch": "The old bowl vanishes; a bigger ring with its white roof appears by 2019.",
+      "milestones": [
+        {
+          "d": "2020-02-24",
+          "t": "Opened with the 'Namaste Trump' event"
+        },
+        {
+          "d": "2021-02-24",
+          "t": "Renamed Narendra Modi Stadium"
+        },
+        {
+          "d": "2023-11-19",
+          "t": "Hosts the ODI World Cup final"
+        }
+      ],
+      "view": {
+        "c": [
+          72.5975,
+          23.0917
+        ],
+        "z": 16.0
+      },
+      "focus": [
+        72.5975,
+        23.0917
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "narendra modi stadium|motera"
+    },
+    {
+      "id": "kashi-vishwanath",
+      "name": "Shri Kashi Vishwanath Dham, Varanasi",
+      "short": "Kashi Vishwanath Dham",
+      "cat": "city",
+      "state": "Uttar Pradesh",
+      "status": "Complete",
+      "cost": null,
+      "stat": "A temple-to-Ganga corridor cut through the old city",
+      "summary": "A pilgrim corridor that cleared a dense knot of old-city lanes to connect the Kashi Vishwanath temple directly to the Ganga ghats. Around 300 properties were acquired, and dozens of old shrines were rediscovered inside demolished houses.",
+      "watch": "Rooftops vanish in 2019–20 and an open stone plaza runs down to the river.",
+      "milestones": [
+        {
+          "d": "2019-03-08",
+          "t": "PM lays the foundation stone"
+        },
+        {
+          "d": "2021-12-13",
+          "t": "Inaugurated by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          83.0118,
+          25.3105
+        ],
+        "z": 16.5
+      },
+      "focus": [
+        83.011,
+        25.3108
+      ],
+      "scanZ": 17,
+      "src": "hires",
+      "kw": "kashi vishwanath"
+    },
+    {
+      "id": "bharat-mandapam",
+      "name": "Bharat Mandapam, Pragati Maidan",
+      "short": "Bharat Mandapam",
+      "cat": "city",
+      "state": "Delhi",
+      "status": "Complete",
+      "cost": "≈₹2,700 cr",
+      "stat": "The G20 Leaders' Summit venue",
+      "summary": "Pragati Maidan's 1970s exhibition halls, including the brutalist Hall of Nations, were demolished to build a new exhibition-and-convention centre, named Bharat Mandapam. It hosted the G20 Leaders' Summit in September 2023.",
+      "watch": "The old hall complex gives way to the new convention centre between 2019 and 2023.",
+      "milestones": [
+        {
+          "d": "2017-04-23",
+          "t": "Hall of Nations demolished"
+        },
+        {
+          "d": "2023-07-26",
+          "t": "Inaugurated as Bharat Mandapam"
+        },
+        {
+          "d": "2023-09-09",
+          "t": "Hosts the G20 Leaders' Summit"
+        }
+      ],
+      "view": {
+        "c": [
+          77.243,
+          28.619
+        ],
+        "z": 16.0
+      },
+      "focus": [
+        77.2427,
+        28.6191
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "bharat mandapam|pragati maidan"
+    },
+    {
+      "id": "yashobhoomi",
+      "name": "Yashobhoomi — IICC, Dwarka",
+      "short": "Yashobhoomi (IICC)",
+      "cat": "city",
+      "state": "Delhi",
+      "status": "Phase 1 complete",
+      "cost": "₹5,400 cr (Phase 1)",
+      "stat": "One of the world's largest convention & expo venues",
+      "summary": "The India International Convention & Expo Centre in Dwarka Sector 25, with a main hall seating thousands and vast exhibition halls, linked to the Airport Express metro line.",
+      "watch": "A bare plot beside the Airport Express line fills with exhibition halls in 2020–23.",
+      "milestones": [
+        {
+          "d": "2023-09-17",
+          "t": "Phase 1 inaugurated by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          77.042,
+          28.5553
+        ],
+        "z": 15.6
+      },
+      "focus": [
+        77.042,
+        28.5553
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "yashobhoomi|\\biicc\\b"
+    },
+    {
+      "id": "mahakal-lok",
+      "name": "Shri Mahakal Lok, Ujjain",
+      "short": "Mahakal Lok, Ujjain",
+      "cat": "city",
+      "state": "Madhya Pradesh",
+      "status": "Phase 1 complete",
+      "cost": null,
+      "stat": "A 900 m temple corridor along Rudra Sagar lake",
+      "summary": "A temple corridor around the Mahakaleshwar Jyotirlinga, lined with murals, statues and carved pillars along the edge of Rudra Sagar lake.",
+      "watch": "The lake's edge is rebuilt into a broad walkway lined with sculptures.",
+      "milestones": [
+        {
+          "d": "2022-10-11",
+          "t": "Phase 1 inaugurated by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          75.7682,
+          23.1827
+        ],
+        "z": 16.3
+      },
+      "focus": [
+        75.7682,
+        23.1827
+      ],
+      "scanZ": 17,
+      "src": "hires",
+      "kw": "mahakal"
+    },
+    {
+      "id": "gift-city",
+      "name": "GIFT City, Gandhinagar",
+      "short": "GIFT City",
+      "cat": "city",
+      "state": "Gujarat",
+      "status": "Growing",
+      "cost": null,
+      "stat": "India's first International Financial Services Centre",
+      "summary": "Gujarat International Finance Tec-City, a planned financial district on the Sabarmati between Ahmedabad and Gandhinagar. It hosts India's IFSC, with international exchanges, banks and funds, and towers keep rising in its core.",
+      "watch": "Empty plots around the first twin towers fill with high-rises, 2014–2026.",
+      "milestones": [
+        {
+          "d": "2017-01-09",
+          "t": "India INX, the first international exchange, opens"
+        },
+        {
+          "d": "2020-04-27",
+          "t": "IFSCA, the unified regulator, is set up"
+        }
+      ],
+      "view": {
+        "c": [
+          72.68,
+          23.16
+        ],
+        "z": 15.0
+      },
+      "focus": [
+        72.68,
+        23.16
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "gift city|\\bifsc\\b"
+    },
+    {
+      "id": "amaravati",
+      "name": "Amaravati Capital City",
+      "short": "Amaravati",
+      "cat": "city",
+      "state": "Andhra Pradesh",
+      "status": "Construction restarted",
+      "cost": null,
+      "stat": "A greenfield capital on land pooled from farmers",
+      "summary": "Andhra Pradesh's planned capital on the Krishna, built on land pooled from tens of thousands of farmers. Roads and buildings went up from 2016, work largely stopped in 2019 under a 'three capitals' plan, and it was revived in 2024 and relaunched in May 2025.",
+      "watch": "A grid of arterial roads appears in 2016–19, fades under weeds, then comes back to life.",
+      "milestones": [
+        {
+          "d": "2015-10-22",
+          "t": "PM lays the foundation stone"
+        },
+        {
+          "d": "2019-12-17",
+          "t": "'Three capitals' proposal stalls work"
+        },
+        {
+          "d": "2025-05-02",
+          "t": "Construction relaunched by PM Modi"
+        }
+      ],
+      "view": {
+        "c": [
+          80.5,
+          16.5
+        ],
+        "z": 13.2
+      },
+      "focus": [
+        80.5,
+        16.5
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "amaravati"
+    },
+    {
+      "id": "dholera",
+      "name": "Dholera Smart City (SIR)",
+      "short": "Dholera Smart City",
+      "cat": "city",
+      "state": "Gujarat",
+      "status": "Under construction",
+      "cost": null,
+      "stat": "A 920 km² investment region, home to India's first commercial chip fab",
+      "summary": "A greenfield industrial city on the flat salt plains between Ahmedabad and Bhavnagar, planned under the Delhi–Mumbai Industrial Corridor. Roads, utilities and the first factories have come up in its activation area, and Tata Electronics is building a ₹91,000 crore semiconductor fab in the region.",
+      "watch": "Blank salt pans turn into a grid of roads, drains and industrial sheds.",
+      "milestones": [
+        {
+          "d": "2024-03-13",
+          "t": "Foundation stone for Tata's semiconductor fab"
+        }
+      ],
+      "view": {
+        "c": [
+          72.2,
+          22.23
+        ],
+        "z": 14.0
+      },
+      "focus": [
+        72.2,
+        22.23
+      ],
+      "scanZ": 16,
+      "src": "hires",
+      "kw": "dholera"
+    }
+  ]
+}
