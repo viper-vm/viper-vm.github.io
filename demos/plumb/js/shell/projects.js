@@ -38,7 +38,8 @@ export async function adopt(project, rev, result, { first = false } = {}) {
   try { project.thumb = thumb(result, { k: busiestPair(result), w: 360, h: 225 }); } catch { /* keep the old picture */ }
   if (first) log(project, `Created from ${rev.files.map((f) => f.name).join(', ')} · ${result.floors.length} floor plans`);
   else log(project, `${rev.label} uploaded · ${change.added.length} new, ${change.resolved.length} resolved`);
-  putCache(`${project.id}:${rev.id}:a:${ENGINE}:${optsKey(rev.opts)}`, result).catch(() => {});
+  const { sheet, ...cached } = result; // the whole-sheet preview is only for the import wizard
+  putCache(`${project.id}:${rev.id}:a:${ENGINE}:${optsKey(rev.opts)}`, cached).catch(() => {});
   await saveProject(project);
   return change;
 }

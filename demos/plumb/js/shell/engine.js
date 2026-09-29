@@ -85,7 +85,7 @@ async function inline(msg, onStage) {
   }
   const r = inlineLast.r;
   if (msg.type === 'mass') return { type: 'mass', mass: r.an.map((a) => massFloor(r.dx, r.roles, a)) };
-  return { type: 'result', result: pack(r) };
+  return { type: 'result', result: pack(r, { sheet: !!msg.sheet }) };
 }
 
 const serial = (opts) => ({
@@ -118,9 +118,9 @@ export async function massRevision(project, rev, { onStage } = {}) {
 }
 
 /** Analyse files that aren't in a project yet (the import wizard's previews). */
-export async function analyseLoose(files, opts, onStage) {
+export async function analyseLoose(files, opts, onStage, { sheet = false } = {}) {
   const key = 'loose:' + hashOf({ n: files.map((f) => [f.name, f.size]), o: optsKey(opts) });
-  const out = await ask({ type: 'analyse', key, files, opts: serial(opts) }, onStage);
+  const out = await ask({ type: 'analyse', key, files, opts: serial(opts), sheet }, onStage);
   return out.result;
 }
 

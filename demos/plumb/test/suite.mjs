@@ -170,6 +170,24 @@ function toBinaryDXF(text) {
   check('each floor reads only its own plan (margin under half the 0.6 m gap)', r.an.every((a) => a.margin < 0.3), r.an.map((a) => a.margin).join());
 }
 
+// ------------------------------------------------------------------ floors marked by hand on the sheet
+{
+  const { casaSheet } = await import(new URL('./fixtures.mjs', import.meta.url).href);
+  const tight = casaSheet(0.2); // the plans 20 cm apart: too close to tell apart by themselves
+  const auto = analyse(tight);
+  check('mark floors: plans 0.2 m apart read as one floor on their own', auto.floors.length === 1, auto.floors.length);
+  const floors = [
+    { id: 0, title: 'GROUND FLOOR', level: 0, typical: false, box: [-3.1, -0.1, 12.08, 12.1] },
+    { id: 1, title: 'FIRST FLOOR', level: 1, typical: false, box: [12.14, -0.1, 21.3, 12.1], marked: true },
+  ];
+  const marked = analyse(tight, { floors });
+  check('mark floors: two boxes drawn by hand → two floors and the bathroom over the dining room', marked.floors.length === 2 && marked.issues.some((i) => i.kind === 'wet-over-dry' && /dining/i.test(i.title)), sig(marked));
+  check('mark floors: each box reads only its own plan', marked.an.every((a) => a.margin <= 0.1) && !marked.an[1].rooms.some((q) => /kitchen|dining|living/i.test(q.name)), marked.an.map((a) => a.rooms.map((q) => q.name).join('/')).join(' | '));
+  const sh = pack(marked, { sheet: true }).sheet;
+  const xs = [...sh.segs].filter((_, i) => i % 2 === 0);
+  check('sheet: the whole drawing for marking by hand, from its corner, with room names', sh && Math.min(...xs) >= -1e-3 && Math.max(...xs) <= sh.w + 1e-3 && sh.weight.length * 4 === sh.segs.length && sh.texts.some((t) => t.text === 'KITCHEN') && !('sheet' in pack(marked)), sh && `${sh.segs.length / 4} lines, ${sh.texts.length} texts`);
+}
+
 // ------------------------------------------------------------------ projects: revisions and issue history
 {
   const { newProject, newRevision, nextLabel, storeys, reconcile, attachOrAdd, setStatus, summarize } = await import(base + 'shell/model.js');

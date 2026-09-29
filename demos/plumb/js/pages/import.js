@@ -7,7 +7,8 @@ import { analyseLoose, kindOf, decodeText } from '../shell/engine.js';
 import { storeFiles, adopt, defaultOpts } from '../shell/projects.js';
 import { newProject, newRevision, nextLabel, currentRev, PROJECT_STATUS, storeys } from '../shell/model.js';
 import { thumb } from '../shell/thumbs.js';
-import { ROLES } from '../recognize.js';
+import { SheetEditor } from '../shell/sheet.js';
+import { ROLES, storeyTitle } from '../recognize.js';
 import { ROLE_LABEL, ROLE_COLOR, levelTag, floorName, SEVERITIES } from '../style.js';
 
 injectIcons();
@@ -24,6 +25,7 @@ const S = {
   opts: { roles: [], types: [], nudges: {}, unitMM: null, floors: null },
   floorsAll: null, floorsEdited: false, result: null, running: false, stage: '', error: null,
   remember: true, thumbs: new Map(), ai: null,
+  sel: -1, cam: null, detected: null, // floors marked on the sheet: the selected one, the view, what Plumb found
 };
 
 // ------------------------------------------------------------------ analysis
@@ -37,10 +39,10 @@ async function run() {
   const files = S.files.map((f) => (f.kind === 'dwg' ? { name: f.name, dwg: true, bin: f.bytes.buffer.slice(0), stamp: f.name + f.size } : f.kind === 'dxfb' ? { name: f.name, text: f.bytes } : { name: f.name, text: f.text || (f.text = decodeText(f.bytes)) }));
   const opts = { ...S.opts, floors: S.floorsEdited ? S.floorsAll : null };
   try {
-    const r = await analyseLoose(files, opts, (st) => { if (id === runId) { S.stage = st; paintStatus(); } });
+    const r = await analyseLoose(files, opts, (st) => { if (id === runId) { S.stage = st; paintStatus(); } }, { sheet: true });
     if (id !== runId) return;
     S.result = r;
-    if (!S.floorsEdited) S.floorsAll = r.floors.map((f) => ({ ...f, repeat: f.repeat || 1 }));
+    if (!S.floorsEdited) { S.floorsAll = r.floors.map((f) => ({ ...f, repeat: f.repeat || 1 })); S.detected = r.floors.map((f) => ({ ...f })); S.sel = -1; }
     // pictures of each floor, remembered by position so left-out floors keep theirs
     r.floors.forEach((f, k) => { const key = boxKey(f); if (!S.thumbs.has(key)) S.thumbs.set(key, thumb(r, { only: k, w: 300, h: 188 })); });
   } catch (err) {
@@ -80,6 +82,7 @@ function autoName() {
 
 // ------------------------------------------------------------------ rendering
 function render() {
+  const sheetFocused = !!editor && document.activeElement === editor.cv; // before the page is replaced
   railEl.innerHTML = rail('projects', S.project);
   const title = S.project ? `New revision · ${esc(S.project.name)}` : 'New project';
   const sub = S.project ? `This becomes <b>${esc(nextLabel(S.project))}</b>. Layer roles and units carry over from ${esc(currentRev(S.project)?.label || 'the last revision')}.` : 'Plumb reads your drawings on this computer. Nothing is uploaded.';
@@ -95,6 +98,53 @@ function render() {
         : `<button class="btn primary" data-create ${canNext() ? '' : 'disabled'}>${icon('i-check')}${S.project ? `Add ${esc(nextLabel(S.project))}` : 'Create project'}</button>`}
     </div>`;
   paintStatus();
+  mountSheet(sheetFocused);
+}
+
+// ------------------------------------------------------------------ marking floors on the sheet
+let editor = null;
+function mountSheet(focused = false) {
+  // the page is redrawn after every change: keep the keyboard on the sheet if it was there
+  if (editor) { editor.destroy(); editor = null; }
+  const cv = $('#sheet');
+  if (!cv || !S.result || !S.result.sheet) return;
+  if (focused) cv.focus({ preventScroll: true });
+  editor = new SheetEditor(cv, {
+    onAdd: addFloor, onChange: changeFloor, onRemove: removeFloor,
+    onSelect: (i) => { S.sel = i; $$('.fthumb').forEach((el) => el.classList.toggle('sel', +el.dataset.card === i)); },
+    onCamera: (cam) => { S.cam = cam.auto ? null : cam; }, // an automatic fit is redone for the new canvas
+  }, S.cam);
+  editor.setSheet(S.result.sheet);
+  editor.setFloors(sheetFloors(), S.sel);
+}
+const sheetFloors = () => (S.floorsAll || []).map((f) => ({ box: f.box, tag: levelTag(f), title: floorName(f), excluded: !!f.excluded }));
+function edited() { S.floorsEdited = true; schedule(0); }
+/** A box drawn over files laid side by side belongs to the file under it (markups go back in its coordinates). */
+function sourceOf(box) {
+  let best = null, bestA = 0;
+  for (const f of S.detected || []) {
+    if (!f.origin) continue;
+    const a = Math.max(0, Math.min(box[2], f.box[2]) - Math.max(box[0], f.box[0])) * Math.max(0, Math.min(box[3], f.box[3]) - Math.max(box[1], f.box[1]));
+    if (a > bestA) { bestA = a; best = f; }
+  }
+  return best ? { file: best.file, origin: best.origin, k: best.k } : {};
+}
+function addFloor(box) {
+  const inc = S.floorsAll.filter((f) => !f.excluded && f.level < 90);
+  const level = inc.length ? Math.max(...inc.map((f) => f.level)) + 1 : 0;
+  S.floorsAll.push({ id: S.floorsAll.length, title: storeyTitle(level), level, typical: false, box, repeat: 1, marked: true, ...sourceOf(box) });
+  S.sel = S.floorsAll.length - 1;
+  edited();
+}
+function changeFloor(i, box) {
+  Object.assign(S.floorsAll[i], { box }, sourceOf(box));
+  edited();
+}
+function removeFloor(i) {
+  const f = S.floorsAll[i];
+  if (f.marked) S.floorsAll.splice(i, 1); else f.excluded = true; // a floor Plumb found can be put back
+  S.sel = -1;
+  edited();
 }
 function paintStatus() {
   const el = $('#status');
@@ -129,7 +179,7 @@ function stepFloors() {
     const inc = !f.excluded, idx = inc ? k++ : -1;
     const r = inc && S.result ? S.result.an[idx] : null;
     const img = S.thumbs.get(boxKey(f));
-    return `<div class="fthumb ${inc ? '' : 'off'}">
+    return `<div class="fthumb ${inc ? '' : 'off'} ${p === S.sel ? 'sel' : ''}" data-card="${p}">
       ${img ? `<img src="${img}" alt="${esc(f.title)}" />` : '<div class="ph"></div>'}
       <div class="ft-b">
         <div class="ft-row"><span class="ft-tag">${esc(levelTag(f))}</span><input data-title="${p}" value="${esc(f.title)}" aria-label="Title of this floor" /></div>
@@ -142,9 +192,21 @@ function stepFloors() {
         </div>
       </div></div>`;
   }).join('');
-  const guessed = !S.floorsEdited && all.find((f) => f.guessed);
-  const why = guessed ? `<p class="tile" style="margin:0;font-size:13px">${icon('i-alert')} This drawing has no floor titles, so the floors are ${guessed.guessed === 'stairs' ? 'in the order their stairs give: the plan whose stair only goes <b>UP</b> is the lowest, the one that only goes <b>DOWN</b> is the top' : 'in order from left to right'}. Check the order, and rename each floor if you like.</p>` : '';
-  return `${why}<p class="muted" style="margin:0">Bottom to top, as the building stacks. Rename a floor, move it, leave out anything that isn’t a floor plan (a site plan, a title block), and mark typical floors with how many times they repeat.</p>
+  const guessed = (S.detected || []).find((f) => f.guessed); // stays put while you edit, so the sheet doesn't jump
+  const one = (S.detected || []).length === 1 && S.files.length === 1 && !S.floorsEdited;
+  const why = one ? `<p class="tile" style="margin:0;font-size:13px">${icon('i-alert')} Plumb found one floor plan on this sheet. If it holds more (drawn close together or touching), <b>mark each one</b>: pull this box in round one plan, then drag across the next.</p>`
+    : guessed ? `<p class="tile" style="margin:0;font-size:13px">${icon('i-alert')} This drawing has no floor titles, so the floors are ${guessed.guessed === 'stairs' ? 'in the order their stairs give: the plan whose stair only goes <b>UP</b> is the lowest, the one that only goes <b>DOWN</b> is the top' : 'in order from left to right'}. Check the order, and rename each floor if you like.</p>` : '';
+  const sheet = S.result && S.result.sheet ? `<div class="sheetbox">
+      <canvas id="sheet"></canvas>
+      <div class="sheet-tools">
+        <button class="icon-btn" data-zoom="1.25" title="Zoom in (+)">${icon('i-plus')}</button>
+        <button class="icon-btn" data-zoom="0.8" title="Zoom out (−)">${icon('i-minus')}</button>
+        <button class="icon-btn" data-fit title="Fit the sheet (F)">${icon('i-fit')}</button>
+        ${S.floorsEdited ? `<button class="btn small" data-redetect title="Forget your changes and find the floors again">Detect again</button>` : ''}
+      </div>
+    </div>
+    <p class="sheet-hint">The whole sheet, with a box round each floor plan. <b>Drag across a plan</b> to add a floor · drag a box to move it · pull its corners to resize · <kbd>Delete</kbd> removes it · scroll to pan, <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + scroll to zoom.</p>` : '';
+  return `${why}${sheet}<p class="muted" style="margin:0">Bottom to top, as the building stacks. Rename a floor, move it, leave out anything that isn’t a floor plan (a site plan, a title block), and mark typical floors with how many times they repeat.</p>
     <div class="fthumbs">${cards}</div>`;
 }
 
@@ -283,6 +345,12 @@ page.addEventListener('click', (e) => {
   const ex = t.closest('[data-excl]');
   if (ex) { const f = S.floorsAll[+ex.dataset.excl]; f.excluded = !f.excluded; S.floorsEdited = true; schedule(0); return; }
   if (t.closest('[data-ai]')) { askAI(); return; }
+  const zm = t.closest('[data-zoom]');
+  if (zm) { if (editor) editor.zoom(+zm.dataset.zoom); return; }
+  if (t.closest('[data-fit]')) { if (editor) editor.fit(); return; }
+  if (t.closest('[data-redetect]')) { S.floorsEdited = false; S.floorsAll = null; S.sel = -1; schedule(0); return; }
+  const card = t.closest('[data-card]');
+  if (card && !t.closest('button, input, label')) { S.sel = +card.dataset.card; $$('.fthumb').forEach((el) => el.classList.toggle('sel', el === card)); if (editor) editor.setFloors(sheetFloors(), S.sel); return; }
   if (t.closest('[data-aiapply]')) { applyAI(); return; }
 });
 page.addEventListener('change', (e) => {
@@ -308,6 +376,13 @@ page.addEventListener('input', (e) => {
   if (t.id === 'm-client') S.meta.client = t.value;
 });
 page.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.empty[data-pick]')) { e.preventDefault(); picker.click(); } });
+// Delete removes the selected floor from anywhere on the Floors step (not while typing a name)
+document.addEventListener('keydown', (e) => {
+  if (S.step !== 1 || S.sel < 0 || !S.floorsAll || !S.floorsAll[S.sel] || (e.key !== 'Delete' && e.key !== 'Backspace')) return;
+  if ((editor && e.target === editor.cv) || (e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable]'))) return;
+  e.preventDefault();
+  removeFloor(S.sel);
+});
 onDropFiles((files) => { if (S.step !== 0) S.step = 0; addFiles(files); });
 
 // ------------------------------------------------------------------ boot

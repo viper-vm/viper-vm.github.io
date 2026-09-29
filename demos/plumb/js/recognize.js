@@ -339,10 +339,12 @@ function splitPlans(isl, segs, labels) {
   const A = areaOf(isl.box);
   const res = Math.max(0.08, Math.max(x1 - x0, y1 - y0) / 1500);
   const near = (s) => { const mx = (s[0] + s[2]) / 2, my = (s[1] + s[3]) / 2; return mx >= x0 - 1 && mx <= x1 + 1 && my >= y0 - 1 && my <= y1 + 1; };
-  const parts = dropFrames(islandsOf(segs.filter(near), isl.box, res, 0.2));
+  const raw = islandsOf(segs.filter(near), isl.box, res, 0.2);
+  const parts = dropFrames(raw);
   const named = (p) => labels.filter((t) => inBox(p.box, t.x, t.y)).length;
   const plans = parts.filter((p) => areaOf(p.box) >= 0.1 * A && p.box[2] - p.box[0] > 3 && p.box[3] - p.box[1] > 3 && (named(p) >= 2 || areaOf(p.box) >= 0.3 * A));
-  if (plans.length < 2) return [isl];
+  // one plan: the island as it was, unless a border round it was dropped, then just the plan
+  if (!plans.length || (plans.length === 1 && parts.length === raw.length)) return [isl];
   // plans that overlap are one plan in pieces (a wing, a courtyard): leave the island whole
   for (let a = 0; a < plans.length; a++) for (let c = a + 1; c < plans.length; c++) {
     const P = plans[a].box, Q = plans[c].box;

@@ -26,7 +26,7 @@ async function analysed(key, files, opts, post) {
 }
 
 self.onmessage = async (e) => {
-  const { id, type = 'analyse', key, files, opts } = e.data;
+  const { id, type = 'analyse', key, files, opts, sheet } = e.data;
   const post = (stage) => self.postMessage({ id, type: 'progress', stage });
   try {
     if (type === 'mass') {
@@ -37,7 +37,7 @@ self.onmessage = async (e) => {
       return;
     }
     const r = await analysed(key || null, files, opts || {}, post);
-    self.postMessage({ id, type: 'result', result: pack(r) });
+    self.postMessage({ id, type: 'result', result: pack(r, { sheet: !!sheet }) });
   } catch (err) {
     self.postMessage({ id, type: 'error', message: String((err && err.message) || err), stack: String((err && err.stack) || '') });
   }

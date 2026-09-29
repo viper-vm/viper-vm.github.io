@@ -192,7 +192,7 @@ export function lakeviewFiles() {
 // saved as "inches", the sliding doors a mirrored block (extrusion 0,0,−1, X scale −1), glazing and
 // a pergola on a generic layer, door swings on "TEXTURA", treads on a code name, "UP"/"DOWN" arrows,
 // "SLIDING DOOR" notes and a room called "COVERED TERRACE". The bathroom upstairs sits over the dining.
-export function casaSheet() {
+export function casaSheet(gap = 0.6) {
   const dx = new ModernDxf(1);
   for (const [n, c] of [['A-WALL', 7], ['muro', 7], ['casa', 1], ['inne_gulv', 3], ['TEXTURA', 4], ['A-SECTMBM', 8], ['A-FLORSTM', 6], ['CASCO', 2]]) dx.layer(n, c);
   const T = (x, y, text, l = 'CASCO') => dx.add(TEXT(x, y, 0.11, text, l));
@@ -222,8 +222,8 @@ export function casaSheet() {
   box(9, 0, 12, 6, 'inne_gulv');
   for (let x = 9.25; x < 12; x += 0.5) { L(x, 0, x, 6, 'inne_gulv'); L(x + 0.05, 0, x + 0.05, 6, 'inne_gulv'); }
   T(10.5, 3, 'PERGOLATED');
-  // first floor, 0.6 m to the right: stair coming down, bathroom (over the dining), two bedrooms
-  const ox = 12.6;
+  // first floor, `gap` to the right of the pergola: stair coming down, bathroom (over the dining), two bedrooms
+  const ox = 12 + gap;
   shell(ox);
   treads(ox);
   T(ox + 1.15, 8.6, 'DOWN', 'A-FLORSTM');

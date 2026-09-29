@@ -30,7 +30,9 @@ const SECTIONS = [
       <li><b>Room names</b> as text inside each room: <code>BED ROOM</code>, <code>TOILET</code>, <code>KITCHEN</code>, <code>M.B.R.</code>, <code>T&amp;B</code>, <code>W.C.</code>, <code>OTS</code>. Open-plan areas can carry several names; Plumb splits them.</li>
       <li>Ducts drawn with the usual cross, lifts with a cross, stairs with treads.</li>
     </ul>
-    <p>Layer names don’t have to follow any standard. Plumb reads them by name first, then by what’s drawn on them; you can correct any layer in the wizard, and it remembers your office’s names.</p>`],
+    <p>Layer names don’t have to follow any standard. Plumb reads them by name first, then by what’s drawn on them; you can correct any layer in the wizard, and it remembers your office’s names.</p>
+    <h3>Marking floors by hand</h3>
+    <p>The <b>Floors</b> step shows the whole sheet with a box round each plan Plumb found. If plans sit very close or touch, if a plan was missed, or if an elevation was taken for a plan, fix it there: <b>drag across a plan</b> to add a floor, drag a box to move it, pull its corners to resize, and press <kbd>Delete</kbd> to remove one. Put the floors in order with the arrows on each card. <b>Detect again</b> forgets your boxes.</p>`],
   ['formats', 'Supported files', `
     <ul>
       <li><b>DWG</b> from AutoCAD R13 to 2025 (and BricsCAD, ZWCAD, DraftSight, Revit and ArchiCAD exports). DWG is read with LibreDWG, which is downloaded once the first time you open a DWG.</li>
@@ -76,7 +78,7 @@ const SECTIONS = [
       <li><kbd>J</kbd> / <kbd>K</kbd> next / previous issue · <kbd>Esc</kbd> clear the selection</li>
     </ul>`],
   ['faq', 'Questions', `
-    <h3>It found no floor plans</h3><p>Check each plan has a title with a level in it (see Preparing drawings), or upload one file per floor.</p>
+    <h3>It found no floor plans, or only one</h3><p>Mark them by hand in the Floors step: drag across each plan on the sheet. Titles with a level in them (see Preparing drawings) or one file per floor also help.</p>
     <h3>The rooms look wrong</h3><p>Usually a wall layer read as something else, or doors without swings. Fix the layer in the wizard (Layers step), or click a room in the plan to set its type.</p>
     <h3>The floors don’t line up</h3><p>Plumb aligns floors on their columns. If a floor has few columns, use <b>Adjust</b> in the plan to line it up by hand.</p>
     <h3>Can I move a project to another computer?</h3><p>Not yet; project export and cloud sync are planned.</p>`],
