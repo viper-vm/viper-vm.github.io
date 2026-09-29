@@ -170,6 +170,17 @@ function toBinaryDXF(text) {
   check('each floor reads only its own plan (margin under half the 0.6 m gap)', r.an.every((a) => a.margin < 0.3), r.an.map((a) => a.margin).join());
 }
 
+// ------------------------------------------------------------------ real-world sheets (freecadfloorplans.com)
+{
+  const { casaSheet } = await import(new URL('./fixtures.mjs', import.meta.url).href);
+  const { roomType, wallGaps } = await import(base + 'recognize.js');
+  check('room names in Spanish and Chinese', roomType('Dormitorio') === 'bedroom' && roomType('Cocina') === 'kitchen' && roomType('卧室') === 'bedroom' && roomType('厨房') === 'kitchen' && roomType('客厅') === 'living' && roomType('卫生间') === 'toilet' && roomType('Baño') === 'toilet', ['卧室', '厨房', '客厅'].map(roomType).join());
+  const gaps = wallGaps([[0, 0, 3, 0, 'W'], [4.2, 0, 8, 0, 'W'], [3, 0.2, 3, 3, 'W'], [0, 5, 2, 5, 'W'], [6, 5.5, 8, 5.5, 'W']]);
+  check('wall openings: a wall line that carries on 1.2 m further along is bridged; offset or distant lines are not', gaps.length === 1 && Math.abs(gaps[0][0] - 3) < 1e-9 && Math.abs(gaps[0][2] - 4.2) < 1e-9, JSON.stringify(gaps));
+  const r = analyse(casaSheet(0.6, { elevation: true }));
+  check('an elevation drawn beside the plans is not a floor', r.floors.length === 2 && r.floors.every((f) => f.box[2] < 22.5), r.floors.map((f) => f.title + ' ' + f.box.map((v) => v.toFixed(1))).join(' | '));
+}
+
 // ------------------------------------------------------------------ floors marked by hand on the sheet
 {
   const { casaSheet } = await import(new URL('./fixtures.mjs', import.meta.url).href);

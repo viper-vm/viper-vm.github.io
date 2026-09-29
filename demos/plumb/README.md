@@ -55,7 +55,10 @@ time a DWG is opened), DXF ASCII (R12 → 2018+) and binary DXF. Several files a
    drawn on it: door swings, stair treads, glazing as close pairs of lines, walls as pairs 10–45 cm
    apart), objects in their own coordinate system (AutoCAD's mirrored "extrusion −Z" copies), the
    floors on a sheet (a border frame ignored, plans drawn close together pulled apart, and with no
-   titles the order read from the stair arrows: UP on the lowest plan, DOWN on the top), every room from the linework
+   titles the order read from the stair arrows: UP on the lowest plan, DOWN on the top; elevations
+   and sections beside the plans left out by their titles or because they show no doors, rooms or
+   walls), wall openings closed however the window is drawn, room names in any script (Spanish and
+   Chinese room words known), every room from the linework
    (door swings close openings; open-plan spaces split by their labels), room types from their names
    including abbreviations (`M.B.R.`, `T&B`, `W.C.`, `OTS`…), columns, ducts, lifts and stairs.
 2. **Stacks the floors** — each floor is aligned on the one below by RANSAC over column pairs (the
@@ -121,7 +124,7 @@ test/             suite.mjs + fixtures.mjs (a second building drafted in the opp
 node demos/plumb/test/suite.mjs
 ```
 
-72 checks: the shipped sample must yield exactly its 9 planted issues; *Lakeview Court* (metres,
+75 checks: the shipped sample must yield exactly its 9 planted issues; *Lakeview Court* (metres,
 floors stacked vertically, walls as polylines on a meaningless layer name, door blocks inserted
 rotated and mirrored, hatched columns, multi-line MTEXT tags, block-less DIMENSIONs, one floor drawn
 off-grid) must yield exactly its 5 — as one file and as one file per floor; dimensions read from

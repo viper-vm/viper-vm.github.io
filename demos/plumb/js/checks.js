@@ -112,7 +112,7 @@ export function runChecks(floors, an, transforms) {
         for (const [lid, a] of m) {
           const rl = loRoom.get(lid);
           if (!rl || !DRY_HABITABLE.has(rl.type)) continue;
-          if (a < 0.5 && a < ru.cellArea * 0.25) continue;
+          if (a < 0.8 && a < ru.cellArea * 0.3) continue; // a sliver along a wall is alignment, not a problem
           const sev = ru.type === 'toilet' && rl.type === 'bedroom' ? 'high' : ru.type === 'kitchen' && rl.type === 'living' ? 'low' : 'medium';
           push({ ...pair, kind: 'wet-over-dry', severity: sev, at: [ru.cx, ru.cy], atLower: [rl.cx, rl.cy], rooms: [ru.id, rl.id],
             title: `${ru.name} over ${lower(rl.name)}`,
@@ -209,16 +209,21 @@ function cantilevers(lo, up, tx, ty) {
   if (!any) return [];
   const dist = distanceTransform(supported, W, H);
   const lab = label(proj, W, H, 1);
+  // how thick each overhang is: a strip under ~0.8 m is a wall, fence or parapet line, not a slab
+  const open = new Uint8Array(W * H);
+  for (let k = 0; k < W * H; k++) open[k] = proj[k] ? 0 : 1;
+  const inner = distanceTransform(open, W, H);
   const out = [];
   for (let id = 0; id < lab.count; id++) {
     const area = lab.sizes[id] * gu.res * gu.res;
     if (area < 0.6) continue;
-    let depth = 0, ax = 0, ay = 0, n = 0;
+    let depth = 0, ax = 0, ay = 0, n = 0, thick = 0;
     const roomArea = new Map();
     const [i0, j0, i1, j1] = lab.bbox[id];
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
       const k = j * W + i;
       if (lab.labels[k] !== id) continue;
+      if (inner[k] > thick) thick = inner[k];
       if (dist[k] > depth) depth = dist[k];
       ax += i; ay += j; n++;
       const rid = up.roomAt[k];
@@ -226,6 +231,7 @@ function cantilevers(lo, up, tx, ty) {
     }
     depth *= gu.res;
     if (depth < 0.45) continue; // slivers from drawing differences
+    if (2 * thick * gu.res < 0.8 && depth > 4 * thick * gu.res) continue; // a thin line sticking out (a garden wall, a fence), not a slab or a chajja
     let room = null, rb = 0;
     for (const [rid, c] of roomArea) { if (c > rb) { const r = up.rooms[rid]; if (r) { rb = c; room = r.name; } } }
     out.push({ area, depth, at: [gu.x0 + (ax / n + 0.5) * gu.res, gu.y0 + (ay / n + 0.5) * gu.res], room });

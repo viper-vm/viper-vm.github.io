@@ -247,7 +247,7 @@ function stepLayers() {
       ${layers.map((l) => `<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${ROLE_COLOR[l.role]};margin-right:8px"></span><span class="num" style="font-size:12.5px">${esc(l.name)}</span></td><td class="n">${content(l)}</td>
         <td><select data-layer="${esc(l.name)}" class="${l.auto ? '' : 'you'}">${ROLES.map((ro) => `<option value="${ro}" ${ro === l.role ? 'selected' : ''}>${ROLE_LABEL[ro]}</option>`).join('')}</select></td></tr>`).join('')}
     </tbody></table></div>
-    <label class="opt"><input type="checkbox" id="remember" ${S.remember ? 'checked' : ''} /> Remember these layer roles for the office’s next drawings</label>`;
+    <label class="opt"><input type="checkbox" id="remember" ${S.remember ? 'checked' : ''} /> Remember the roles you change for the office’s next drawings</label>`;
 }
 
 function stepReview() {
@@ -315,7 +315,8 @@ async function create() {
     await adopt(project, rev, S.result, { first: !S.project });
     if (S.remember) {
       const layerRoles = { ...(S.settings.layerRoles || {}) };
-      for (const l of S.result.layers) if (l.stats && l.stats.segs + l.stats.arcs + l.stats.texts + l.stats.fills > 0) layerRoles[l.name] = l.role;
+      // only what you decided: Plumb's own guesses are made fresh for every drawing
+      for (const [name, role] of S.opts.roles) layerRoles[name] = role;
       const roomTypes = { ...(S.settings.roomTypes || {}) };
       for (const [k, v] of S.opts.types) roomTypes[k] = v;
       await saveSettings({ layerRoles, roomTypes });

@@ -102,11 +102,15 @@ export const DEFAULT_SETTINGS = {
 };
 export async function getSettings() {
   const s = await getKV('settings', {});
+  // until Sept 2026 every import remembered Plumb's own guesses as office layer standards; forget
+  // those once (from now on only roles you change are remembered)
+  if (s.layerRoles && Object.keys(s.layerRoles).length && !s.rolesYours) { s.layerRoles = {}; s.rolesYours = true; await putKV('settings', s); }
   return { ...DEFAULT_SETTINGS, ...s, heights: { ...DEFAULT_SETTINGS.heights, ...(s.heights || {}) }, ai: { ...DEFAULT_SETTINGS.ai, ...(s.ai || {}) } };
 }
 export async function saveSettings(patch) {
   const cur = await getSettings();
   const next = { ...cur, ...patch };
+  if ('layerRoles' in patch) next.rolesYours = true; // roles saved from now on are yours
   await putKV('settings', next);
   return next;
 }
