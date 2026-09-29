@@ -1,7 +1,7 @@
 // Plumb — the whole analysis: DXF text → floors, rooms, columns, alignment and issues.
 
 import { parseDXF } from './dxf.js';
-import { inferUnitMM, toMetres, layerRoles, findFloors, analyseFloor, parseLevel } from './recognize.js';
+import { inferUnitMM, toMetres, layerRoles, findFloors, analyseFloor, parseLevel, storeyTitle } from './recognize.js';
 import { alignPair, runChecks } from './checks.js';
 
 /**
@@ -71,7 +71,15 @@ export function analyseFiles(files, opts = {}) {
 
 function finish(dx, unit, roles, floors, opts, t0) {
   const stage = opts.onStage || (() => {});
-  const an = floors.map((f, k) => { stage(`Reading ${f.title.toLowerCase()} (${k + 1}/${floors.length})…`); return analyseFloor(dx, roles, f.box, { types: opts.types }); });
+  // each floor reads its own lines plus a margin — never so far that it takes in the plan next door
+  const margins = floors.map((f, k) => {
+    let gap = Infinity;
+    floors.forEach((o, j) => {
+      if (j !== k) gap = Math.min(gap, Math.hypot(Math.max(o.box[0] - f.box[2], f.box[0] - o.box[2], 0), Math.max(o.box[1] - f.box[3], f.box[1] - o.box[3], 0)));
+    });
+    return Math.max(0.1, Math.min(1.0, gap / 2 - 0.02));
+  });
+  const an = floors.map((f, k) => { stage(`Reading ${f.title.toLowerCase()} (${k + 1}/${floors.length})…`); return analyseFloor(dx, roles, f.box, { types: opts.types, margin: margins[k] }); });
   stage('Stacking the floors…');
   const transforms = [{ tx: 0, ty: 0 }], aligns = [null];
   for (let k = 1; k < an.length; k++) {
@@ -87,9 +95,7 @@ function finish(dx, unit, roles, floors, opts, t0) {
   return { dx, unit, roles, floors, an, transforms, aligns, issues, ms: { total: now() - t0 } };
 }
 
-const ORD = ['GROUND', 'FIRST', 'SECOND', 'THIRD', 'FOURTH', 'FIFTH', 'SIXTH', 'SEVENTH', 'EIGHTH', 'NINTH', 'TENTH'];
-const nth = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? 'TH' : ['TH', 'ST', 'ND', 'RD'][n % 10] || 'TH');
-const storey = (n) => ({ level: n, typical: false, text: n < 0 ? `BASEMENT ${-n}` : `${n < ORD.length ? ORD[n] : nth(n)} FLOOR` });
+const storey = (n) => ({ level: n, typical: false, text: storeyTitle(n) });
 const SHORT = { gf: 0, ff: 1, sf: 2, tf: 3 }; // office shorthand in India: ground, first, second, third floor
 
 /**

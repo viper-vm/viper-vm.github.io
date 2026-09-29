@@ -18,18 +18,18 @@ export function pack(r) {
     transforms: r.transforms,
     aligns: r.aligns,
     issues: r.issues,
-    geometry: r.floors.map((f, k) => ({ ...floorGeometry(r.dx, r.roles, f.box), dims: dims[k] })),
+    geometry: r.floors.map((f, k) => ({ ...floorGeometry(r.dx, r.roles, f.box, r.an[k] && r.an[k].margin), dims: dims[k] })),
     an: r.an.map((a) => ({
-      box: a.box, res: a.res, grid: a.grid, rooms: a.rooms, columns: a.columns, doors: a.doors, outlines: a.outlines,
+      box: a.box, res: a.res, margin: a.margin, grid: a.grid, rooms: a.rooms, columns: a.columns, doors: a.doors, outlines: a.outlines,
       footprintArea: a.footprintArea, roomAt: a.roomAt, inside: a.inside,
     })),
   };
 }
 
 /** Line work of one floor, grouped by role, as flat Float64Arrays [x1,y1,x2,y2,…] (fast to draw). */
-function floorGeometry(dx, roles, box) {
+function floorGeometry(dx, roles, box, margin) {
   const [x0, y0, x1, y1] = box;
-  const m = 1.2;
+  const m = margin ?? 1.2;
   const inb = (x, y) => x >= x0 - m && x <= x1 + m && y >= y0 - m && y <= y1 + m;
   const groups = {};
   const roleOf = (layer) => (roles.get(layer) || { role: 'other' }).role;

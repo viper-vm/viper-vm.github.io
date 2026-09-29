@@ -48,8 +48,13 @@ time a DWG is opened), DXF ASCII (R12 → 2018+) and binary DXF. Several files a
 
 ## What it does
 
-1. **Understands the drawing** — units (from `$INSUNITS`, else from door-swing radii), what each
-   layer holds (AIA/NCS and common names, else what's drawn on it), every room from the linework
+1. **Understands the drawing** — units (`$INSUNITS`, cross-checked against the door swings and the
+   size of the sheet, since files often say "inches" when drawn in metres), what each layer holds
+   (AIA/NCS and common names in English, Spanish, French, German, Italian and Portuguese, else what's
+   drawn on it: door swings, stair treads, glazing as close pairs of lines, walls as pairs 10–45 cm
+   apart), objects in their own coordinate system (AutoCAD's mirrored "extrusion −Z" copies), the
+   floors on a sheet (a border frame ignored, plans drawn close together pulled apart, and with no
+   titles the order read from the stair arrows: UP on the lowest plan, DOWN on the top), every room from the linework
    (door swings close openings; open-plan spaces split by their labels), room types from their names
    including abbreviations (`M.B.R.`, `T&B`, `W.C.`, `OTS`…), columns, ducts, lifts and stairs.
 2. **Stacks the floors** — each floor is aligned on the one below by RANSAC over column pairs (the
@@ -114,13 +119,16 @@ test/             suite.mjs + fixtures.mjs (a second building drafted in the opp
 node demos/plumb/test/suite.mjs
 ```
 
-51 checks: the shipped sample must yield exactly its 9 planted issues; *Lakeview Court* (metres,
+59 checks: the shipped sample must yield exactly its 9 planted issues; *Lakeview Court* (metres,
 floors stacked vertically, walls as polylines on a meaningless layer name, door blocks inserted
 rotated and mirrored, hatched columns, multi-line MTEXT tags, block-less DIMENSIONs, one floor drawn
 off-grid) must yield exactly its 5 — as one file and as one file per floor; dimensions read from
 blocks and rebuilt from points; a binary-DXF round trip gives identical results; the 3D model finds
 every door, window and parapet; issue history across revisions (kept, resolved, reopened; floors
-renamed, files added or dropped or reordered, plans moved); plus markup coordinates, level parsing
+renamed, files added or dropped or reordered, plans moved); *Casa*, a sheet like the ones on free
+plan sites (both storeys side by side 0.6 m apart in a border, no titles, metres saved as "inches",
+mirrored sliding-door blocks, glazing and treads on code-named layers) must read as two floors with
+the bathroom over the dining room; plus markup coordinates, level parsing
 (including `GF`/`FF`/`SF`/`TF` file names) and text anchoring.
 
 Plumb is a coordination aid, not a structural or services design check.

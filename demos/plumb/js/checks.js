@@ -121,7 +121,8 @@ export function runChecks(floors, an, transforms) {
         }
       }
       // ducts and cores should continue straight down
-      if (ru.type === 'duct' || ru.type === 'lift' || ru.type === 'stair') {
+      // a small unnamed space only *might* be a shaft ("Shaft?"): not enough to raise an issue
+      if ((ru.type === 'duct' || ru.type === 'lift' || ru.type === 'stair') && ru.name !== 'Shaft?') {
         let same = 0;
         for (const [lid, a] of m) { const rl = loRoom.get(lid); if (rl && rl.type === ru.type) same += a; }
         const ratio = same / ru.cellArea;
@@ -132,8 +133,11 @@ export function runChecks(floors, an, transforms) {
         for (const r of cands) { const d = Math.hypot(r.cx - (ru.cx + tx), r.cy - (ru.cy + ty)); if (d < nd) { nd = d; nearest = r; } }
         const label = ru.type === 'duct' ? 'Duct' : ru.type === 'lift' ? 'Lift well' : 'Staircase';
         if (nearest && nd < 2.5) {
+          // centred on the one below: only the drawn shape differs (a stair's top flight and its
+          // opening, a duct narrowing as it rises). A lift well still has to be the same size.
+          if (nd < 0.15 && ru.type !== 'lift') continue;
           push({ ...pair, kind: `${ru.type}-offset`, severity: ru.type === 'stair' ? 'medium' : 'high', at: [ru.cx, ru.cy], atLower: [nearest.cx, nearest.cy], rooms: [ru.id, nearest.id],
-            title: `${label} shifted ${mm(nd)} mm`,
+            title: nd < 0.05 ? `${label} changes size` : `${label} shifted ${mm(nd)} mm`,
             detail: ru.type === 'duct'
               ? `Only ${Math.round(ratio * 100)}% of this ${lower(ru.name)} lines up with the one below. Vertical stacks (soil, waste, vent) can't jog without offsets and cleanouts.`
               : `Only ${Math.round(ratio * 100)}% overlaps the floor below. ${ru.type === 'lift' ? 'A lift well has to be dead straight.' : 'Flights and landings should stack.'}`,

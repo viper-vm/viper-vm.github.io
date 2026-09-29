@@ -15,7 +15,7 @@ export function massFloor(dx, roles, an) {
   const [bx0, by0, bx1, by1] = an.box;
   const span = Math.max(bx1 - bx0, by1 - by0);
   const res = Math.max(0.025, span / 2600);
-  const m = 1.2;
+  const m = an.margin ?? 1.2; // the floor's own reach (smaller when the next plan is close)
   const g = new Grid(bx0 - m, by0 - m, bx1 + m, by1 + m, res);
   const W = g.w, H = g.h;
   const inBox = (x, y) => x >= bx0 - m && x <= bx1 + m && y >= by0 - m && y <= by1 + m;

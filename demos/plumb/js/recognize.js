@@ -6,28 +6,51 @@ import { Grid, label, distanceTransform, allContours, polyArea } from './raster.
 // ---------------------------------------------------------------------------
 // Units
 
-/** Millimetres per drawing unit: from $INSUNITS, else guessed from door swings and plan size. */
-export function inferUnitMM(dxf) {
-  if (dxf.unitMM) return { mm: dxf.unitMM, source: 'header' };
+const UNIT_CANDS = [[1, 'mm'], [10, 'cm'], [1000, 'm'], [25.4, 'in'], [304.8, 'ft']];
+const UNIT_WORD = { 1: 'mm', 10: 'cm', 1000: 'm', 25.4: 'inches', 304.8: 'feet' };
+
+/** The unit that makes the most door-swing arcs door-sized (0.6–1.1 m), if the drawing says so clearly. */
+function unitFromDoors(dxf) {
   const radii = dxf.arcs.filter((a) => {
     let sw = a.a1 - a.a0;
     while (sw < 0) sw += Math.PI * 2;
     return sw > 1.2 && sw < 1.95;
-  }).map((a) => a.r).sort((p, q) => p - q);
-  if (radii.length >= 3) {
-    const med = radii[Math.floor(radii.length / 2)];
-    // a door leaf is ~0.7–1.0 m
-    const cands = [[1, 'mm'], [10, 'cm'], [1000, 'm'], [25.4, 'in'], [304.8, 'ft']];
-    let best = cands[0], bestErr = Infinity;
-    for (const c of cands) {
-      const m = (med * c[0]) / 1000;
-      const err = Math.abs(Math.log(m / 0.85));
-      if (err < bestErr) { bestErr = err; best = c; }
-    }
-    if (bestErr < 0.6) return { mm: best[0], source: `door swings (${best[1]})` };
+  }).map((a) => a.r);
+  let best = null;
+  for (const [mm, name] of UNIT_CANDS) {
+    const doors = radii.map((r) => (r * mm) / 1000).filter((m) => m > 0.6 && m < 1.1);
+    if (doors.length < 3) continue;
+    doors.sort((p, q) => p - q);
+    const med = doors[Math.floor(doors.length / 2)];
+    const err = Math.abs(Math.log(med / 0.85));
+    if (!best || doors.length > best.n || (doors.length === best.n && err < best.err)) best = { mm, name, n: doors.length, err };
   }
-  // fall back to overall size: a plan set is typically 10–300 m across
+  return best;
+}
+
+/**
+ * Millimetres per drawing unit. $INSUNITS if the drawing agrees with it; files often carry the
+ * wrong one (a house drawn in metres, saved as "inches"), so the door swings and the size of the
+ * whole drawing get a say.
+ */
+export function inferUnitMM(dxf) {
   const b = dxf.bounds, span = Math.max(b.x1 - b.x0, b.y1 - b.y0);
+  const doors = unitFromDoors(dxf);
+  if (dxf.unitMM) {
+    const spanM = (span * dxf.unitMM) / 1000;
+    const agrees = spanM >= 3 && spanM <= 5000 && (!doors || doors.mm === dxf.unitMM || doors.n < 3);
+    if (agrees) return { mm: dxf.unitMM, source: 'header' };
+    const said = UNIT_WORD[dxf.unitMM] ? `; the file says ${UNIT_WORD[dxf.unitMM]}` : '';
+    if (doors) return { mm: doors.mm, source: `door swings (${doors.name})${said}` };
+    const size = unitFromSize(span);
+    return { ...size, source: size.source + said };
+  }
+  if (doors) return { mm: doors.mm, source: `door swings (${doors.name})` };
+  return unitFromSize(span);
+}
+
+// a plan set is typically 10–300 m across
+function unitFromSize(span) {
   if (span > 5000) return { mm: 1, source: 'drawing size (mm)' };
   if (span > 500) return { mm: 10, source: 'drawing size (cm)' };
   return { mm: 1000, source: 'drawing size (m)' };
@@ -64,24 +87,26 @@ export const ROLES = ['wall', 'column', 'door', 'window', 'outline', 'stair', 'l
 export const BOUNDARY_ROLES = new Set(['wall', 'column', 'window', 'outline']);
 
 const NAME_RULES = [
-  ['column', /(^|[^a-z])(s-col|col|cols|column|columns|pillar|pier|stanchion)([^a-z]|$)/i],
-  ['wall', /(wall|wand|mur|brick|masonry|partition|block ?work|a-wall|^w$)/i],
-  ['door', /(door|dr|shutter|a-door|gate)/i],
-  ['window', /(window|win|glaz|glass|vent|ventilator|a-glaz|curtain)/i],
-  ['outline', /(slab|outline|above|plinth|footprint|balcony edge|chajja|projection|bldg|building line)/i],
-  ['stair', /(stair|strs|step|tread|ramp)/i],
-  ['lift', /(lift|elev|elevator)/i],
-  ['duct', /(duct|shaft|p-|plumb|ots|drain|sanitary|san-)/i],
-  ['furniture', /(furn|furniture|fixture|sofa|bed|kitchen eq|equip|fitting|cars?$|prkg|parking|tree|plant|landscape)/i],
-  ['dim', /(dim|dimension)/i],
-  ['text', /(text|txt|anno|name|label|title|ttlb|note|room)/i],
-  ['hatch', /(hatch|patt|fill|poche)/i],
-  ['grid', /(grid|axis|centre ?line|center ?line)/i],
+  ['column', /(^|[^a-z])(s-col|col|cols|column|columns|pillar|pier|stanchion|pilar|pilares|columna|poteau|stütze|stuetze|pilastro)([^a-z]|$)/i],
+  ['wall', /(wall|wand|mur|mauer|brick|masonry|partition|block ?work|a-wall|^w$|pared|tabique|parete|parede|cloison)/i],
+  ['door', /(door|(^|[^a-z])drs?([^a-z]|$)|shutter|gate|puert|porte\b|portes\b|\bt[üu]e?r(en)?\b|deur|porta\b)/i],
+  ['window', /(window|(^|[^a-z])win([^a-z]|$)|glaz|glass|vent|curtain|fenetre|fenêtre|fenster|finestr|janela|carpinter)/i],
+  ['outline', /(slab|outline|above|plinth|footprint|balcony edge|chajja|projection|bldg|building line|forjado|losa)/i],
+  ['stair', /(stair|strs|step|tread|ramp|escaler|escalon|treppe|\bscala\b|escada|a-flor-?(strs?|stm|hr(a?l|m)))/i],
+  ['lift', /(lift|elev|elevator|ascensor|aufzug|ascenseur|ascensore)/i],
+  ['duct', /(duct|shaft|p-|plumb|ots|drain|sanitary|san-|ducto|schacht)/i],
+  ['furniture', /(furn|furniture|fixture|sofa|bed|kitchen eq|equip|fitting|cars?$|prkg|parking|tree|plant|landscape|mobili|mueble|meuble|m[öo]bel|moebel|arredo|cocina|cucina|k[üu]che)/i],
+  ['dim', /(dim|dimension|cota|acot|bema[ßs]|quota)/i],
+  ['hatch', /(hatch|patt|fill|poche|textur|trama|sombread|schraff)/i],
+  ['text', /(text|txt|anno|name|label|title|ttlb|note|room|texto|rotul|nombre|beschrift)/i],
+  ['grid', /(grid|axis|centre ?line|center ?line|ejes?\b|achse)/i],
 ];
 
 /** Classify every layer by its name, then by what is drawn on it. */
 export function layerRoles(dx) {
   const stats = new Map();
+  const treads = new Map(); // layer → short axis-aligned lines, to spot stair treads
+  const lines = new Map();  // layer → axis-aligned lines over 30 cm, to see how they pair up
   const st = (l) => {
     if (!stats.has(l)) stats.set(l, { segs: 0, len: 0, arcs: 0, doorArcs: 0, texts: 0, fills: 0, colFills: 0, axis: 0 });
     return stats.get(l);
@@ -90,7 +115,18 @@ export function layerRoles(dx) {
     const o = st(s[4]); o.segs++;
     const L = Math.hypot(s[2] - s[0], s[3] - s[1]);
     o.len += L;
-    if (Math.abs(s[0] - s[2]) < 1e-6 || Math.abs(s[1] - s[3]) < 1e-6) o.axis++;
+    const vert = Math.abs(s[0] - s[2]) < 1e-6, horiz = Math.abs(s[1] - s[3]) < 1e-6;
+    if (vert || horiz) {
+      o.axis++;
+      if (L > 0.5 && L < 2.0) {
+        const list = treads.get(s[4]) || (treads.set(s[4], []), treads.get(s[4]));
+        if (list.length < 4000) list.push({ o: horiz ? 0 : 1, len: L, pos: horiz ? s[1] : s[0] });
+      }
+      if (L > 0.3) {
+        const list = lines.get(s[4]) || (lines.set(s[4], []), lines.get(s[4]));
+        if (list.length < 3000) list.push(horiz ? { h: 1, c: s[1], a0: Math.min(s[0], s[2]), a1: Math.max(s[0], s[2]) } : { h: 0, c: s[0], a0: Math.min(s[1], s[3]), a1: Math.max(s[1], s[3]) });
+      }
+    }
   }
   for (const a of dx.arcs) {
     const o = st(a.layer); o.arcs++;
@@ -108,17 +144,71 @@ export function layerRoles(dx) {
     const o = stats.get(name) || { segs: 0, len: 0, arcs: 0, doorArcs: 0, texts: 0, fills: 0, colFills: 0, axis: 0 };
     let role = null;
     for (const [r, re] of NAME_RULES) if (re.test(name)) { role = r; break; }
-    // content overrides for generic names
+    // a name can mislead: "TEXTURA" (Spanish for texture) holds door swings, not text
+    if (role === 'text' && !o.texts && o.segs + o.arcs > 0) role = null;
+    if ((!role || role === 'hatch') && o.doorArcs >= 2 && o.doorArcs >= o.arcs * 0.5) role = 'door';
+    // content decides for generic names
     if (!role) {
       if (o.colFills >= 3 && o.colFills >= o.fills * 0.6) role = 'column';
-      else if (o.doorArcs >= 2 && o.doorArcs >= o.arcs * 0.5) role = 'door';
       else if (o.texts > 0 && o.segs < 5) role = 'text';
+      else if (looksLikeTreads(treads.get(name))) role = 'stair';
+      else if (looksLikeGlazing(lines.get(name))) role = 'window';
       else if (o.segs > 20 && o.axis / Math.max(1, o.segs) > 0.6) role = 'wall';
       else role = 'other';
     }
     roles.set(name, { role, stats: o, auto: true });
   }
   return roles;
+}
+
+/**
+ * Most lines have a parallel twin a few centimetres away: glass and frames (a sliding door, a
+ * window), not walls, whose two faces sit 10–45 cm apart.
+ */
+function looksLikeGlazing(list) {
+  if (!list || list.length < 8) return false;
+  const gaps = [];
+  for (const o of [0, 1]) {
+    const L = list.filter((q) => q.h === o).sort((p, q) => p.c - q.c);
+    for (let i = 0; i < L.length; i++) {
+      const a = L[i];
+      let best = Infinity;
+      for (const j of [-1, 1]) {
+        for (let k = i + j; k >= 0 && k < L.length && Math.abs(L[k].c - a.c) <= 0.5; k += j) {
+          const b = L[k], d = Math.abs(b.c - a.c);
+          if (d < 1e-4 || d >= best) continue;
+          if (Math.min(a.a1, b.a1) - Math.max(a.a0, b.a0) >= 0.5 * (a.a1 - a.a0)) best = d;
+        }
+      }
+      if (best < 0.5) gaps.push(best);
+    }
+  }
+  if (gaps.length < 0.6 * list.length) return false;
+  gaps.sort((p, q) => p - q);
+  return gaps[Math.floor(gaps.length / 2)] < 0.06;
+}
+
+/** Six or more equal parallel lines, 18–38 cm apart one after the next: a flight of stairs. */
+function looksLikeTreads(list) {
+  if (!list || list.length < 6) return false;
+  const groups = new Map();
+  for (const q of list) {
+    const k = q.o + ':' + Math.round(q.len / 0.05);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(q.pos);
+  }
+  for (const ps of groups.values()) {
+    if (ps.length < 6) continue;
+    ps.sort((p, q) => p - q);
+    let run = 0;
+    for (let i = 1; i < ps.length; i++) {
+      const d = ps[i] - ps[i - 1];
+      if (d < 0.005) continue; // the same line again (two flights side by side)
+      run = d > 0.18 && d < 0.38 ? run + 1 : 0;
+      if (run >= 5) return true;
+    }
+  }
+  return false;
 }
 
 function bboxOf(pts) {
@@ -155,28 +245,31 @@ export function parseLevel(text) {
   return null;
 }
 
+const ORD = ['GROUND', 'FIRST', 'SECOND', 'THIRD', 'FOURTH', 'FIFTH', 'SIXTH', 'SEVENTH', 'EIGHTH', 'NINTH', 'TENTH'];
+const nth = (n) => n + (n % 100 >= 11 && n % 100 <= 13 ? 'TH' : ['TH', 'ST', 'ND', 'RD'][n % 10] || 'TH');
+/** "GROUND FLOOR", "SECOND FLOOR", "12TH FLOOR", "BASEMENT 1" */
+export const storeyTitle = (n) => (n < 0 ? `BASEMENT ${-n}` : `${n < ORD.length ? ORD[n] : nth(n)} FLOOR`);
+
+const STAIR_UP = /^\s*(up|upstairs|sube|monte|↑)\s*$/i, STAIR_DOWN = /^\s*(dn|down|downstairs|baja|descend|↓)\s*$/i;
+const areaOf = (bx) => Math.max(0, bx[2] - bx[0]) * Math.max(0, bx[3] - bx[1]);
+const inBox = (bx, x, y) => x >= bx[0] && x <= bx[2] && y >= bx[1] && y <= bx[3];
+
 /**
  * Split the drawing into islands and find the floor plans among them.
- * Returns floors sorted bottom → top: {id, title, level, typical, box:[x0,y0,x1,y1]}.
+ * Returns floors sorted bottom → top: {id, title, level, typical, box:[x0,y0,x1,y1], guessed?}.
+ * guessed: 'stairs' when the order came from the stair arrows, 'order' when from left to right.
  */
 export function findFloors(dx, roles) {
   const b = dx.bounds;
   const span = Math.max(b.x1 - b.x0, b.y1 - b.y0);
-  const res = Math.max(0.25, span / 1600);
-  const g = new Grid(b.x0 - 2, b.y0 - 2, b.x1 + 2, b.y1 + 2, res);
   const skip = new Set(['text', 'dim', 'grid']);
-  for (const s of dx.segs) {
-    const r = roles.get(s[4]);
-    if (r && skip.has(r.role)) continue;
-    g.seg(s[0], s[1], s[2], s[3], Math.ceil(1.2 / res));
-  }
-  const lab = label(g.data, g.w, g.h, 1);
-  const islands = [];
-  for (let id = 0; id < lab.count; id++) {
-    if (lab.sizes[id] < 4) continue;
-    const [i0, j0, i1, j1] = lab.bbox[id];
-    islands.push({ id, box: [g.x0 + i0 * res + 1.2, g.y0 + j0 * res + 1.2, g.x0 + (i1 + 1) * res - 1.2, g.y0 + (j1 + 1) * res - 1.2] });
-  }
+  const segs = dx.segs.filter((s) => { const r = roles.get(s[4]); return !(r && skip.has(r.role)); });
+  const labels = dx.texts.filter((t) => { const r = roles.get(t.layer); return !(r && r.role === 'dim') && /[a-z]{3}/i.test(t.text) && !SIZE_TEXT.test(t.text); });
+  // islands: a plan's pieces (a detached porch, a parked car) join up within ~2.4 m
+  let islands = dropFrames(islandsOf(segs, [b.x0, b.y0, b.x1, b.y1], Math.max(0.25, span / 1600), 1.2));
+  // plans drawn closer together than that come out as one island: split it where a finer look
+  // shows separate plans, each with its own room names
+  islands = islands.flatMap((isl) => splitPlans(isl, segs, labels));
   // titles: level-like texts just below (or above) an island, overlapping it horizontally
   for (const isl of islands) {
     const [x0, y0, x1, y1] = isl.box;
@@ -191,20 +284,83 @@ export function findFloors(dx, roles) {
       const above = ty > y1 && ty < y1 + Math.max(6, h * 0.4);
       const inside = tx >= x0 && tx <= x1 && ty >= y0 && ty <= y1;
       if (!horiz || !(below || above || inside)) continue;
+      // inside a plan, "COVERED TERRACE" or "PARKING" names a room; a title says plan / floor / level
+      if (inside && !(below || above) && !/(plan|floor|level|storey|story)/i.test(t.text)) continue;
       const score = t.h * 10 - (below ? y0 - ty : above ? ty - y1 : h) * 0.2 + (/plan/i.test(t.text) ? 5 : 0);
       if (!best || score > best.score) best = { score, t, lv };
     }
     if (best) { isl.title = best.t.text; isl.level = best.lv.level; isl.typical = best.lv.typical; isl.titleText = best.t; }
   }
   let floors = islands.filter((i) => i.title !== undefined);
-  // no titles at all: take the big islands, left to right
-  if (!floors.length) {
-    const area = (i) => (i.box[2] - i.box[0]) * (i.box[3] - i.box[1]);
-    const maxA = Math.max(...islands.map(area));
-    floors = islands.filter((i) => area(i) > maxA * 0.25).sort((p, q) => p.box[0] - q.box[0]).map((i, k) => ({ ...i, title: `Plan ${k + 1}`, level: k }));
+  // no titles at all: take the big islands, in the order their stairs give (the lowest plan's
+  // stair only goes UP, the top one only DOWN), else left to right
+  if (!floors.length && islands.length) {
+    const maxA = Math.max(...islands.map((i) => areaOf(i.box)));
+    const big = islands.filter((i) => areaOf(i.box) > maxA * 0.25);
+    const says = (i, re) => dx.texts.some((t) => re.test(t.text) && inBox(i.box, t.x, t.y));
+    const rank = (i) => { const up = says(i, STAIR_UP), dn = says(i, STAIR_DOWN); return up && !dn ? 0 : dn && !up ? 2 : 1; };
+    const byStairs = big.length > 1 && big.some((i) => rank(i) !== 1);
+    big.sort((p, q) => (byStairs ? rank(p) - rank(q) : 0) || p.box[0] - q.box[0] || q.box[1] - p.box[1]);
+    floors = big.map((i, k) => ({ ...i, title: storeyTitle(k), level: k, guessed: byStairs ? 'stairs' : 'order' }));
   }
   floors.sort((p, q) => p.level - q.level || p.box[0] - q.box[0]);
-  return floors.map((f, k) => ({ id: k, title: f.title, level: f.level, typical: !!f.typical, box: f.box }));
+  return floors.map((f, k) => ({ id: k, title: f.title, level: f.level, typical: !!f.typical, box: f.box, ...(f.guessed ? { guessed: f.guessed } : {}) }));
+}
+
+/** Connected groups of linework, each line thickened by `reach` metres. */
+function islandsOf(segs, box, res, reach) {
+  const m = reach + 1;
+  const g = new Grid(box[0] - m, box[1] - m, box[2] + m, box[3] + m, res);
+  const r = Math.max(1, Math.round(reach / res)); // whole cells, not rounded up: two plans 0.6 m apart must stay apart
+  for (const s of segs) g.seg(s[0], s[1], s[2], s[3], r);
+  const lab = label(g.data, g.w, g.h, 1);
+  const out = [];
+  for (let id = 0; id < lab.count; id++) {
+    if (lab.sizes[id] < 4) continue;
+    const [i0, j0, i1, j1] = lab.bbox[id];
+    out.push({ box: [g.x0 + i0 * res + reach, g.y0 + j0 * res + reach, g.x0 + (i1 + 1) * res - reach, g.y0 + (j1 + 1) * res - reach], fill: lab.sizes[id] * res * res, reach });
+  }
+  return out;
+}
+
+/** A sheet border or title-block frame drawn round other islands is not a plan. */
+function dropFrames(islands) {
+  return islands.filter((o) => {
+    const A = areaOf(o.box), w = o.box[2] - o.box[0], h = o.box[3] - o.box[1];
+    const innerA = islands.reduce((a, i) => a + (i !== o && i.box[0] >= o.box[0] && i.box[1] >= o.box[1] && i.box[2] <= o.box[2] && i.box[3] <= o.box[3] ? areaOf(i.box) : 0), 0);
+    const ring = o.fill < 2 * (w + h) * 2 * o.reach * 1.6; // little more than its own edge
+    return !(innerA > 0.15 * A && ring);
+  });
+}
+
+/** One island, or the separate plans inside it when a finer grain pulls them apart. */
+function splitPlans(isl, segs, labels) {
+  const [x0, y0, x1, y1] = isl.box;
+  const A = areaOf(isl.box);
+  const res = Math.max(0.08, Math.max(x1 - x0, y1 - y0) / 1500);
+  const near = (s) => { const mx = (s[0] + s[2]) / 2, my = (s[1] + s[3]) / 2; return mx >= x0 - 1 && mx <= x1 + 1 && my >= y0 - 1 && my <= y1 + 1; };
+  const parts = dropFrames(islandsOf(segs.filter(near), isl.box, res, 0.2));
+  const named = (p) => labels.filter((t) => inBox(p.box, t.x, t.y)).length;
+  const plans = parts.filter((p) => areaOf(p.box) >= 0.1 * A && p.box[2] - p.box[0] > 3 && p.box[3] - p.box[1] > 3 && (named(p) >= 2 || areaOf(p.box) >= 0.3 * A));
+  if (plans.length < 2) return [isl];
+  // plans that overlap are one plan in pieces (a wing, a courtyard): leave the island whole
+  for (let a = 0; a < plans.length; a++) for (let c = a + 1; c < plans.length; c++) {
+    const P = plans[a].box, Q = plans[c].box;
+    const ov = Math.max(0, Math.min(P[2], Q[2]) - Math.max(P[0], Q[0])) * Math.max(0, Math.min(P[3], Q[3]) - Math.max(P[1], Q[1]));
+    if (ov > 0.2 * Math.min(areaOf(P), areaOf(Q))) return [isl];
+  }
+  // every other piece joins the plan it sits in or next to; the rest are notes, legends, keys
+  const boxes = plans.map((p) => [...p.box]);
+  for (const p of parts) {
+    if (plans.includes(p)) continue;
+    const cx = (p.box[0] + p.box[2]) / 2, cy = (p.box[1] + p.box[3]) / 2;
+    let best = -1, bd = Infinity;
+    plans.forEach((q, k) => { const d = Math.hypot(Math.max(q.box[0] - cx, 0, cx - q.box[2]), Math.max(q.box[1] - cy, 0, cy - q.box[3])); if (d < bd) { bd = d; best = k; } });
+    if (best < 0 || bd > 2) continue;
+    const bx = boxes[best];
+    bx[0] = Math.min(bx[0], p.box[0]); bx[1] = Math.min(bx[1], p.box[1]); bx[2] = Math.max(bx[2], p.box[2]); bx[3] = Math.max(bx[3], p.box[3]);
+  }
+  return boxes.map((box) => ({ box, fill: 0, reach: 0 }));
 }
 
 // ---------------------------------------------------------------------------
@@ -233,7 +389,11 @@ export function roomType(name) {
   return 'unknown';
 }
 
-const SIZE_TEXT = /^\s*[\d.,'"′″\s]+[x×*]\s*[\d.,'"′″\s]+\s*$|^\s*\d+(\.\d+)?\s*(sq\.?\s?(m|ft)|m2|m²|sft)\s*$/i;
+// stair arrows, door and window notes and tags: on the plan, but not room names
+const NOT_NAME = /^\s*(n|north|(sliding|folding|pocket)?\s*doors?|windows?|opening|ramp( up| down| dn)?|[dwv]\s?-?\d{1,2}[a-z]?)\s*$/i;
+// "UP" / "DN" still mark out the stair's own zone in an open plan
+const STAIR_ARROW = /^\s*(up|dn|down|upstairs|downstairs|sube|baja|↑|↓)\s*$/i;
+const SIZE_TEXT = /^\s*[\d.,'"′″\s]+[x×*]\s*[\d.,'"′″\s]+\s*$|^\s*[\d,]+(\.\d+)?\s*(sq\.?\s?(m|ft)|m2|m²|sft|sf|s\.f\.|ft2|ft²)\s*$/i;
 
 /**
  * Analyse one floor island. Returns
@@ -241,7 +401,7 @@ const SIZE_TEXT = /^\s*[\d.,'"′″\s]+[x×*]\s*[\d.,'"′″\s]+\s*$|^\s*\d+(\
  */
 export function analyseFloor(dx, roles, box, opts = {}) {
   const res = opts.res ?? 0.04;
-  const margin = 1.0;
+  const margin = opts.margin ?? 1.0;
   const [bx0, by0, bx1, by1] = box;
   const g = new Grid(bx0 - margin, by0 - margin, bx1 + margin, by1 + margin, res);
   const inBox = (x, y) => x >= bx0 - margin && x <= bx1 + margin && y >= by0 - margin && y <= by1 + margin;
@@ -326,7 +486,7 @@ export function analyseFloor(dx, roles, box, opts = {}) {
   //    (open-plan living/dining/kitchen, a lobby that runs into the stair and lift)
   const roomAt = new Int32Array(W * H).fill(-1);
   const draft = [];
-  const isName = (s) => !SIZE_TEXT.test(s) && /[a-z]/i.test(s) && s.length <= 40 && !/scale|plan\b/i.test(s);
+  const isName = (s) => !SIZE_TEXT.test(s) && !NOT_NAME.test(s) && /[a-z]/i.test(s) && s.length <= 40 && !/scale|plan\b/i.test(s);
   const queue = new Int32Array(W * H);
   for (const rg of regions) {
     if (rg.outside || rg.cavity) continue;
@@ -380,24 +540,33 @@ export function analyseFloor(dx, roles, box, opts = {}) {
   }
   // the brush that seals gaps also eats a strip along every wall: give it back
   const erode = (brush + 0.75) * res;
+  // small unnamed spaces all the same size, five or more: the gaps in a pergola, deck or louvre
+  const dims = draft.map((d, v) => [(rb[v][2] - rb[v][0] + 1) * res, (rb[v][3] - rb[v][1] + 1) * res]);
+  const keyOf = (v) => `${Math.round(dims[v][0] / 0.05)}:${Math.round(dims[v][1] / 0.05)}`;
+  const same = new Map();
+  draft.forEach((d, v) => { if (!d.nameText && cnt[v] * res * res < 3) same.set(keyOf(v), (same.get(keyOf(v)) || 0) + 1); });
   let rooms = draft.map((d, v) => {
     const area = cnt[v] * res * res + per[v] * res * erode;
-    let name = d.nameText;
-    const forced = types && types.get(normName(name));
-    let type = forced || roomType(d.nameText || d.texts.map((t) => t.text).join(' '));
+    const arrow = STAIR_ARROW.test(d.nameText || '');
+    let name = arrow ? '' : d.nameText;
+    const forced = types && types.get(normName(d.nameText));
+    let type = forced || (arrow ? 'unknown' : roomType(d.nameText || d.texts.map((t) => t.text).join(' ')));
     if (!forced && (type === 'unknown' || type === 'service')) {
       if (hits.duct[v] >= 2 && area < 5) { type = 'duct'; name = name || 'Duct'; }
       else if (hits.lift[v] >= 2 && area < 14) { type = 'lift'; name = name || 'Lift'; }
-      else if (hits.stair[v] >= 6) { type = 'stair'; name = name || 'Staircase'; }
+      else if (hits.stair[v] >= (arrow ? 3 : 6)) { type = 'stair'; name = name || 'Staircase'; }
     }
-    if (!forced && type === 'unknown' && !name && area < 1.6) { type = 'duct'; name = 'Shaft?'; }
+    const pattern = !d.nameText && cnt[v] * res * res < 3 && same.get(keyOf(v)) >= 5;
+    const [bw, bh] = dims[v];
+    const compact = Math.min(bw, bh) >= 0.3 && Math.max(bw, bh) <= 3 * Math.min(bw, bh);
+    if (!forced && type === 'unknown' && !name && area < 1.6 && compact && !pattern) { type = 'duct'; name = 'Shaft?'; }
     const sizeText = d.texts.map((t) => t.text).find((x) => SIZE_TEXT.test(x)) || '';
     return {
-      idx: v, region: d.region, name: tidyName(name) || (type === 'unknown' ? 'Unnamed space' : cap(type)), label: d.nameText || '', type, area, cellArea: cnt[v] * res * res, sizeText,
+      idx: v, region: d.region, name: tidyName(name) || (type === 'unknown' ? 'Unnamed space' : cap(type)), label: d.nameText || '', type, area, cellArea: cnt[v] * res * res, sizeText, pattern,
       bbox: rb[v], cx: g.x0 + (sx[v] / Math.max(1, cnt[v]) + 0.5) * res, cy: g.y0 + (sy[v] / Math.max(1, cnt[v]) + 0.5) * res,
     };
   });
-  const keep = rooms.filter((r) => r.area >= (r.type === 'duct' || r.type === 'lift' ? 0.05 : 0.45) && !(r.type === 'unknown' && r.area < 0.8));
+  const keep = rooms.filter((r) => !r.pattern && r.area >= (r.type === 'duct' || r.type === 'lift' ? 0.05 : 0.45) && !(r.type === 'unknown' && r.area < 0.8));
   const remap = new Int32Array(nD).fill(-1);
   keep.forEach((r, k) => { remap[r.idx] = k; r.id = k; });
   for (let k = 0; k < W * H; k++) if (roomAt[k] >= 0) roomAt[k] = remap[roomAt[k]];
@@ -428,7 +597,7 @@ export function analyseFloor(dx, roles, box, opts = {}) {
   for (let k = 0; k < W * H; k++) if (inside[k]) fpArea++;
 
   return {
-    box, res,
+    box, res, margin,
     grid: { x0: g.x0, y0: g.y0, w: W, h: H, res },
     labels: lab.labels, roomAt, regions, rooms, columns: cols, doors,
     inside, outlines, footprintArea: fpArea * res * res,

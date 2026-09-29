@@ -38,6 +38,7 @@ export const LWPOLY = (pts, closed, l) => [[0, 'LWPOLYLINE'], [8, l], [90, pts.l
 export const ARC = (cx, cy, r, a0, a1, l) => [[0, 'ARC'], [8, l], [10, cx], [20, cy], [30, 0], [40, r], [50, a0], [51, a1]];
 export const INSERT = (name, x, y, sx, sy, rot, l) => [[0, 'INSERT'], [8, l], [2, name], [10, x], [20, y], [30, 0], [41, sx], [42, sy], [43, 1], [50, rot]];
 export const MTEXT = (x, y, h, text, l, attach = 5) => [[0, 'MTEXT'], [8, l], [10, x], [20, y], [30, 0], [40, h], [71, attach], [1, text]];
+export const TEXT = (x, y, h, text, l) => [[0, 'TEXT'], [8, l], [10, x], [20, y], [30, 0], [40, h], [1, text], [72, 1], [11, x], [21, y], [31, 0], [73, 2]];
 export const HATCH = (pts, l) => [[0, 'HATCH'], [8, l], [10, 0], [20, 0], [30, 0], [2, 'SOLID'], [70, 1], [71, 0], [91, 1], [92, 2], [72, 0], [73, 1], [93, pts.length], ...pts.flatMap((p) => [[10, p[0]], [20, p[1]]]), [97, 0], [75, 0], [76, 1], [98, 0]];
 /** A DIMENSION with no *D block (some exporters write none): only definition points + measurement. */
 export const DIM = (p1, p2, at, rot, value, l) => {
@@ -184,4 +185,54 @@ export function lakeviewFiles() {
   const origins = [[1000, 500], [0, 0], [-50, 30]];
   const names = ['ground.dxf', 'first-floor.dxf', 'L2.dxf'];
   return [0, 1, 2].map((lv) => { const dx = base(); emit(dx, plan(lv), ...origins[lv], null); return { name: names[lv], text: dx.toString() }; }).reverse();
+}
+
+// ---------------------------------------------------------------------------- Casa: a sheet from a free-plan site
+// Both storeys side by side 0.6 m apart inside a sheet border, no floor titles, drawn in metres but
+// saved as "inches", the sliding doors a mirrored block (extrusion 0,0,−1, X scale −1), glazing and
+// a pergola on a generic layer, door swings on "TEXTURA", treads on a code name, "UP"/"DOWN" arrows,
+// "SLIDING DOOR" notes and a room called "COVERED TERRACE". The bathroom upstairs sits over the dining.
+export function casaSheet() {
+  const dx = new ModernDxf(1);
+  for (const [n, c] of [['A-WALL', 7], ['muro', 7], ['casa', 1], ['inne_gulv', 3], ['TEXTURA', 4], ['A-SECTMBM', 8], ['A-FLORSTM', 6], ['CASCO', 2]]) dx.layer(n, c);
+  const T = (x, y, text, l = 'CASCO') => dx.add(TEXT(x, y, 0.11, text, l));
+  const L = (x1, y1, x2, y2, l) => dx.add(LINE(x1, y1, x2, y2, l));
+  const box = (x0, y0, x1, y1, l) => dx.add(LWPOLY(rect(x0, y0, x1, y1), true, l));
+  const shell = (ox, gap) => { // 9 × 12 m, 15 cm walls; an optional opening in the bottom wall
+    const t = 0.15;
+    if (gap) {
+      const [g0, g1] = gap;
+      dx.add(LWPOLY([[ox + g0, 0], [ox, 0], [ox, 12], [ox + 9, 12], [ox + 9, 0], [ox + g1, 0]], false, 'A-WALL'));
+      dx.add(LWPOLY([[ox + g0, t], [ox + t, t], [ox + t, 12 - t], [ox + 9 - t, 12 - t], [ox + 9 - t, t], [ox + g1, t]], false, 'A-WALL'));
+      L(ox + g0, 0, ox + g0, t, 'A-WALL'); L(ox + g1, 0, ox + g1, t, 'A-WALL');
+    } else { box(ox, 0, ox + 9, 12, 'A-WALL'); box(ox + t, t, ox + 9 - t, 12 - t, 'A-WALL'); }
+  };
+  const treads = (ox) => { for (let k = 0; k < 17; k++) L(ox + 0.4, 6.3 + k * 0.28, ox + 1.9, 6.3 + k * 0.28, 'A-SECTMBM'); };
+  // ground floor: open kitchen / dining / living, stair going up, sliding doors, terrace, pergola
+  shell(0, [3, 6]);
+  const panels = [];
+  for (const [p0, p1, y0] of [[0, 1.6, 0.02], [1.4, 3, 0.08]]) for (const o of [0, 0.015, 0.03, 0.045]) panels.push(LINE(p0, y0 + o, p1, y0 + o, 'casa'));
+  dx.block('SLIDE', [...panels, LINE(0, 0, 0, 0.15, 'casa'), LINE(3, 0, 3, 0.15, 'casa')]); // two sliding panels
+  dx.add([...INSERT('SLIDE', -3, 0, -1, 1, 0, 'muro'), [210, 0], [220, 0], [230, -1]]); // lands at x 3–6
+  for (const y of [2, 5, 8]) for (const o of [0, 0.04, 0.08]) L(8.89 + o, y, 8.89 + o, y + 1.2, 'inne_gulv'); // windows, east wall
+  treads(0);
+  T(1.15, 8.6, 'UP', 'A-FLORSTM');
+  T(7, 9.5, 'KITCHEN'); T(4.5, 6, 'DINING'); T(4.5, 2.5, 'LIVING'); T(4.5, 0.6, 'SLIDING DOOR');
+  box(-3, 3, 0, 9, 'inne_gulv'); T(-1.5, 6, 'COVERED TERRACE');
+  box(9, 0, 12, 6, 'inne_gulv');
+  for (let x = 9.25; x < 12; x += 0.5) { L(x, 0, x, 6, 'inne_gulv'); L(x + 0.05, 0, x + 0.05, 6, 'inne_gulv'); }
+  T(10.5, 3, 'PERGOLATED');
+  // first floor, 0.6 m to the right: stair coming down, bathroom (over the dining), two bedrooms
+  const ox = 12.6;
+  shell(ox);
+  treads(ox);
+  T(ox + 1.15, 8.6, 'DOWN', 'A-FLORSTM');
+  box(ox + 6.2, 0.15, ox + 6.3, 11.85, 'A-WALL');                                   // master | the rest
+  box(ox + 3.5, 4.5, ox + 3.6, 7.5, 'A-WALL'); box(ox + 3.5, 7.5, ox + 6.2, 7.6, 'A-WALL'); // bathroom
+  box(ox + 0.15, 4.4, ox + 6.2, 4.5, 'A-WALL');                                     // bedroom | bathroom, hall
+  T(ox + 4.9, 6, 'BATHROOM'); T(ox + 3, 2.3, 'BEDROOM'); T(ox + 7.6, 6, 'MASTER BEDROOM');
+  for (const [cx, cy, a0] of [[ox + 3.6, 4.5, 0], [ox + 6.3, 9, 90], [ox + 1, 4.5, 0], [ox + 6.2, 2, 90]]) dx.add(ARC(cx, cy, 0.8, a0, a0 + 90, 'TEXTURA'));
+  // the sheet border
+  box(-4.2, -1.2, ox + 10.2, 13.2, 'inne_gulv');
+  return dx.toString();
 }

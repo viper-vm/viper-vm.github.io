@@ -193,6 +193,9 @@ export function parseDXF(input) {
       let layer = get(r, 8, '0').trim();
       if (layer === '0' && inherited) layer = inherited;
       layer = layerOf(layer);
+      // entities drawn in their own coordinate system (extrusion ≠ +Z, most often a mirrored copy)
+      const O = OCS_TYPES.has(r.type) && !(r.type === 'POLYLINE' && is3D(r)) ? ocsOf(r) : null;
+      const Mo = O ? M.mul(O) : M;
       switch (r.type) {
         case 'LINE': {
           const p = M.apply(getNum(r, 10), getNum(r, 20)), q = M.apply(getNum(r, 11), getNum(r, 21));
@@ -202,18 +205,18 @@ export function parseDXF(input) {
         case 'LWPOLYLINE': case 'POLYLINE': {
           const pts = r.pts || lwPoints(r);
           const closed = r.type === 'LWPOLYLINE' ? (getNum(r, 70, 0) & 1) === 1 : r.closed;
-          emitPoly(pts, closed, M, layer);
+          emitPoly(pts, closed, Mo, layer);
           break;
         }
         case 'ARC': {
           const c = [getNum(r, 10), getNum(r, 20)], rr = getNum(r, 40);
           const a0 = (getNum(r, 50) * Math.PI) / 180, a1 = (getNum(r, 51) * Math.PI) / 180;
-          emitArc(c, rr, a0, a1, M, layer);
+          emitArc(c, rr, a0, a1, Mo, layer);
           break;
         }
         case 'CIRCLE': {
-          const c = M.apply(getNum(r, 10), getNum(r, 20));
-          const rr = getNum(r, 40) * M.scale;
+          const c = Mo.apply(getNum(r, 10), getNum(r, 20));
+          const rr = getNum(r, 40) * Mo.scale;
           S.circles.push({ cx: c[0], cy: c[1], r: rr, layer });
           tessCircle(c, rr, layer);
           break;
@@ -223,7 +226,8 @@ export function parseDXF(input) {
           let t0 = getNum(r, 41, 0), t1 = getNum(r, 42, Math.PI * 2);
           if (t1 < t0) t1 += Math.PI * 2;
           const n = Math.max(8, Math.ceil(((t1 - t0) / (Math.PI * 2)) * 48));
-          const mx2 = -my * ratio, my2 = mx * ratio;
+          const turn = getNum(r, 230, 1) < 0 ? -1 : 1; // points in WCS, but it runs round its own normal
+          const mx2 = -my * ratio * turn, my2 = mx * ratio * turn;
           let prev = null;
           for (let k = 0; k <= n; k++) {
             const t = t0 + ((t1 - t0) * k) / n;
@@ -259,20 +263,21 @@ export function parseDXF(input) {
           let s = '';
           if (r.type === 'MTEXT') { for (const [c, v] of r.d) if (c === 3 || c === 1) s += v; }
           else s = get(r, 1, '');
-          const p = M.apply(x, y);
-          const h = getNum(r, 40, 1) * M.scale;
+          const Mt = r.type === 'MTEXT' ? M : Mo; // MTEXT is placed in world coordinates
+          const p = Mt.apply(x, y);
+          const h = getNum(r, 40, 1) * Mt.scale;
           let rot = getNum(r, 50, 0);
           if (r.type === 'MTEXT') {
             const dx = getNum(r, 11, 1), dy = getNum(r, 21, 0);
             if (get(r, 11, null) !== null) rot = (Math.atan2(dy, dx) * 180) / Math.PI;
           }
           const text = cleanText(s, r.type === 'MTEXT');
-          if (text) S.texts.push({ x: p[0], y: p[1], h, rot: rot + M.rotDeg, text, layer, mtext: r.type === 'MTEXT', ha, va, attach: r.type === 'MTEXT' ? getNum(r, 71, 1) : 0 });
+          if (text) S.texts.push({ x: p[0], y: p[1], h, rot: rot + Mt.rotDeg, text, layer, mtext: r.type === 'MTEXT', ha, va, attach: r.type === 'MTEXT' ? getNum(r, 71, 1) : 0 });
           break;
         }
         case 'SOLID': case 'TRACE': {
           const q = [[getNum(r, 10), getNum(r, 20)], [getNum(r, 11), getNum(r, 21)], [getNum(r, 13), getNum(r, 23)], [getNum(r, 12), getNum(r, 22)]];
-          const pts = q.map((p) => M.apply(p[0], p[1]));
+          const pts = q.map((p) => Mo.apply(p[0], p[1]));
           S.fills.push({ pts, layer, solid: true });
           for (let k = 0; k < 4; k++) { const a = pts[k], b = pts[(k + 1) % 4]; if (a[0] !== b[0] || a[1] !== b[1]) S.segs.push([a[0], a[1], b[0], b[1], layer]); }
           break;
@@ -280,7 +285,7 @@ export function parseDXF(input) {
         case 'HATCH': {
           const solid = getNum(r, 70, 0) === 1;
           for (const loop of hatchLoops(r)) {
-            const pts = loop.map((p) => M.apply(p[0], p[1]));
+            const pts = loop.map((p) => Mo.apply(p[0], p[1]));
             if (pts.length >= 3) S.fills.push({ pts, layer, solid });
           }
           break;
@@ -316,12 +321,12 @@ export function parseDXF(input) {
           const sx = getNum(r, 41, 1), sy = getNum(r, 42, 1), rotI = getNum(r, 50, 0);
           const cols = Math.max(1, getNum(r, 70, 1)), rows = Math.max(1, getNum(r, 71, 1));
           const dcol = getNum(r, 44, 0), drow = getNum(r, 45, 0);
-          const wp = M.apply(ix, iy);
-          S.inserts.push({ name, x: wp[0], y: wp[1], layer, sx, sy, rot: rotI + M.rotDeg });
+          const wp = Mo.apply(ix, iy);
+          S.inserts.push({ name, x: wp[0], y: wp[1], layer, sx, sy, rot: rotI + Mo.rotDeg });
           if (!bl || depth > 12) break;
           for (let ci = 0; ci < cols; ci++) for (let ri = 0; ri < rows; ri++) {
             const local = Mat.insert(ix, iy, sx, sy, rotI, bl.base, ci * dcol, ri * drow);
-            emit(bl.ents, M.mul(local), layer, depth + 1);
+            emit(bl.ents, Mo.mul(local), layer, depth + 1);
           }
           break;
         }
@@ -398,6 +403,30 @@ export function parseDXF(input) {
   for (const t of out.texts) { if (t.x < x0) x0 = t.x; if (t.x > x1) x1 = t.x; if (t.y < y0) y0 = t.y; if (t.y > y1) y1 = t.y; }
   out.bounds = Number.isFinite(x0) ? { x0, y0, x1, y1 } : { x0: 0, y0: 0, x1: 1, y1: 1 };
   return out;
+}
+
+// Entities whose coordinates are in their Object Coordinate System (DXF reference, "OCS").
+const OCS_TYPES = new Set(['LWPOLYLINE', 'POLYLINE', 'ARC', 'CIRCLE', 'TEXT', 'ATTRIB', 'SOLID', 'TRACE', 'HATCH', 'INSERT']);
+const is3D = (r) => (getNum(r, 70, 0) & 8) === 8; // 3D polylines are in world coordinates
+
+/**
+ * OCS → world, seen from above, for an entity's extrusion direction (210/220/230), by the DXF
+ * Arbitrary Axis Algorithm. null for the usual +Z. Extrusion (0,0,−1) — what AutoCAD's MIRROR
+ * and some exporters produce — negates X.
+ */
+function ocsOf(r) {
+  if (get(r, 230, null) === null && get(r, 210, null) === null) return null;
+  let nx = getNum(r, 210, 0), ny = getNum(r, 220, 0), nz = getNum(r, 230, 1);
+  const len = Math.hypot(nx, ny, nz);
+  if (!(len > 1e-12)) return null;
+  nx /= len; ny /= len; nz /= len;
+  if (nz > 1 - 1e-9) return null;
+  // Ax = Wy × N when N is near the world Z axis, else Wz × N; Ay = N × Ax
+  let ax, ay, az;
+  if (Math.abs(nx) < 1 / 64 && Math.abs(ny) < 1 / 64) { ax = nz; ay = 0; az = -nx; } else { ax = -ny; ay = nx; az = 0; }
+  const al = Math.hypot(ax, ay, az); ax /= al; ay /= al; az /= al;
+  const bx = ny * az - nz * ay, by = nz * ax - nx * az;
+  return make(ax, bx, 0, ay, by, 0);
 }
 
 // POLYLINE / VERTEX / SEQEND → a single record with pts

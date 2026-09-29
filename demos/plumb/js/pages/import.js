@@ -142,7 +142,9 @@ function stepFloors() {
         </div>
       </div></div>`;
   }).join('');
-  return `<p class="muted" style="margin:0">Bottom to top, as the building stacks. Rename a floor, move it, leave out anything that isn’t a floor plan (a site plan, a title block), and mark typical floors with how many times they repeat.</p>
+  const guessed = !S.floorsEdited && all.find((f) => f.guessed);
+  const why = guessed ? `<p class="tile" style="margin:0;font-size:13px">${icon('i-alert')} This drawing has no floor titles, so the floors are ${guessed.guessed === 'stairs' ? 'in the order their stairs give: the plan whose stair only goes <b>UP</b> is the lowest, the one that only goes <b>DOWN</b> is the top' : 'in order from left to right'}. Check the order, and rename each floor if you like.</p>` : '';
+  return `${why}<p class="muted" style="margin:0">Bottom to top, as the building stacks. Rename a floor, move it, leave out anything that isn’t a floor plan (a site plan, a title block), and mark typical floors with how many times they repeat.</p>
     <div class="fthumbs">${cards}</div>`;
 }
 

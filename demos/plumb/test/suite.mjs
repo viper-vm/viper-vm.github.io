@@ -152,6 +152,24 @@ function toBinaryDXF(text) {
   check('textAnchor: middle / left-baseline / MTEXT top-left', mid[0] === 5 && mid[1] === 5 && left[0] > 5.4 && left[1] > 5 && mt[0] > 5.4 && mt[1] < 5);
 }
 
+// ------------------------------------------------------------------ a real-world sheet: both storeys side by side
+{
+  const { casaSheet } = await import(new URL('./fixtures.mjs', import.meta.url).href);
+  const text = casaSheet();
+  const frames = parseDXF(text).segs.filter((s) => s[4] === 'casa');
+  check('OCS: a mirrored block (extrusion 0,0,−1) lands where AutoCAD draws it', frames.length === 10 && frames.every((s) => Math.min(s[0], s[2]) >= 2.99 && Math.max(s[0], s[2]) <= 6.01), JSON.stringify(frames.map((s) => s.slice(0, 4))));
+  const r = analyse(text);
+  check('units: the file says inches, the door swings say metres', r.unit.mm === 1000 && /inches/.test(r.unit.source), JSON.stringify(r.unit));
+  check('floors: two plans 0.6 m apart inside a sheet border → 2 floors', r.floors.length === 2, r.floors.map((f) => f.title + ' ' + f.box.map((v) => v.toFixed(1))).join(' | '));
+  check('floors: no titles → ordered by the stairs (UP on the ground floor), "COVERED TERRACE" not a title', r.floors[0].guessed === 'stairs' && r.floors[0].box[0] < 0 && r.floors[1].box[0] > 12 && r.floors.every((f) => !/terrace/i.test(f.title)), r.floors.map((f) => `${f.title}:${f.guessed}`).join(' '));
+  const role = (l) => r.roles.get(l).role;
+  check('layers by content: glazing (sliding doors; windows + pergola), door swings on "TEXTURA", treads on a code name', role('casa') === 'window' && role('inne_gulv') === 'window' && role('TEXTURA') === 'door' && role('A-SECTMBM') === 'stair', ['casa', 'inne_gulv', 'TEXTURA', 'A-SECTMBM'].map((l) => l + ':' + role(l)).join(' '));
+  const g = r.an[0].rooms;
+  check('rooms: open plan split by its names, the stair from its UP arrow; notes and slats are not rooms', ['Kitchen', 'Dining', 'Living'].every((n) => g.some((q) => q.name === n)) && g.some((q) => q.type === 'stair') && !g.some((q) => /sliding|^up$/i.test(q.name) || q.type === 'duct'), g.map((q) => q.name + ':' + q.type).join(','));
+  check('issues: the bathroom over the dining room', r.issues.some((i) => i.kind === 'wet-over-dry' && /dining/i.test(i.title)), sig(r));
+  check('each floor reads only its own plan (margin under half the 0.6 m gap)', r.an.every((a) => a.margin < 0.3), r.an.map((a) => a.margin).join());
+}
+
 // ------------------------------------------------------------------ projects: revisions and issue history
 {
   const { newProject, newRevision, nextLabel, storeys, reconcile, attachOrAdd, setStatus, summarize } = await import(base + 'shell/model.js');
