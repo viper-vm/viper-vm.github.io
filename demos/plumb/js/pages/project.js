@@ -81,6 +81,7 @@ function render() {
           <span class="badge status">${esc(REV.label)} · ${esc(fmtDate(REV.date))}</span></div></div>
       <div class="acts">
         <a class="btn" href="import.html?project=${pid}">${icon('i-upload')}Upload revision</a>
+        <a class="btn" href="areas.html?id=${pid}">${icon('i-area')}Area statement</a>
         <a class="btn" href="workspace.html?id=${pid}#plan">${icon('i-2d')}Plan</a>
         <a class="btn primary" href="workspace.html?id=${pid}#model">${icon('i-home')}3D model</a>
       </div>
@@ -89,7 +90,7 @@ function render() {
     <div class="grid g4">
       <div class="tile"><h3>Open issues</h3><div class="kpi-v ${s.issues.high ? 'high' : ''}">${s.issues.total}</div><div class="kpi-s">${SEVERITIES.map((k) => `${s.issues[k]} ${k}`).join(' · ')}</div></div>
       <div class="tile"><h3>Storeys</h3><div class="kpi-v">${esc(s.storeys)}</div><div class="kpi-s">${s.floors} floor plan${s.floors === 1 ? '' : 's'} · ${s.rooms} rooms</div></div>
-      <div class="tile"><h3>Built-up area</h3><div class="kpi-v" style="font-size:24px">${fmtArea(s.footprint, { areaUnit: 'm2' })}</div><div class="kpi-s">${SET.areaUnit === 'm2' ? 'sum of floor plates' : `${Math.round(s.footprint * 10.7639).toLocaleString('en-IN')} ft² · sum of floor plates`}</div></div>
+      <div class="tile"><h3>Built-up area</h3><div class="kpi-v" style="font-size:24px">${fmtArea(s.footprint, { areaUnit: 'm2' })}</div><div class="kpi-s">${SET.areaUnit === 'm2' ? 'sum of floor plates' : `${Math.round(s.footprint * 10.7639).toLocaleString('en-IN')} ft² · sum of floor plates`} · <a href="areas.html?id=${pid}">area statement</a></div></div>
       <div class="tile"><h3>Drawing</h3><div class="kpi-v" style="font-size:24px">${s.unitMM === 1 ? 'mm' : s.unitMM === 1000 ? 'm' : s.unitMM === 10 ? 'cm' : s.unitMM === 25.4 ? 'in' : s.unitMM === 304.8 ? 'ft' : s.unitMM + ' mm'}</div><div class="kpi-s">${s.columns} columns · ${s.dims} dimensions</div></div>
     </div>
 

@@ -30,7 +30,7 @@ function render() {
     <h2 class="sec" id="region">Region &amp; rules</h2>
     <div class="tile"><div class="frow">
       <label class="fld"><span>Region</span><select id="region-sel"><option value="IN-AMD" selected>India · Ahmedabad</option><option disabled>More cities later</option></select>
-      <span class="hint">Ahmedabad (AMC and AUDA areas) follows Gujarat’s Comprehensive General Development Control Regulations, CGDCR 2017. FSI and area statements (next phase) and bye-law checks (the phase after) will use it; every rule will show its clause and stay editable.</span></label>
+      <span class="hint">Ahmedabad (AMC and AUDA areas) follows Gujarat’s Comprehensive General Development Control Regulations, CGDCR 2017. Each project’s area statement works out RERA carpet area and FSI under it; bye-law checks come next. Every rule shows its clause and stays editable.</span></label>
     </div></div>
 
     <h2 class="sec" id="units">Units</h2>

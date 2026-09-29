@@ -188,6 +188,31 @@ function toBinaryDXF(text) {
   check('sheet: the whole drawing for marking by hand, from its corner, with room names', sh && Math.min(...xs) >= -1e-3 && Math.max(...xs) <= sh.w + 1e-3 && sh.weight.length * 4 === sh.segs.length && sh.texts.some((t) => t.text === 'KITCHEN') && !('sheet' in pack(marked)), sh && `${sh.segs.length / 4} lines, ${sh.texts.length} texts`);
 }
 
+// ------------------------------------------------------------------ area statements (RERA carpet, CGDCR FSI)
+{
+  const { areaStatement, statementCSV, ZONES, zoneOf } = await import(base + 'areas.js');
+  const { casaSheet } = await import(new URL('./fixtures.mjs', import.meta.url).href);
+  const z = (c) => { const q = zoneOf(c); return `${q.base}/${q.chargeable}/${q.max}`; };
+  check('FSI table 6.5 (D1 AUDA): R1 1.8/0.9/2.7, R2 1.2/0.6/1.8, CBD 1.8/3.6/5.4, TOZ up to 4.0', z('R1') === '1.8/0.9/2.7' && z('R2') === '1.2/0.6/1.8' && z('C5') === '1.8/3.6/5.4' && zoneOf('TOZ').max === 4 && ZONES.length >= 12, `${z('R1')} ${z('R2')} ${z('C5')}`);
+  const house = pack(analyse(casaSheet()));
+  const st = areaStatement(house, { building: 'house', plot: 250, zone: 'R1' });
+  const [g, f1] = st.floors;
+  check('walls: split by what they face (the first floor\'s partitions ≈ the 2.3 m² drawn)', f1.partitions > 1.6 && f1.partitions < 3.2 && g.partitions < 0.5, `${f1.partitions.toFixed(2)} / ${g.partitions.toFixed(2)}`);
+  check('carpet area (RERA): rooms + partitions; the house\'s own stair is in it, outer walls and the covered terrace are not', Math.abs(g.carpet - g.carpetRooms - g.partitions) < 1e-9 && g.rooms.some((r) => r.use === 'stair' && r.rera === 'carpet') && g.balcony > 15 && g.carpet < g.builtUp - g.balcony, `carpet ${g.carpet.toFixed(1)}, balcony ${g.balcony.toFixed(1)}, built-up ${g.builtUp.toFixed(1)}`);
+  const stair = g.exempt.find((e) => e.use === 'stair');
+  check('FSI: the stair (measured to its flight, not the open plan) is left out under 6.3.2(6); the pergola isn\'t built-up', stair && stair.area > 6 && stair.area < 13 && /6\.3\.2\(6\)/.test(stair.rule) && Math.abs(g.fsiArea - (g.builtUp - g.exemptArea)) < 1e-9 && g.pergola > 1, stair && `${stair.area.toFixed(1)} m² stair, pergola ${g.pergola.toFixed(1)}`);
+  check('FSI consumed = FSI area ÷ plot; within the base FSI', Math.abs(st.fsi.consumed - st.totals.fsiArea / 250) < 1e-9 && st.fsi.status === 'base', st.fsi.consumed.toFixed(3));
+  const unnamed = g.review[0];
+  const st2 = areaStatement(house, { building: 'house', plot: 250, uses: { [unnamed.key]: 'terrace' } });
+  check('a space you assign moves: unnamed → open terrace (stated apart, not built-up)', unnamed && st2.floors[0].terrace === unnamed.area && st2.floors[0].builtUp === g.builtUp && st2.floors[0].review.length === g.review.length - 1, unnamed && unnamed.name);
+  const flats = areaStatement(pack(analyse(readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8'))), { building: 'apartments', plot: 600 });
+  const stilt = flats.floors[0], typ = flats.floors[1];
+  check('apartments: stilt parking, stair, lift and electric room exempt; the guard room is common, not a flat', ['parking', 'stair', 'lift', 'electric'].every((u) => stilt.exempt.some((e) => e.use === u)) && stilt.carpet < 1 && stilt.rooms.some((r) => /guard/i.test(r.name) && r.use === 'common'), stilt.exempt.map((e) => e.use).join());
+  check('apartments: stair and lift are common areas outside the flats\' carpet; balconies stated apart', typ.common > typ.exemptArea && typ.carpet > 150 && typ.balcony > 5 && typ.rooms.filter((r) => r.use === 'stair').every((r) => r.rera === 'none'), `carpet ${typ.carpet.toFixed(1)}, common ${typ.common.toFixed(1)}`);
+  const csv = statementCSV(flats, { project: 'Riverside', rev: 'Rev A' }).split('\r\n');
+  check('CSV: floors, total, FSI and every room', csv.some((l) => l.startsWith('"Total"')) && csv.some((l) => l.startsWith('"FSI consumed"')) && csv.filter((l) => /"(Parking|Lift|Toilet)"/.test(l)).length >= 3, csv.length);
+}
+
 // ------------------------------------------------------------------ projects: revisions and issue history
 {
   const { newProject, newRevision, nextLabel, storeys, reconcile, attachOrAdd, setStatus, summarize } = await import(base + 'shell/model.js');

@@ -20,8 +20,8 @@ office shorthand common in India: `GF`, `FF`, `SF`, `TF`, `B1`, `4F`, also after
 name, e.g. `Riverside GF.dwg`).
 
 Set up for **India, starting with Ahmedabad** (AMC/AUDA, Gujarat CGDCR 2017): mm or ft-in, m² and
-ft² side by side, Indian room abbreviations. Area statements (RERA carpet area, FSI) and bye-law
-checks are the next phases.
+ft² side by side, Indian room abbreviations, and an area statement with RERA carpet area and FSI.
+Bye-law checks are the next phase.
 
 ## Pages
 
@@ -31,6 +31,7 @@ checks are the next phases.
 | `app/` | All projects: grid or list, search, starred/archived, status, the sample building |
 | `app/import.html` | Import wizard: files → floors (the whole sheet with a box round each plan: drag to add, move, resize or delete; order, rename, leave out, typical ×N) → units (with evidence) → layer roles (with *Ask AI*) → review. Also takes a new revision (`?project=`) |
 | `app/project.html` | Project overview: open issues, the stack, most urgent, what changed since the last revision, hand-back files, floors, revisions, activity |
+| `app/areas.html` | Area statement: built-up, FSI area (CGDCR 2017 §6.3.2 exemptions with their clauses), RERA carpet area (§2(k)), balconies, open terraces, common, shafts, walls, floor by floor; plot area, zone (Table 6.5, D1 AUDA) and FSI consumed; every space re-assignable; CSV and print |
 | `app/issues.html` | Every issue across revisions: filters, a snapshot, status (open, in review, resolved, accepted), who it's for, notes, history, CSV/DXF, RFIs |
 | `app/workspace.html` | Plan overlay, Stack and 3D model with collapsible panels; the model has a levels strip, view presets, one dock, section cut and issue pins |
 | `app/settings.html` | Region, units, office storey heights, learnt layer standards and room names, AI key, theme, data on this device |
@@ -91,6 +92,7 @@ app/*.html        the app's pages (css/base.css shared tokens + components, css/
                   css/app.css workspace)
 js/pages/         one script per page: library, import, project, issues, settings, help, landing
 js/workspace.js   plan / stack / 3D model workspace
+js/areas.js       area statements: RERA carpet area and FSI under CGDCR 2017 (pure)
 js/shell/         store.js (IndexedDB), model.js (projects, revisions, issue history; pure), sheet.js (marking floors on the sheet),
                   engine.js (worker + caching), projects.js, thumbs.js, ui.js, icons.js
 js/dxf.js         DXF reader (R12–2018: LINE/(LW)POLYLINE+bulges/ARC/CIRCLE/ELLIPSE/SPLINE/TEXT/MTEXT/
@@ -119,7 +121,7 @@ test/             suite.mjs + fixtures.mjs (a second building drafted in the opp
 node demos/plumb/test/suite.mjs
 ```
 
-63 checks: the shipped sample must yield exactly its 9 planted issues; *Lakeview Court* (metres,
+72 checks: the shipped sample must yield exactly its 9 planted issues; *Lakeview Court* (metres,
 floors stacked vertically, walls as polylines on a meaningless layer name, door blocks inserted
 rotated and mirrored, hatched columns, multi-line MTEXT tags, block-less DIMENSIONs, one floor drawn
 off-grid) must yield exactly its 5 — as one file and as one file per floor; dimensions read from
@@ -129,7 +131,9 @@ renamed, files added or dropped or reordered, plans moved); *Casa*, a sheet like
 plan sites (both storeys side by side 0.6 m apart in a border, no titles, metres saved as "inches",
 mirrored sliding-door blocks, glazing and treads on code-named layers) must read as two floors with
 the bathroom over the dining room, and, with its plans only 20 cm apart, read as one floor until two
-boxes are marked by hand; plus markup coordinates, level parsing
+boxes are marked by hand; area statements (Table 6.5 FSI values, walls split into partitions and
+external walls, carpet area, exemptions with their clauses, apartments' stilt floors and common
+areas, re-assigned spaces, CSV); plus markup coordinates, level parsing
 (including `GF`/`FF`/`SF`/`TF` file names) and text anchoring.
 
 Plumb is a coordination aid, not a structural or services design check.

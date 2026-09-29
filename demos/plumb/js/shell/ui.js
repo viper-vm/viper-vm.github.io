@@ -106,7 +106,7 @@ export const qs = (k) => new URLSearchParams(location.search).get(k);
 // ------------------------------------------------------------------ navigation rail
 /**
  * The left rail on every page except the workspaces.
- * active: 'projects' | 'overview' | 'issues' | 'settings' | 'help'; project: the open project (or null).
+ * active: 'projects' | 'overview' | 'issues' | 'areas' | 'settings' | 'help'; project: the open project (or null).
  */
 export function rail(active, project = null, counts = {}) {
   const a = (key, href, ic, label, extra = '') => `<a class="rl ${active === key ? 'on' : ''}" href="${href}"${active === key ? ' aria-current="page"' : ''}>${icon(ic)}<span>${label}</span>${extra}</a>`;
@@ -124,6 +124,7 @@ export function rail(active, project = null, counts = {}) {
         ${a('plan', `workspace.html?id=${pid}#plan`, 'i-2d', 'Plan')}
         ${a('model', `workspace.html?id=${pid}#model`, 'i-home', '3D model')}
         ${a('issues', `issues.html?id=${pid}`, 'i-issues', 'Issues', counts.open ? `<b class="rl-n">${counts.open}</b>` : '')}
+        ${a('areas', `areas.html?id=${pid}`, 'i-area', 'Areas')}
       </div>` : ''}
     </nav>
     <div class="rail-foot">

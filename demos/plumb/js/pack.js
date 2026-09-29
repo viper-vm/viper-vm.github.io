@@ -21,7 +21,7 @@ export function pack(r, { sheet = false } = {}) {
     geometry: r.floors.map((f, k) => ({ ...floorGeometry(r.dx, r.roles, f.box, r.an[k] && r.an[k].margin), dims: dims[k] })),
     an: r.an.map((a) => ({
       box: a.box, res: a.res, margin: a.margin, grid: a.grid, rooms: a.rooms, columns: a.columns, doors: a.doors, outlines: a.outlines,
-      footprintArea: a.footprintArea, roomAt: a.roomAt, inside: a.inside,
+      footprintArea: a.footprintArea, roomAt: a.roomAt, inside: a.inside, walls: a.walls, patternArea: a.patternArea,
     })),
     ...(sheet ? { sheet: sheetOf(r.dx, r.roles) } : {}),
   };

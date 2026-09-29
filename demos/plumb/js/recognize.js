@@ -379,7 +379,7 @@ const TYPE_RULES = [
   ['balcony', /(balcony|terrace|deck|sit ?out|veranda|verandah|patio|porch|chajja|projection)/i],
   ['circulation', /(passage|corridor|lobby|foyer|entrance|entry|hallway|vestibule|landing|gallery)/i],
   ['parking', /(parking|stilt|driveway|garage|car ?port|drive ?way)/i],
-  ['service', /(store|storage|electric|elec|meter|pump|guard|security|driver|servant|dress|wardrobe|laundry|room\b)/i],
+  ['service', /(store|storage|electric|elec|meter|pump|guard|security|driver|servant|dress|wardrobe|closet|linen|walk-?in|laundry|room\b)/i],
 ];
 export const ROOM_TYPES = ['toilet', 'kitchen', 'bedroom', 'living', 'circulation', 'balcony', 'stair', 'lift', 'duct', 'service', 'parking', 'unknown'];
 export const WET = new Set(['toilet', 'kitchen']);
@@ -490,28 +490,63 @@ export function analyseFloor(dx, roles, box, opts = {}) {
   const draft = [];
   const isName = (s) => !SIZE_TEXT.test(s) && !NOT_NAME.test(s) && /[a-z]/i.test(s) && s.length <= 40 && !/scale|plan\b/i.test(s);
   const queue = new Int32Array(W * H);
+  // stair flights (clusters of stair-layer lines): a stair named only by its UP/DN arrow keeps to its
+  // flight, and the rest of that space is a landing or goes to the rooms around it
+  const flights = [];
+  for (const s of dx.segs) {
+    if (roleOf(s[4]) !== 'stair' || !inBox((s[0] + s[2]) / 2, (s[1] + s[3]) / 2)) continue;
+    flights.push([Math.min(s[0], s[2]), Math.min(s[1], s[3]), Math.max(s[0], s[2]), Math.max(s[1], s[3])]);
+  }
+  for (let merged = true; merged;) {
+    merged = false;
+    for (let a = 0; a < flights.length && !merged; a++) for (let b = a + 1; b < flights.length; b++) {
+      const A = flights[a], B = flights[b];
+      if (B[0] <= A[2] + 0.6 && B[2] >= A[0] - 0.6 && B[1] <= A[3] + 0.6 && B[3] >= A[1] - 0.6) {
+        flights[a] = [Math.min(A[0], B[0]), Math.min(A[1], B[1]), Math.max(A[2], B[2]), Math.max(A[3], B[3])];
+        flights.splice(b, 1); merged = true; break;
+      }
+    }
+  }
+  const flightOf = (t) => {
+    let best = null, bd = 1.5;
+    for (const f of flights) { const d = Math.hypot(Math.max(f[0] - t.x, 0, t.x - f[2]), Math.max(f[1] - t.y, 0, t.y - f[3])); if (d < bd) { bd = d; best = f; } }
+    return best ? [best[0] - 0.25, best[1] - 0.25, best[2] + 0.25, best[3] + 0.25] : null;
+  };
+  const cellIn = (c, b) => { const i = c % W, j = (c - i) / W, x = g.x0 + (i + 0.5) * res, y = g.y0 + (j + 0.5) * res; return x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3]; };
   for (const rg of regions) {
     if (rg.outside || rg.cavity) continue;
     const seenCell = new Set();
-    const names = rg.texts.filter((t) => isName(t.text)).filter((t) => (seenCell.has(t.cell) ? false : (seenCell.add(t.cell), true)));
+    let names = rg.texts.filter((t) => isName(t.text)).filter((t) => (seenCell.has(t.cell) ? false : (seenCell.add(t.cell), true)));
     const [i0, j0, i1, j1] = rg.bbox;
+    const keep = names.map((t) => (STAIR_ARROW.test(t.text) ? flightOf(textAnchorXY(t)) : null));
+    if (names.length === 1 && keep[0]) {
+      // only an arrow: the flight is the stair, the rest of the space a landing (if there's much of it)
+      let spare = -1, n = 0;
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const k = j * W + i; if (lab.labels[k] === rg.id && !cellIn(k, keep[0])) { n++; if (spare < 0) spare = k; } }
+      if (n * res * res >= 1.5) { names = [...names, { text: 'Landing', cell: spare, synthetic: true }]; keep.push(null); }
+    }
     if (names.length <= 1) {
       const idx = draft.length;
       for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const k = j * W + i; if (lab.labels[k] === rg.id) roomAt[k] = idx; }
       draft.push({ region: rg.id, nameText: names[0] ? names[0].text : '', texts: rg.texts, bbox: rg.bbox });
     } else {
-      // multi-source flood from each name: every cell joins the name it can walk to first
+      // multi-source flood from each name: every cell joins the name it can walk to first (an arrow's
+      // zone only within its flight); anything cut off that way joins its nearest zone afterwards
       let head = 0, tail = 0;
-      names.forEach((t, s) => { roomAt[t.cell] = draft.length + s; queue[tail++] = t.cell; });
-      while (head < tail) {
-        const c = queue[head++], v = roomAt[c];
-        const i = c % W, j = (c - i) / W;
-        const nb = [i > 0 ? c - 1 : -1, i < W - 1 ? c + 1 : -1, j > 0 ? c - W : -1, j < H - 1 ? c + W : -1];
-        for (const n of nb) if (n >= 0 && roomAt[n] === -1 && lab.labels[n] === rg.id) { roomAt[n] = v; queue[tail++] = n; }
+      const base = draft.length;
+      names.forEach((t, s) => { roomAt[t.cell] = base + s; queue[tail++] = t.cell; });
+      for (let pass = 0; pass < 2; pass++) {
+        if (pass === 1) { head = 0; tail = 0; for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const k = j * W + i; if (lab.labels[k] === rg.id && roomAt[k] >= base) queue[tail++] = k; } }
+        while (head < tail) {
+          const c = queue[head++], v = roomAt[c], box = pass === 0 ? keep[v - base] : null;
+          const i = c % W, j = (c - i) / W;
+          const nb = [i > 0 ? c - 1 : -1, i < W - 1 ? c + 1 : -1, j > 0 ? c - W : -1, j < H - 1 ? c + W : -1];
+          for (const n of nb) if (n >= 0 && roomAt[n] === -1 && lab.labels[n] === rg.id && (!box || cellIn(n, box))) { roomAt[n] = v; queue[tail++] = n; }
+        }
       }
       names.forEach((t) => {
         // size texts belong to the nearest name in the same region
-        draft.push({ region: rg.id, nameText: t.text, texts: [t, ...rg.texts.filter((u) => !isName(u.text) && roomAt[u.cell] === roomAt[t.cell])], bbox: rg.bbox });
+        draft.push({ region: rg.id, nameText: t.text, texts: t.synthetic ? [] : [t, ...rg.texts.filter((u) => !isName(u.text) && roomAt[u.cell] === roomAt[t.cell])], bbox: rg.bbox });
       });
     }
   }
@@ -546,7 +581,7 @@ export function analyseFloor(dx, roles, box, opts = {}) {
   const dims = draft.map((d, v) => [(rb[v][2] - rb[v][0] + 1) * res, (rb[v][3] - rb[v][1] + 1) * res]);
   const keyOf = (v) => `${Math.round(dims[v][0] / 0.05)}:${Math.round(dims[v][1] / 0.05)}`;
   const same = new Map();
-  draft.forEach((d, v) => { if (!d.nameText && cnt[v] * res * res < 3) same.set(keyOf(v), (same.get(keyOf(v)) || 0) + 1); });
+  draft.forEach((d, v) => { if (cnt[v] * res * res < 3) same.set(keyOf(v), (same.get(keyOf(v)) || 0) + 1); }); // a labelled slat counts towards the pattern too
   let rooms = draft.map((d, v) => {
     const area = cnt[v] * res * res + per[v] * res * erode;
     const arrow = STAIR_ARROW.test(d.nameText || '');
@@ -569,6 +604,7 @@ export function analyseFloor(dx, roles, box, opts = {}) {
     };
   });
   const keep = rooms.filter((r) => !r.pattern && r.area >= (r.type === 'duct' || r.type === 'lift' ? 0.05 : 0.45) && !(r.type === 'unknown' && r.area < 0.8));
+  const patternArea = rooms.reduce((a, r) => a + (r.pattern ? r.area : 0), 0); // pergola / deck slats, for the area statement
   const remap = new Int32Array(nD).fill(-1);
   keep.forEach((r, k) => { remap[r.idx] = k; r.id = k; });
   for (let k = 0; k < W * H; k++) if (roomAt[k] >= 0) roomAt[k] = remap[roomAt[k]];
@@ -598,14 +634,80 @@ export function analyseFloor(dx, roles, box, opts = {}) {
   let fpArea = 0;
   for (let k = 0; k < W * H; k++) if (inside[k]) fpArea++;
 
+  // 9. walls: the footprint that is neither a room nor left-over space (drawn lines and the thin
+  //    cavities between a wall's two faces). A wall cell within ~45 cm of the outside, on a wall
+  //    that runs from the outside to a room, is external; the rest are partitions.
+  const walls = measureWalls({ W, H, res, inside, roomAt, labels: lab.labels, regions, rooms });
+
   return {
     box, res, margin,
     grid: { x0: g.x0, y0: g.y0, w: W, h: H, res },
     labels: lab.labels, roomAt, regions, rooms, columns: cols, doors,
-    inside, outlines, footprintArea: fpArea * res * res,
+    inside, outlines, footprintArea: fpArea * res * res, walls, patternArea,
     stats: { boundaryCells: g.data.reduce((a, v) => a + v, 0), regions: lab.count },
   };
 }
+
+/**
+ * Walls of one floor, owned room by room. Wall cells (drawn lines and the thin cavities between a
+ * wall's faces, only where they bound a room) are split between the spaces on either side, each cell
+ * going to the space it's nearest; where two owners meet inside a wall tells what that wall faces.
+ * Returns { total, outside, owned: [{ area, faces: { [roomIndex | 'out']: fraction } }] } in m²,
+ * so an area statement can decide what's a partition (carpet on both sides) and what's external.
+ * Room areas already take back the strip the boundary brush eats, so it isn't counted twice.
+ */
+function measureWalls({ W, H, res, inside, roomAt, labels, regions, rooms }) {
+  const N = W * H, wall = new Uint8Array(N);
+  for (let k = 0; k < N; k++) {
+    if (!inside[k] || roomAt[k] >= 0) continue;
+    const id = labels[k];
+    if (id < 0 || regions[id].cavity) wall[k] = 1;
+  }
+  // one wave through the walls from every room and from the outside: each cell joins the nearest
+  const OUT = rooms.length, owner = new Int32Array(N).fill(-1), dist = new Int32Array(N), q = new Int32Array(N);
+  let head = 0, tail = 0;
+  const T = Math.max(2, Math.round(0.45 / res));
+  for (let k = 0; k < N; k++) {
+    if (!wall[k]) continue;
+    const i = k % W;
+    for (const n of [i > 0 ? k - 1 : -1, i < W - 1 ? k + 1 : -1, k >= W ? k - W : -1, k + W < N ? k + W : -1]) {
+      if (n < 0) continue;
+      const o = roomAt[n] >= 0 ? roomAt[n] : !inside[n] ? OUT : -1;
+      if (o >= 0) { owner[k] = o; dist[k] = 1; q[tail++] = k; break; }
+    }
+  }
+  while (head < tail) {
+    const c = q[head++], i = c % W;
+    if (dist[c] >= T) continue; // walls are at most ~45 cm thick: beyond that it's something else
+    for (const n of [i > 0 ? c - 1 : -1, i < W - 1 ? c + 1 : -1, c >= W ? c - W : -1, c + W < N ? c + W : -1]) {
+      if (n >= 0 && wall[n] && owner[n] < 0) { owner[n] = owner[c]; dist[n] = dist[c] + 1; q[tail++] = n; }
+    }
+  }
+  const cells = new Float64Array(OUT + 1), meet = new Map(); // meet: "a,b" → cell edges where owners a and b touch
+  const bump = (a, b) => { const key = a < b ? a + ',' + b : b + ',' + a; meet.set(key, (meet.get(key) || 0) + 1); };
+  for (let k = 0; k < N; k++) {
+    const o = owner[k];
+    if (o < 0) continue;
+    cells[o]++;
+    if (k % W < W - 1 && owner[k + 1] >= 0 && owner[k + 1] !== o) bump(o, owner[k + 1]);
+    if (k + W < N && owner[k + W] >= 0 && owner[k + W] !== o) bump(o, owner[k + W]);
+  }
+  const faces = Array.from({ length: OUT + 1 }, () => ({}));
+  for (const [key, n] of meet) {
+    const [a, b] = key.split(',').map(Number);
+    faces[a][b === OUT ? 'out' : b] = (faces[a][b === OUT ? 'out' : b] || 0) + n;
+    faces[b][a === OUT ? 'out' : a] = (faces[b][a === OUT ? 'out' : a] || 0) + n;
+  }
+  const owned = rooms.map((r, i) => {
+    const f = faces[i], sum = Object.values(f).reduce((a, v) => a + v, 0);
+    for (const k of Object.keys(f)) f[k] /= sum;
+    return { area: Math.max(0, cells[i] * res * res - Math.max(0, r.area - r.cellArea)), faces: sum ? f : { [i]: 1 } };
+  });
+  const outside = cells[OUT] * res * res; // the outer half of external walls
+  return { total: outside + owned.reduce((a, o) => a + o.area, 0), outside, owned };
+}
+
+const textAnchorXY = (t) => { const [x, y] = textAnchor(t); return { x, y }; };
 
 /** Where a text actually sits: the middle of its box, from its justification and rotation. */
 export function textAnchor(t) {

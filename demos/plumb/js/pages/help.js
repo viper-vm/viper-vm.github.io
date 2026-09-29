@@ -69,7 +69,16 @@ const SECTIONS = [
     <p>The markups DXF rings every open issue on both floors, in the drawing’s own units, on <code>PLUMB-*</code> layers. XREF or insert it at 0,0 over the drawing.</p>`],
   ['amd', 'Ahmedabad and CGDCR 2017', `
     <p>Plumb is set up for Ahmedabad first. Projects in the Ahmedabad Municipal Corporation and AUDA areas follow Gujarat’s Comprehensive General Development Control Regulations, CGDCR 2017.</p>
-    <p>Coming next: area statements with RERA carpet area and FSI worked out from the plans. After that: bye-law checks (room sizes, ventilation, stair and corridor widths, lifts, parking) with the clause shown beside every result. Every threshold will be visible and editable.</p>`],
+    <p><b>Area statement</b> (a project’s <b>Areas</b> page): RERA carpet area and FSI worked out from the plans, floor by floor. Coming next: bye-law checks (room sizes, ventilation, stair and corridor widths, lifts, parking) with the clause shown beside every result. Every threshold will be visible and editable.</p>`],
+  ['areas', 'Area statements', `
+    <p>A project’s <b>Areas</b> page works out, from the drawings: built-up area, the area counted towards FSI, RERA carpet area, balconies and verandahs, open terraces, common areas, shafts and walls, floor by floor and in total. Add the plot area and zone to see the FSI consumed against the base and maximum FSI.</p>
+    <h3>RERA carpet area</h3>
+    <p>Under the Real Estate Act 2016, §2(k): the net usable floor area, without the external walls, service shafts and the exclusive balcony, verandah and open terrace areas (stated separately), but with the internal partition walls. Plumb measures each room inside its walls and splits every wall between the spaces on its two sides; a wall with carpet on both sides is a partition.</p>
+    <h3>FSI under CGDCR 2017</h3>
+    <p>Built-up area on every floor, to the outer face of the walls, divided by the plot area. Not counted, under Part II §6.3.2: staircases with their intermediate landings, lifts with their wells, landings and walls, parking basements and hollow plinths, ramps, electric rooms, lofts up to 30% and pergolas. Balconies are not exempt. Base, chargeable and maximum FSI come from Table 6.5 for category D1 (AUDA) and can be changed.</p>
+    <h3>What you decide</h3>
+    <p>Plumb guesses what each space is from its name. Unnamed spaces wait for you (a terrace? a gap?), and anything can be re-assigned in the room list: room, balcony or verandah, open terrace, common area, staircase, lift, shaft, parking, electric room, pergola, or not counted. Choose <b>Bungalow</b> for one unit (its stair is part of the carpet area) or <b>Apartments</b> (stairs, lifts and lobbies are common).</p>
+    <p class="note">Not yet: landing allowances beyond the stair and lift as drawn, lofts, mezzanines, and carpet area flat by flat. Check the zone and FSI against the TP scheme and the latest amendments before submitting.</p>`],
   ['privacy', 'Privacy', `<p>Your drawings are read on your computer and stored only in this browser. Nothing is uploaded. The optional AI assist sends layer names, room labels and findings (never the drawing) to the AI provider with your own key.</p>`],
   ['keys', 'Keyboard shortcuts', `
     <ul>
