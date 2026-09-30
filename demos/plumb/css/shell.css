@@ -180,6 +180,8 @@ table.t tr.click:hover td { background: var(--panel-2); }
 .ar-lofts td.bad { color: var(--high); font-weight: 600; }
 .ar-lofts tr.rv td { background: var(--medium-soft); }
 .ar-addloft { margin-top: 10px; }
+.ar-lofts .ar-src { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.ar-lofts .ar-loft.you { border-color: var(--brass); }
 .ar-addloft select { height: 32px; min-width: 260px; max-width: 100%; }
 .ar-notes { display: grid; gap: 8px; font-size: 13.5px; color: var(--ink-2); }
 .ar-notes p { margin: 0; }

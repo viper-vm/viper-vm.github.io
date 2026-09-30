@@ -231,6 +231,12 @@ function toBinaryDXF(text) {
   const bedL = withNote.an[1].rooms.find((r) => r.name === 'Bedroom');
   const stL = areaStatement(withNote, { building: 'house', plot: 250 });
   check('lofts: “LOFT ABOVE” in a room marks it (not its name); the statement asks for the loft\'s area', bedL && bedL.loft && !withNote.an[1].rooms.some((r) => /loft/i.test(r.name)) && stL.floors[1].lofts.length === 1 && stL.floors[1].lofts[0].area === null, bedL && `${bedL.name} ${bedL.loft}`);
+  const drawn = pack(analyse(casaSheet(0.6, { loft: 'drawn', mezz: 'drawn' })));
+  const bedD = drawn.an[1].rooms.find((r) => r.name === 'Bedroom'), masD = drawn.an[1].rooms.find((r) => /master/i.test(r.name));
+  const stD = areaStatement(drawn, { building: 'house', plot: 250 }).floors[1];
+  check('lofts and mezzanines measured inside the outline round their note (3.0 × 1.6 m with a cross through it; 2.0 × 4.0 m)', bedD && near(bedD.loftArea, 4.8, 0.1) && masD && near(masD.mezzArea, 8.0, 0.12) && near(bedD.area, bedL.area, 1e-9), `${bedD && bedD.loftArea} / ${masD && masD.mezzArea}`);
+  const yoursD = areaStatement(drawn, { building: 'house', plot: 250, lofts: { [stD.lofts[0].key]: { area: 3 } } }).floors[1].lofts[0];
+  check('…the statement uses what\'s measured, unless you give your own', near(stD.lofts[0].area, bedD.loftArea, 1e-9) && !stD.lofts[0].yours && near(stD.mezz[0].area, masD.mezzArea, 1e-9) && yoursD.area === 3 && yoursD.yours && near(yoursD.measured, bedD.loftArea, 1e-9), `${stD.lofts[0].area} / ${yoursD.area}`);
   // lofts (6.3.2(5)): up to 30% of the room below is free, the rest counts
   const bed = typ.rooms.find((r) => r.type === 'bedroom');
   const withLoft = (a) => areaStatement(pack(analyse(readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8'))), { building: 'apartments', plot: 600, lofts: { [bed.key]: { area: a } } }).floors[1];

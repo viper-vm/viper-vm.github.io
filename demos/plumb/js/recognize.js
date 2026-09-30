@@ -694,6 +694,7 @@ export function analyseFloor(dx, roles, box, opts = {}) {
       idx: v, region: d.region, name: tidyName(name) || (type === 'unknown' ? 'Unnamed space' : cap(type)), label: d.nameText || '', type, area, cellArea: cnt[v] * res * res, sizeText, pattern,
       loft: d.texts.some((t) => /\bloft\b/i.test(t.text)) || undefined, // “LOFT ABOVE” written in the room
       mezz: d.texts.some((t) => /\bmezz(anine|\.)?\b/i.test(t.text)) || undefined, // “MEZZANINE ABOVE”
+      marks: d.texts.filter((t) => /\bloft\b|\bmezz(anine|\.)?\b/i.test(t.text)).map((t) => ({ kind: /\bloft\b/i.test(t.text) ? 'loft' : 'mezz', ...textAnchorXY(t) })),
       bbox: rb[v], cx: g.x0 + (sx[v] / Math.max(1, cnt[v]) + 0.5) * res, cy: g.y0 + (sy[v] / Math.max(1, cnt[v]) + 0.5) * res,
     };
   });
@@ -708,6 +709,18 @@ export function analyseFloor(dx, roles, box, opts = {}) {
   const wmax = new Float64Array(rooms.length);
   for (let k = 0; k < W * H; k++) { const v = roomAt[k]; if (v >= 0 && dist[k] > wmax[v]) wmax[v] = dist[k]; }
   rooms.forEach((rm, v) => { rm.width = Math.round((2 * (wmax[v] + brush) + 1) * res * 100) / 100; });
+
+  // lofts and mezzanines over a room: the outline round the note that marks them, measured
+  if (rooms.some((rm) => rm.marks.length)) {
+    const dir = mainDirection(dx.segs.filter((s) => roleOf(s[4]) === 'wall' && inBox(s[0], s[1])));
+    const lines = dx.segs.filter((s) => { const r = roleOf(s[4]); return r !== 'text' && r !== 'dim' && r !== 'hatch' && r !== 'grid' && (inBox(s[0], s[1]) || inBox(s[2], s[3])) && onDirection(s, dir); });
+    for (const rm of rooms) {
+      if (!rm.marks.length) continue;
+      const got = measureOverhead(lines, rm, g, W, H, roomAt);
+      for (const kind of ['loft', 'mezz']) { const m = got.filter((q) => q.kind === kind); if (m.length) { rm[kind + 'Area'] = Math.round(m.reduce((a, q) => a + q.area, 0) * 100) / 100; rm[kind + 'Poly'] = m.map((q) => q.box); } }
+    }
+  }
+  for (const rm of rooms) delete rm.marks;
 
   // 6. outline of each room (cell corners → metres)
   for (const rm of rooms) {
@@ -822,6 +835,68 @@ function measureFlight(box, segs, sideAt) {
   for (const q of tread) { const v = sideAt((q.s[0] + q.s[2]) / 2, (q.s[1] + q.s[3]) / 2); if (v >= 0) votes.set(v, (votes.get(v) || 0) + 1); }
   const room = votes.size ? [...votes].sort((p, q) => q[1] - p[1])[0][0] : -1;
   return { box, width: Math.round(med(tread.map((q) => q.L)) * 100) / 100, going: Math.round(med(goings) * 1000) / 1000, treads: goings.length + 1, room };
+}
+
+/** The main direction of a floor's walls (radians, mod 90°): most plans are square to the sheet, some aren't. */
+function mainDirection(walls) {
+  const bins = new Float64Array(90);
+  for (const s of walls) {
+    const L = Math.hypot(s[2] - s[0], s[3] - s[1]);
+    let a = (Math.atan2(s[3] - s[1], s[2] - s[0]) * 180) / Math.PI;
+    a = ((a % 90) + 90) % 90;
+    bins[Math.round(a) % 90] += L;
+  }
+  return (bins.indexOf(Math.max(...bins)) * Math.PI) / 180;
+}
+/** A line square to the walls (within 5°): an outline, not the cross drawn through a loft. */
+function onDirection(s, dir) {
+  let a = Math.atan2(s[3] - s[1], s[2] - s[0]) - dir;
+  a = ((a % (Math.PI / 2)) + Math.PI / 2) % (Math.PI / 2);
+  return Math.min(a, Math.PI / 2 - a) < 0.09;
+}
+/**
+ * The area of each loft or mezzanine marked in a room: from the note (“LOFT ABOVE”), fill the room's
+ * floor up to the lines round it (its dashed outline, the walls). Nothing is returned for a note with
+ * no outline of its own (the fill reaches the whole room) or an outline too small to be one.
+ */
+function measureOverhead(lines, rm, g, W, H, roomAt) {
+  const res = g.res, [i0, j0, i1, j1] = rm.bbox, w = i1 - i0 + 3, h = j1 - j0 + 3;
+  const X0 = g.x0 + (i0 - 1) * res, Y0 = g.y0 + (j0 - 1) * res;
+  const free = new Uint8Array(w * h);
+  for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const gi = i + i0 - 1, gj = j + j0 - 1; if (gi >= 0 && gj >= 0 && gi < W && gj < H && roomAt[gj * W + gi] === rm.id) free[j * w + i] = 1; }
+  // stamp the lines (a cell either side closes the gaps of a dashed line drawn dash by dash)
+  const X1 = X0 + w * res, Y1 = Y0 + h * res;
+  for (const s of lines) {
+    if (Math.max(s[0], s[2]) < X0 || Math.min(s[0], s[2]) > X1 || Math.max(s[1], s[3]) < Y0 || Math.min(s[1], s[3]) > Y1) continue;
+    const a0 = (s[0] - X0) / res, b0 = (s[1] - Y0) / res, a1 = (s[2] - X0) / res, b1 = (s[3] - Y0) / res;
+    const n = Math.max(1, Math.ceil(Math.hypot(a1 - a0, b1 - b0) * 2));
+    for (let k = 0; k <= n; k++) {
+      const ci = Math.floor(a0 + ((a1 - a0) * k) / n), cj = Math.floor(b0 + ((b1 - b0) * k) / n);
+      for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) { const ii = ci + di, jj = cj + dj; if (ii >= 0 && jj >= 0 && ii < w && jj < h) free[jj * w + ii] = 0; }
+    }
+  }
+  const seen = new Uint8Array(w * h), q = new Int32Array(w * h), out = [];
+  for (const mk of rm.marks) {
+    let start = -1;
+    const ci = Math.floor((mk.x - X0) / res), cj = Math.floor((mk.y - Y0) / res);
+    for (let r = 0; r <= 4 && start < 0; r++) for (let dj = -r; dj <= r && start < 0; dj++) for (let di = -r; di <= r; di++) { const ii = ci + di, jj = cj + dj; if (ii >= 0 && jj >= 0 && ii < w && jj < h && free[jj * w + ii] && !seen[jj * w + ii]) { start = jj * w + ii; break; } }
+    if (start < 0) continue;
+    let head = 0, tail = 0, cnt = 0, per = 0, bx0 = w, by0 = h, bx1 = 0, by1 = 0;
+    q[tail++] = start; seen[start] = 1;
+    while (head < tail) {
+      const c = q[head++], i = c % w, j = (c - i) / w;
+      cnt++; if (i < bx0) bx0 = i; if (i > bx1) bx1 = i; if (j < by0) by0 = j; if (j > by1) by1 = j;
+      for (const n of [i > 0 ? c - 1 : -1, i < w - 1 ? c + 1 : -1, j > 0 ? c - w : -1, j < h - 1 ? c + w : -1]) {
+        if (n < 0 || !free[n]) { per++; continue; }
+        if (!seen[n]) { seen[n] = 1; q[tail++] = n; }
+      }
+    }
+    // measured to the middle of the lines round it, as the rooms are
+    const area = cnt * res * res + per * res * 1.5 * res;
+    if (area < 0.3 || cnt * res * res > 0.85 * rm.cellArea) continue;
+    out.push({ kind: mk.kind, area, box: [X0 + bx0 * res, Y0 + by0 * res, X0 + (bx1 + 1) * res, Y0 + (by1 + 1) * res] });
+  }
+  return out;
 }
 
 /**

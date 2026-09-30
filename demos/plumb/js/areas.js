@@ -243,25 +243,28 @@ export function landingsOf(an, rooms, building) {
 export const isMezzFloor = (f) => /\bmezz/i.test(f.title || '') || (f.level > 0 && f.level % 1 !== 0);
 
 /**
- * Mezzanines over rooms: marked in the drawing (“MEZZANINE ABOVE”) or added by you, with the area you
- * give. CGDCR Part I 2.70: a mezzanine's area is counted in FSI, all of it; Part III 13.1.8: no more
+ * Mezzanines over rooms: marked in the drawing (“MEZZANINE ABOVE”) or added by you; the area is yours
+ * if you gave one, else the outline round the note, measured. CGDCR Part I 2.70: a mezzanine's area is counted in FSI, all of it; Part III 13.1.8: no more
  * than 30% of the room it's in. Usable floor, so inside a unit it's carpet area too.
  */
 function mezzOf(an, rooms, set = {}) {
   return rooms.filter((r) => (set[r.key] === false ? false : set[r.key] != null || !!an.rooms[r.i].mezz)).map((r) => {
-    const v = set[r.key];
-    const area = v && Number.isFinite(+v.area) && +v.area > 0 ? +v.area : null;
-    return { i: r.i, key: r.key, name: r.name, roomArea: r.area, area, limit: 0.3 * r.area, over: area ? Math.max(0, area - 0.3 * r.area) : 0, detected: !!an.rooms[r.i].mezz, carpet: r.rera === 'carpet' };
+    const v = set[r.key], yours = v && Number.isFinite(+v.area) && +v.area > 0 ? +v.area : null, measured = an.rooms[r.i].mezzArea ?? null;
+    const area = yours ?? measured;
+    return { i: r.i, key: r.key, name: r.name, roomArea: r.area, area, yours: yours != null, measured, limit: 0.3 * r.area, over: area ? Math.max(0, area - 0.3 * r.area) : 0, detected: !!an.rooms[r.i].mezz, carpet: r.rera === 'carpet' };
   });
 }
 
-/** Lofts: marked in the drawing (“LOFT ABOVE”) or added by you, with the area you give; up to 30% of the room below is free (§6.3.2(5)). */
+/**
+ * Lofts: marked in the drawing (“LOFT ABOVE”) or added by you. The area is yours if you gave one, else
+ * the outline round the note, measured; up to 30% of the room below is free (§6.3.2(5)).
+ */
 function loftsOf(an, rooms, set = {}) {
   return rooms.filter((r) => (set[r.key] === false ? false : set[r.key] != null || !!an.rooms[r.i].loft)).map((r) => {
-    const v = set[r.key];
-    const area = v && Number.isFinite(+v.area) && +v.area > 0 ? +v.area : null;
+    const v = set[r.key], yours = v && Number.isFinite(+v.area) && +v.area > 0 ? +v.area : null, measured = an.rooms[r.i].loftArea ?? null;
+    const area = yours ?? measured;
     const allowed = 0.3 * r.area;
-    return { i: r.i, key: r.key, name: r.name, roomArea: r.area, area, allowed, free: area ? Math.min(area, allowed) : 0, excess: area ? Math.max(0, area - allowed) : 0, detected: !!an.rooms[r.i].loft };
+    return { i: r.i, key: r.key, name: r.name, roomArea: r.area, area, yours: yours != null, measured, allowed, free: area ? Math.min(area, allowed) : 0, excess: area ? Math.max(0, area - allowed) : 0, detected: !!an.rooms[r.i].loft };
   });
 }
 

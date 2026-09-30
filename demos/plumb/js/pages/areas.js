@@ -133,7 +133,8 @@ function render() {
       <p><b>From the drawing:</b> room areas are net, inside the walls. Every wall is split between the spaces on its two sides; a wall with carpet on both sides is a partition, and the rest are external. Stairs named only by their UP/DOWN arrow are measured to their flight.</p>
       ${st.building === 'apartments' ? `<p><b>Flats:</b> every flat has a kitchen, so each space goes with the kitchen it reaches through the fewest doors and openings, never through a lobby, stair or lift. A flat’s carpet area is its rooms plus the walls between two of its own rooms; a wall to the next flat or to the lobby isn’t an internal partition. A flat is named from a label like “FLAT 101” or “A-302” in it, else numbered by floor, left to right (101, 102…). Move a room to another flat in the room list if a door wasn’t found.</p>` : ''}
       <p><b>Mezzanines</b> count towards FSI in full (Part I 2.70) and, inside a unit, towards its carpet area; a mezzanine drawn as a plan of its own is measured like any floor.</p>
-      <p><b>Not yet:</b> loft and mezzanine areas measured from the drawing (enter them for now). Check the zone and FSI against your TP scheme and the current amendments before you submit.</p>
+      <p><b>Lofts and mezzanines over a room</b> are measured inside the dashed outline round their note, to the middle of its lines (a cross drawn through a loft is ignored). With no outline of their own, enter the area.</p>
+      <p>Check the zone and FSI against your TP scheme and the current amendments before you submit.</p>
     </div>`;
 }
 
@@ -157,10 +158,10 @@ function loftsSection(st) {
   const S = setup();
   const candidates = st.floors.flatMap((f) => f.rooms.filter((r) => r.rera === 'carpet' && !f.lofts.some((l) => l.i === r.i)).map((r) => ({ f, r })));
   return `<h2 class="sec">Lofts</h2>
-    <p class="hint" style="margin:-4px 2px 10px">CGDCR 6.3.2(5): a loft up to 30% of the room it’s in isn’t counted towards FSI; the rest is. Plumb finds lofts written in a room (“LOFT ABOVE”); give each its area, or add one.</p>
+    <p class="hint" style="margin:-4px 2px 10px">CGDCR 6.3.2(5): a loft up to 30% of the room it’s in isn’t counted towards FSI; the rest is. Plumb finds lofts written in a room (“LOFT ABOVE”) and measures the outline drawn round the note; type an area to use your own, or add a loft.</p>
     ${lofts.length ? `<div class="tblw"><table class="t ar-t ar-lofts"><thead><tr><th>Floor</th><th>Over</th><th class="n">Room</th><th class="n">Loft m²</th><th class="n">Free up to 30%</th><th class="n">Counted in FSI</th><th></th></tr></thead><tbody>
       ${lofts.map(({ f, l }) => `<tr class="${l.area == null ? 'rv' : ''}"><td><span class="ft-tag">${esc(levelTag(R.floors[f.k]))}</span></td><td>${esc(l.name)}${l.detected ? ' <span class="muted">· in the drawing</span>' : ''}</td><td class="n">${m2(l.roomArea)}</td>
-        <td class="n"><input class="inp ar-loft" type="number" min="0" step="0.01" inputmode="decimal" data-loft="${esc(l.key)}" value="${l.area ?? ''}" placeholder="area" aria-label="Loft area over ${esc(l.name)}" /></td>
+        <td class="n"><input class="inp ar-loft ${l.yours ? 'you' : ''}" type="number" min="0" step="0.01" inputmode="decimal" data-loft="${esc(l.key)}" data-measured="${l.measured ?? ''}" value="${l.area != null ? +l.area.toFixed(2) : ''}" placeholder="area" aria-label="Loft area over ${esc(l.name)}" />${srcTag(l)}</td>
         <td class="n">${m2(l.allowed)}</td><td class="n ${l.excess > 0.005 ? 'bad' : ''}">${l.area == null ? '<span class="muted">—</span>' : m2(l.excess)}</td>
         <td><button class="btn link small" data-noloft="${esc(l.key)}">Remove</button></td></tr>`).join('')}
     </tbody></table></div>` : ''}
@@ -168,6 +169,9 @@ function loftsSection(st) {
     ${!lofts.length && !candidates.length ? '<p class="muted">No rooms to put a loft in yet.</p>' : ''}
     ${S.lofts && Object.values(S.lofts).some((v) => v === false) ? `<p class="hint" style="margin:6px 2px 0"><button class="btn link small" data-loftsback>Bring back the lofts you removed</button></p>` : ''}`;
 }
+
+/** Where a loft's or mezzanine's area came from. */
+const srcTag = (o) => `<div class="ar-src">${o.yours ? (o.measured != null ? `yours · measured ${m2(o.measured)}` : 'yours') : o.measured != null ? 'measured from the outline' : 'no outline: enter it'}</div>`;
 
 /** Mezzanines: every square metre counts towards FSI (Part I 2.70); 30% of the space they're in at most (Part III 13.1.8). */
 function mezzSection(st) {
@@ -177,12 +181,12 @@ function mezzSection(st) {
   const candidates = st.floors.filter((f) => !f.mezzFloor).flatMap((f) => f.rooms.filter((r) => (r.fsi === 'count' || r.fsi === 'exempt') && r.use !== 'stair' && r.use !== 'lift' && !f.mezz.some((m) => m.i === r.i)).map((r) => ({ f, r })));
   const pct = (v) => `${Math.round(v * 100)}%`;
   return `<h2 class="sec">Mezzanines</h2>
-    <p class="hint" style="margin:-4px 2px 10px">A mezzanine’s area counts towards FSI, all of it (CGDCR Part I 2.70), and inside a flat or unit it’s carpet area too. It may cover up to 30% of the space it’s in, with 2.1 m clear above and below (Part III 13.1.8). A plan titled “MEZZANINE” is read as a floor of its own; one written in a room (“MEZZANINE ABOVE”) is listed here for its area, or add one.</p>
+    <p class="hint" style="margin:-4px 2px 10px">A mezzanine’s area counts towards FSI, all of it (CGDCR Part I 2.70), and inside a flat or unit it’s carpet area too. It may cover up to 30% of the space it’s in, with 2.1 m clear above and below (Part III 13.1.8). A plan titled “MEZZANINE” is read as a floor of its own; one written in a room (“MEZZANINE ABOVE”) is measured from the outline drawn round the note; type an area to use your own, or add one.</p>
     ${plans.length || mz.length ? `<div class="tblw"><table class="t ar-t ar-lofts"><thead><tr><th>Floor</th><th>Mezzanine</th><th class="n">Area m²</th><th class="n">Of the space</th><th class="n">Share</th><th class="n">In FSI</th><th></th></tr></thead><tbody>
       ${plans.map((f) => `<tr><td><span class="ft-tag">${esc(levelTag(R.floors[f.k]))}</span></td><td>${esc(cap(f.title))} <span class="muted">· a plan of its own${f.overlooks ? `, over the ${esc(f.overlooks.title.toLowerCase())}` : ''}</span></td>
         <td class="n">${m2(f.builtUp)}</td><td class="n">${f.overlooks ? m2(f.overlooks.area) : '—'}</td><td class="n ${f.overlooks && f.overlooks.share > 0.3 + 1e-6 ? 'bad' : ''}">${f.overlooks ? pct(f.overlooks.share) : '—'}</td><td class="n">${m2(f.builtUp)}</td><td></td></tr>`).join('')}
       ${mz.map(({ f, m }) => `<tr class="${m.area == null ? 'rv' : ''}"><td><span class="ft-tag">${esc(levelTag(R.floors[f.k]))}</span></td><td>Over ${esc(m.name)}${m.detected ? ' <span class="muted">· in the drawing</span>' : ''}${m.carpet ? ' <span class="muted">· carpet</span>' : ''}</td>
-        <td class="n"><input class="inp ar-loft" type="number" min="0" step="0.01" inputmode="decimal" data-mezz="${esc(m.key)}" value="${m.area ?? ''}" placeholder="area" aria-label="Mezzanine area over ${esc(m.name)}" /></td>
+        <td class="n"><input class="inp ar-loft ${m.yours ? 'you' : ''}" type="number" min="0" step="0.01" inputmode="decimal" data-mezz="${esc(m.key)}" data-measured="${m.measured ?? ''}" value="${m.area != null ? +m.area.toFixed(2) : ''}" placeholder="area" aria-label="Mezzanine area over ${esc(m.name)}" />${srcTag(m)}</td>
         <td class="n">${m2(m.roomArea)}</td><td class="n ${m.over > 0.005 ? 'bad' : ''}">${m.area == null ? '—' : pct(m.area / m.roomArea)}</td><td class="n">${m.area == null ? '<span class="muted">—</span>' : m2(m.area)}</td>
         <td><button class="btn link small" data-nomezz="${esc(m.key)}">Remove</button></td></tr>`).join('')}
     </tbody></table></div>` : ''}
@@ -266,15 +270,15 @@ page.addEventListener('change', (e) => {
   }
   if (t.dataset.loft) {
     S.lofts ||= {};
-    const v = parseFloat(t.value);
-    S.lofts[t.dataset.loft] = { area: Number.isFinite(v) && v > 0 ? v : null };
+    const v = parseFloat(t.value), meas = parseFloat(t.dataset.measured);
+    S.lofts[t.dataset.loft] = { area: Number.isFinite(v) && v > 0 && !(Math.abs(v - meas) < 0.005) ? v : null }; // empty, or the measured figure: measured
     save(true); render();
     return;
   }
   if (t.dataset.mezz) {
     S.mezz ||= {};
-    const v = parseFloat(t.value);
-    S.mezz[t.dataset.mezz] = { area: Number.isFinite(v) && v > 0 ? v : null };
+    const v = parseFloat(t.value), meas = parseFloat(t.dataset.measured);
+    S.mezz[t.dataset.mezz] = { area: Number.isFinite(v) && v > 0 && !(Math.abs(v - meas) < 0.005) ? v : null };
     save(true); render();
     return;
   }
