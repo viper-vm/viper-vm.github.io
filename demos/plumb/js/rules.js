@@ -320,6 +320,15 @@ export function checkBuilding(result, setup, { areas = {}, heights = {} } = {}) 
     const items = floors.flatMap((F) => F.an.rooms.filter((r) => r.type === 'toilet').map((r) => ({ k: F.k, room: r.id, name: r.name, value: sq(r.area), status: r.area + 1e-6 >= 0.9 ? 'pass' : 'fail' })));
     perf.push(R({ id: 'wc-size', clause: 'CGDCR III 13.9.1', title: 'Water closet size', need: '≥ 0.90 m²; at least one per dwelling', status: !items.length ? 'need' : items.some((i) => i.status === 'fail') ? 'fail' : 'pass', value: items.length ? `${items.length} found, smallest ${sq(Math.min(...items.map((i) => parseFloat(i.value))))}` : 'None found', note: items.length ? '' : 'No bath or WC is named in the plans: name it (WC, Toilet, Bath) in the drawing, or set its type in the workspace.', items }));
   }
+  // 13.1.9: lofts — no more than 30% of the room, 1.2 m high at most, 2.1 m clear below
+  {
+    const items = floors.flatMap((F) => F.st.lofts.map((l) => ({ k: F.k, room: l.i, name: l.name, value: l.area == null ? 'area not given' : `${sq(l.area)} of ${sq(l.allowed)} allowed`, status: l.area == null ? 'need' : l.excess > 0.005 ? 'fail' : 'pass' })));
+    perf.push(R({
+      id: 'loft', clause: 'CGDCR III 13.1.9 · II 6.3.2(5)', title: 'Lofts', need: '≤ 30% of the room; ≤ 1.2 m high, 2.1 m clear below',
+      status: !items.length ? 'na' : items.some((i) => i.status === 'fail') ? 'fail' : items.some((i) => i.status === 'need') ? 'need' : 'pass',
+      value: items.length ? `${items.length} loft${items.length > 1 ? 's' : ''}` : 'No lofts', note: items.length ? 'Heights need the section: check them there. Give loft areas on the Areas page.' : '', link: items.length ? 'areas' : undefined, items,
+    }));
+  }
   // 13.1.6: entrance door (not for Dwelling-1 and 2)
   {
     let best = null;

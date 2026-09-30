@@ -53,7 +53,7 @@ function render() {
   const reviewN = st.floors.reduce((a, f) => a + f.review.length, 0);
   const seg = (name, cur, opts) => `<span class="seg" role="group" aria-label="${name}">${opts.map(([v, l]) => `<button type="button" data-set="${name}" data-v="${v}" class="${cur === v ? 'on' : ''}">${l}</button>`).join('')}</span>`;
   const exemptAll = {};
-  for (const f of st.floors) for (const e of f.exempt) exemptAll[e.label] = { rule: e.rule, area: (exemptAll[e.label] ? exemptAll[e.label].area : 0) + e.area * f.repeat };
+  for (const f of st.floors) for (const e of f.exempt) exemptAll[e.short || e.label] = { rule: e.rule, area: (exemptAll[e.short || e.label] ? exemptAll[e.short || e.label].area : 0) + e.area * f.repeat };
 
   const fsiLine = !(F.plot > 0) ? `<div class="kpi-v" style="font-size:20px">Add the plot area</div><div class="kpi-s">to work out the FSI consumed</div>`
     : `<div class="kpi-v ${F.status === 'over' ? 'high' : ''}">${F.consumed.toFixed(2)}</div><div class="kpi-s">of ${F.base} base · ${F.max} maximum (${esc(z.code)})</div>`;
@@ -86,7 +86,7 @@ function render() {
       <div class="tile"><h3>FSI consumed</h3>${fsiLine}</div>
       <div class="tile"><h3>FSI area</h3><div class="kpi-v" style="font-size:24px">${m2(T.fsiArea)} m²</div><div class="kpi-s">built-up ${m2(T.builtUp)} m²</div></div>
       <div class="tile"><h3>RERA carpet area</h3><div class="kpi-v" style="font-size:24px">${m2(T.carpet)} m²</div><div class="kpi-s">${ft2(T.carpet)} ft²${T.flats ? ` · ${T.flats} flat${T.flats === 1 ? '' : 's'}` : ''} · balconies ${m2(T.balcony)} m²${T.terrace > 0.005 ? ` · open terraces ${m2(T.terrace)} m²` : ''}</div></div>
-      <div class="tile"><h3>Not in FSI</h3><div class="kpi-v" style="font-size:24px">${m2(T.exemptArea)} m²</div><div class="kpi-s">${Object.keys(exemptAll).map(esc).join(', ') || 'nothing exempt'}</div></div>
+      <div class="tile"><h3>Not in FSI</h3><div class="kpi-v" style="font-size:24px">${m2(T.exemptArea)} m²</div><div class="kpi-s">${(Object.keys(exemptAll).join(', ').replace(/^./, (c) => c.toUpperCase())) || 'Nothing exempt'}</div></div>
     </div>
 
     ${reviewN ? `<div class="tile ar-review">${icon('i-alert')}<div><b>${reviewN} space${reviewN > 1 ? 's' : ''} (${m2(T.review)} m²) need${reviewN > 1 ? '' : 's'} a decision.</b> They have no name in the drawing, so Plumb can’t tell a room from a terrace or a gap. Say what each is in the room list below; until then they’re left out of every total.
@@ -100,6 +100,10 @@ function render() {
     <p class="hint" style="margin:6px 2px 0">All areas in m². Built-up is measured to the outer face of the walls, balconies included. ${T.pergola > 0.005 ? `Pergolas (${m2(T.pergola)} m²) are left out of built-up area: CGDCR 6.3.2(13).` : ''}</p>
 
     ${flatsSection(st)}
+
+    ${landingsSection(st)}
+
+    ${loftsSection(st)}
 
     ${F.plot > 0 ? `<h2 class="sec">FSI</h2>
     <div class="tile ar-fsisum">
@@ -123,11 +127,43 @@ function render() {
     <h2 class="sec">How it’s worked out</h2>
     <div class="tile ar-notes">
       <p><b>RERA carpet area</b> (Real Estate Act 2016, §2(k)): the net usable floor area, without the external walls, service shafts and the exclusive balcony, verandah and open terrace areas (stated separately), but with the internal partition walls.</p>
-      <p><b>FSI</b> (CGDCR 2017 Part II): built-up area on every floor divided by the plot area. Not counted, under §6.3.2: staircases with their intermediate landings (6), lifts, lift wells and landings with their walls (7), parking basements and hollow plinths (3, 4), electric rooms (10), pergolas (13). Balconies aren’t on that list, so they count.</p>
+      <p><b>FSI</b> (CGDCR 2017 Part II): built-up area on every floor, lofts included, divided by the plot area. Not counted, under §6.3.2: staircases with their intermediate landings and walls, and the landing at floor level up to 2x by x (6); lifts and lift wells with their walls, and the landing up to 2x by 2x (7, 8); lofts up to 30% of their room (5); parking basements and hollow plinths (3, 4); electric rooms (10); pergolas (13). Balconies aren’t on that list, so they count.</p>
       <p><b>From the drawing:</b> room areas are net, inside the walls. Every wall is split between the spaces on its two sides; a wall with carpet on both sides is a partition, and the rest are external. Stairs named only by their UP/DOWN arrow are measured to their flight.</p>
       ${st.building === 'apartments' ? `<p><b>Flats:</b> every flat has a kitchen, so each space goes with the kitchen it reaches through the fewest doors and openings, never through a lobby, stair or lift. A flat’s carpet area is its rooms plus the walls between two of its own rooms; a wall to the next flat or to the lobby isn’t an internal partition. A flat is named from a label like “FLAT 101” or “A-302” in it, else numbered by floor, left to right (101, 102…). Move a room to another flat in the room list if a door wasn’t found.</p>` : ''}
-      <p><b>Not yet:</b> the landing allowances of 6.3.2(6) and (7) beyond the stair and lift as drawn, lofts and mezzanines. Check the zone and FSI against your TP scheme and the current amendments before you submit.</p>
+      <p><b>Not yet:</b> mezzanines, and loft areas measured from the drawing (enter them for now). Check the zone and FSI against your TP scheme and the current amendments before you submit.</p>
     </div>`;
+}
+
+/** Stair and lift landings left out of FSI, and how the allowance was worked out. */
+function landingsSection(st) {
+  const fl = st.floors.filter((f) => f.landings.cores.length);
+  if (!fl.length) return '';
+  return `<h2 class="sec">Stair and lift landings</h2>
+    <p class="hint" style="margin:-4px 2px 10px">CGDCR 6.3.2(6): a stair’s landing at floor level up to twice the stair’s width, x (taken as 2x wide, x deep). 6.3.2(7), (8): a lift’s landing 2x wide and 2x deep, x being the well with its walls. What’s left out is the lobby or landing actually there, up to the allowance${st.building === 'house' ? '' : ' (common spaces only)'}.</p>
+    <div class="tblw"><table class="t ar-t"><thead><tr><th>Floor</th><th>Stair or lift</th><th class="n">x</th><th class="n">Allowed</th><th>Landing there</th><th class="n">Not in FSI</th></tr></thead><tbody>
+      ${fl.map((f) => f.landings.cores.map((c, n) => `<tr>${n === 0 ? `<td rowspan="${f.landings.cores.length}"><span class="ft-tag">${esc(levelTag(R.floors[f.k]))}</span> ${esc(cap(f.title))}${f.repeat > 1 ? ` <span class="muted">×${f.repeat}</span>` : ''}</td>` : ''}
+        <td>${esc(c.name)}</td><td class="n">${c.x.toFixed(2)} m${c.measured ? '' : '<span class="muted" title="Treads not measured: the smallest width Table 13.2 allows"> *</span>'}</td><td class="n">${m2(c.allow)}</td>
+        ${n === 0 ? `<td rowspan="${f.landings.cores.length}">${f.landings.spaces.length ? `${esc(f.landings.spaces.map((i) => f.rooms[i].name).join(', '))} <span class="muted">· ${m2(f.landings.space)} m²</span>` : '<span class="muted">none next to it</span>'}</td><td class="n" rowspan="${f.landings.cores.length}"><b>${m2(f.landings.exempt)}</b></td>` : ''}</tr>`).join('')).join('')}
+    </tbody></table></div>
+    ${fl.some((f) => f.landings.cores.some((c) => !c.measured)) ? '<p class="hint" style="margin:6px 2px 0">* The stair’s treads weren’t measured, so x is the smallest width Table 13.2 allows. Put the treads on a stair layer to measure them.</p>' : ''}`;
+}
+
+/** Lofts: up to 30% of the room below isn't counted; any more is. */
+function loftsSection(st) {
+  const lofts = st.floors.flatMap((f) => f.lofts.map((l) => ({ f, l })));
+  const S = setup();
+  const candidates = st.floors.flatMap((f) => f.rooms.filter((r) => r.rera === 'carpet' && !f.lofts.some((l) => l.i === r.i)).map((r) => ({ f, r })));
+  return `<h2 class="sec">Lofts</h2>
+    <p class="hint" style="margin:-4px 2px 10px">CGDCR 6.3.2(5): a loft up to 30% of the room it’s in isn’t counted towards FSI; the rest is. Plumb finds lofts written in a room (“LOFT ABOVE”); give each its area, or add one.</p>
+    ${lofts.length ? `<div class="tblw"><table class="t ar-t ar-lofts"><thead><tr><th>Floor</th><th>Over</th><th class="n">Room</th><th class="n">Loft m²</th><th class="n">Free up to 30%</th><th class="n">Counted in FSI</th><th></th></tr></thead><tbody>
+      ${lofts.map(({ f, l }) => `<tr class="${l.area == null ? 'rv' : ''}"><td><span class="ft-tag">${esc(levelTag(R.floors[f.k]))}</span></td><td>${esc(l.name)}${l.detected ? ' <span class="muted">· in the drawing</span>' : ''}</td><td class="n">${m2(l.roomArea)}</td>
+        <td class="n"><input class="inp ar-loft" type="number" min="0" step="0.01" inputmode="decimal" data-loft="${esc(l.key)}" value="${l.area ?? ''}" placeholder="area" aria-label="Loft area over ${esc(l.name)}" /></td>
+        <td class="n">${m2(l.allowed)}</td><td class="n ${l.excess > 0.005 ? 'bad' : ''}">${l.area == null ? '<span class="muted">—</span>' : m2(l.excess)}</td>
+        <td><button class="btn link small" data-noloft="${esc(l.key)}">Remove</button></td></tr>`).join('')}
+    </tbody></table></div>` : ''}
+    ${candidates.length ? `<div class="ar-addloft"><select class="inp" id="a-addloft" aria-label="Room to add a loft to"><option value="">Add a loft over…</option>${candidates.map(({ f, r }) => `<option value="${esc(r.key)}">${esc(levelTag(R.floors[f.k]))} · ${esc(r.name)} (${m2(r.area)} m²)</option>`).join('')}</select></div>` : ''}
+    ${!lofts.length && !candidates.length ? '<p class="muted">No rooms to put a loft in yet.</p>' : ''}
+    ${S.lofts && Object.values(S.lofts).some((v) => v === false) ? `<p class="hint" style="margin:6px 2px 0"><button class="btn link small" data-loftsback>Bring back the lofts you removed</button></p>` : ''}`;
 }
 
 /** Carpet area flat by flat (buildings of flats only). */
@@ -175,6 +211,9 @@ page.addEventListener('click', (e) => {
     save(true); render(); toast('Left out of the totals. Change any of them in the room list.');
     return;
   }
+  const nl = t.closest('[data-noloft]');
+  if (nl) { const S = setup(); S.lofts ||= {}; S.lofts[nl.dataset.noloft] = false; save(true); render(); return; }
+  if (t.closest('[data-loftsback]')) { const S = setup(); for (const [k, v] of Object.entries(S.lofts || {})) if (v === false) delete S.lofts[k]; save(true); render(); return; }
   if (t.closest('[data-csv]')) {
     const st = areaStatement(R, setup());
     download(`${P.name.replace(/[^\w.-]+/g, '-')}-${REV.label.replace(/\s+/g, '')}-area-statement.csv`, statementCSV(st, { project: P.name, rev: REV.label }), 'text/csv');
@@ -196,6 +235,21 @@ page.addEventListener('change', (e) => {
     const auto = areaStatement(R, { ...S, flatOf: {} }).floors.flatMap((f) => f.rooms).find((r) => r.key === t.dataset.flat);
     if (auto && (auto.flat || 'none') === t.value) delete S.flatOf[t.dataset.flat]; else S.flatOf[t.dataset.flat] = t.value;
     save(true); render();
+    return;
+  }
+  if (t.dataset.loft) {
+    S.lofts ||= {};
+    const v = parseFloat(t.value);
+    S.lofts[t.dataset.loft] = { area: Number.isFinite(v) && v > 0 ? v : null };
+    save(true); render();
+    return;
+  }
+  if (t.id === 'a-addloft' && t.value) {
+    S.lofts ||= {};
+    S.lofts[t.value] = { area: null };
+    save(true); render();
+    const inp = page.querySelector(`[data-loft="${CSS.escape(t.value)}"]`);
+    if (inp) inp.focus();
     return;
   }
   if (t.dataset.fname) {

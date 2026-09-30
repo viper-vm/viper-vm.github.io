@@ -4,8 +4,8 @@
 // RERA Act 2016 §2(k): carpet area is the net usable floor area of an apartment, excluding external
 // walls, service shafts, exclusive balcony or verandah area and exclusive open terrace area, but
 // including the internal partition walls. Balconies and open terraces are stated separately.
-// CGDCR 2017 Part II §6.3.2 lists the areas not counted towards FSI (staircases, lifts, parking…);
-// balconies are not on that list, so they count.
+// CGDCR 2017 Part II §6.3.2 lists the areas not counted towards FSI (staircases and lifts with their
+// walls and landings, lofts up to 30%, parking…); balconies are not on that list, so they count.
 
 /** CGDCR 2017 Part II, Table 6.5: use control and F.S.I., category D1 AUDA. Chargeable FSI is at 40% of the jantri rate. */
 export const ZONES = [
@@ -200,6 +200,55 @@ export function flatsOf(an, rooms, { flatOf = {}, names = {}, level = 1 } = {}) 
 }
 
 /**
+ * Landings at floor level not counted towards FSI (CGDCR 2017 Part II §6.3.2):
+ *   (6) a staircase's landing up to twice the width of the stair (x): its width plus 0.5x each side,
+ *       taken here as 2x wide by x deep;
+ *   (7), (8) a lift's landing 2x wide (the well with its walls, x, plus 0.5x each side) by 2x deep.
+ * What's left out is the landing space actually there — lobbies, landings and passages opening onto the
+ * stair or lift (common ones, in a building of flats) — up to those allowances. Stair widths come from
+ * the treads where the flight was measured, else the smallest Table 13.2 allows.
+ */
+export function landingsOf(an, rooms, building) {
+  const cores = rooms.filter((r) => r.use === 'stair' || r.use === 'lift');
+  const none = { allowance: 0, space: 0, exempt: 0, cores: [], spaces: [] };
+  if (!cores.length) return none;
+  const res = (an.grid && an.grid.res) || an.res || 0.04;
+  const byId = new Map(rooms.map((r) => [r.i, r]));
+  const nb = new Map(rooms.map((r) => [r.i, new Set()]));
+  const link = (a, b) => { if (a !== b && nb.has(a) && nb.has(b)) { nb.get(a).add(b); nb.get(b).add(a); } };
+  const regionOf = new Map();
+  for (const r of rooms) { const rg = an.rooms[r.i].region; if (regionOf.has(rg)) for (const o of regionOf.get(rg)) link(o, r.i); regionOf.set(rg, [...(regionOf.get(rg) || []), r.i]); }
+  for (const o of an.openings || []) if (o.kind !== 'window') link(o.a, o.b);
+  const out = cores.map((r) => {
+    const room = an.rooms[r.i];
+    if (r.use === 'stair') {
+      const flights = (an.stairs || []).filter((q) => q.room === r.i);
+      const x = flights.length ? Math.max(...flights.map((q) => q.width)) : building === 'house' ? 1.0 : 1.2;
+      return { i: r.i, name: r.name, use: 'stair', x, measured: flights.length > 0, allow: 2 * x * x };
+    }
+    const [i0, j0, i1, j1] = room.bbox || [0, 0, 0, 0];
+    const x = Math.max(i1 - i0 + 1, j1 - j0 + 1) * res + 0.3; // the well with its walls (15 cm each side)
+    return { i: r.i, name: r.name, use: 'lift', x, measured: true, allow: 4 * x * x };
+  });
+  const landing = (r) => r.type === 'circulation' && r.fsi === 'count' && (building === 'house' || r.use === 'common');
+  const spaces = new Set();
+  for (const c of cores) for (const n of nb.get(c.i)) if (landing(byId.get(n))) spaces.add(n);
+  const space = [...spaces].reduce((a, i) => a + byId.get(i).area, 0);
+  const allowance = out.reduce((a, c) => a + c.allow, 0);
+  return { allowance, space, exempt: Math.min(space, allowance), cores: out, spaces: [...spaces] };
+}
+
+/** Lofts: marked in the drawing (“LOFT ABOVE”) or added by you, with the area you give; up to 30% of the room below is free (§6.3.2(5)). */
+function loftsOf(an, rooms, set = {}) {
+  return rooms.filter((r) => (set[r.key] === false ? false : set[r.key] != null || !!an.rooms[r.i].loft)).map((r) => {
+    const v = set[r.key];
+    const area = v && Number.isFinite(+v.area) && +v.area > 0 ? +v.area : null;
+    const allowed = 0.3 * r.area;
+    return { i: r.i, key: r.key, name: r.name, roomArea: r.area, area, allowed, free: area ? Math.min(area, allowed) : 0, excess: area ? Math.max(0, area - allowed) : 0, detected: !!an.rooms[r.i].loft };
+  });
+}
+
+/**
  * The area statement of an analysed building.
  * setup: { building: 'house'|'apartments'|'commercial', plot (m²) | null, zone, base, chargeable, max, uses: { [roomKey]: use } }
  */
@@ -235,8 +284,18 @@ export function areaStatement(result, setup = {}) {
       for (const [b, frac] of Object.entries(o.faces)) if (b !== 'out' && rooms[+b] && rooms[+b].rera === 'carpet') partitions += o.area * frac;
     });
     const pergola = sum((r) => r.use === 'pergola') + (an.patternArea || 0);
-    const exempt = ['stair', 'lift', 'parking', 'electric'].map((u) => ({ use: u, label: USES[u].label, rule: USES[u].rule, area: sum((r) => r.use === u) })).filter((e) => e.area > 0.005);
-    const builtUp = sum((r) => r.fsi === 'count' || r.fsi === 'exempt') + walls.total;
+    // the stair and the lift are left out with their walls (§6.3.2(6), (7)), and their landings up to the allowances
+    const wallsOf = (u) => rooms.reduce((a, r) => a + (r.use === u && walls.owned[r.i] ? walls.owned[r.i].area : 0), 0);
+    const landings = landingsOf(an, rooms, building);
+    const lofts = loftsOf(an, rooms, setup.lofts || {});
+    const loftArea = lofts.reduce((a, l) => a + (l.area || 0), 0);
+    const exempt = [
+      ...['stair', 'lift'].map((u) => ({ use: u, label: `${USES[u].label}, with its walls`, short: u === 'stair' ? 'stairs' : 'lifts', rule: USES[u].rule, area: sum((r) => r.use === u) + wallsOf(u), walls: wallsOf(u) })),
+      { use: 'landing', label: 'Stair and lift landings', short: 'landings', rule: 'CGDCR 6.3.2(6), (7)', area: landings.exempt },
+      { use: 'loft', label: 'Lofts, up to 30% of their room', short: 'lofts', rule: 'CGDCR 6.3.2(5)', area: lofts.reduce((a, l) => a + l.free, 0) },
+      ...['parking', 'electric'].map((u) => ({ use: u, label: USES[u].label, short: u === 'parking' ? 'parking' : 'electric rooms', rule: USES[u].rule, area: sum((r) => r.use === u) })),
+    ].filter((e) => e.area > 0.005);
+    const builtUp = sum((r) => r.fsi === 'count' || r.fsi === 'exempt') + walls.total + loftArea;
     const exemptArea = exempt.reduce((a, e) => a + e.area, 0);
     return {
       k, title: f.title, level: f.level, repeat, rooms, flats,
@@ -247,7 +306,7 @@ export function areaStatement(result, setup = {}) {
       common: sum((r) => r.use === 'common' || (building !== 'house' && (r.use === 'stair' || r.use === 'lift'))),
       shafts: sum((r) => r.use === 'shaft'),
       walls: walls.total, outerWalls: walls.total - partitions,
-      builtUp, exempt, exemptArea, fsiArea: builtUp - exemptArea, pergola,
+      builtUp, exempt, exemptArea, fsiArea: builtUp - exemptArea, pergola, landings, lofts, loft: loftArea,
       review: rooms.filter((r) => r.use === 'review'),
     };
   });
@@ -255,7 +314,7 @@ export function areaStatement(result, setup = {}) {
   const totals = {
     builtUp: total('builtUp'), exemptArea: total('exemptArea'), fsiArea: total('fsiArea'),
     carpet: total('carpet'), balcony: total('balcony'), terrace: total('terrace'), common: total('common'),
-    shafts: total('shafts'), walls: total('walls'), pergola: total('pergola'),
+    shafts: total('shafts'), walls: total('walls'), pergola: total('pergola'), loft: total('loft'),
     review: floors.reduce((a, f) => a + f.review.reduce((b, r) => b + r.area, 0) * f.repeat, 0),
     flats: floors.reduce((a, f) => a + f.flats.length * f.repeat, 0),
   };
@@ -304,6 +363,14 @@ export function statementCSV(st, { project = '', rev = '' } = {}) {
   const F = st.fsi;
   rows.push([q('Zone'), q(`${F.zone.code} — ${F.zone.name}`)], [q('Plot area (m²)'), f2(F.plot)], [q('FSI base / chargeable / maximum'), F.base, F.chargeable, F.max]);
   if (F.plot > 0) rows.push([q('FSI consumed'), F.consumed.toFixed(3)], [q('Balance to maximum (m²)'), f2(F.balance)]);
+  if (st.floors.some((f) => f.landings.cores.length)) {
+    rows.push([], ['Floor', 'Stair or lift', 'x (m)', 'Landing allowed (m²)', 'Landing space there (m²)', 'Not in FSI (m²)'].map(q));
+    for (const f of st.floors) f.landings.cores.forEach((c, n) => rows.push([q(f.title), q(c.name), f2(c.x), f2(c.allow), n === 0 ? f2(f.landings.space) : '', n === 0 ? f2(f.landings.exempt) : '']));
+  }
+  if (st.floors.some((f) => f.lofts.length)) {
+    rows.push([], ['Floor', 'Loft over', 'Room (m²)', 'Loft (m²)', 'Free up to 30% (m²)', 'Counted in FSI (m²)'].map(q));
+    for (const f of st.floors) for (const l of f.lofts) rows.push([q(f.title), q(l.name), f2(l.roomArea), f2(l.area), f2(l.allowed), f2(l.excess)]);
+  }
   if (st.floors.some((f) => f.flats.length)) {
     rows.push([], ['Floor', 'Times', 'Flat', 'Type', 'RERA carpet (m²)', 'Rooms (m²)', 'Internal walls (m²)', 'Balcony / verandah (m²)', 'Open terrace (m²)'].map(q));
     for (const f of st.floors) for (const fl of f.flats) rows.push([q(f.title), f.repeat, q(fl.name), q(fl.kind), f2(fl.carpet), f2(fl.carpetRooms), f2(fl.partitions), f2(fl.balcony), f2(fl.terrace)]);

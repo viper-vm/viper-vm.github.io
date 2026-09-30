@@ -219,7 +219,28 @@ function toBinaryDXF(text) {
   const flats = areaStatement(pack(analyse(readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8'))), { building: 'apartments', plot: 600 });
   const stilt = flats.floors[0], typ = flats.floors[1];
   check('apartments: stilt parking, stair, lift and electric room exempt; the guard room is common, not a flat', ['parking', 'stair', 'lift', 'electric'].every((u) => stilt.exempt.some((e) => e.use === u)) && stilt.carpet < 1 && stilt.rooms.some((r) => /guard/i.test(r.name) && r.use === 'common'), stilt.exempt.map((e) => e.use).join());
-  check('apartments: stair and lift are common areas outside the flats\' carpet; balconies stated apart', typ.common > typ.exemptArea && typ.carpet > 150 && typ.balcony > 5 && typ.rooms.filter((r) => r.use === 'stair').every((r) => r.rera === 'none'), `carpet ${typ.carpet.toFixed(1)}, common ${typ.common.toFixed(1)}`);
+  check('apartments: stair and lift are common areas outside the flats\' carpet; balconies stated apart', typ.common > 30 && typ.carpet > 150 && typ.balcony > 5 && typ.rooms.filter((r) => r.use === 'stair').every((r) => r.rera === 'none'), `carpet ${typ.carpet.toFixed(1)}, common ${typ.common.toFixed(1)}`);
+  // landings (6.3.2(6), (7)): the lobby off the stair and lift is left out, up to 2x·x for the stair and 2x·2x for the lift
+  const L1 = typ.landings, lob = typ.rooms.find((r) => /lobby/i.test(r.name));
+  const st15 = L1.cores.find((c) => c.use === 'stair'), lf = L1.cores.find((c) => c.use === 'lift');
+  check('landings: stair 1.5 m wide → 4.5 m² allowed, the lift ≈ 2 m well → ≈ 16 m²; the lobby is the landing, left out up to that', st15 && near(st15.allow, 4.5, 0.01) && st15.measured && lf && lf.allow > 12 && lf.allow < 20 && L1.spaces.length === 1 && lob && L1.spaces[0] === lob.i && near(L1.exempt, Math.min(lob.area, L1.allowance), 1e-9) && typ.exempt.some((e) => e.use === 'landing' && near(e.area, L1.exempt, 1e-9)), `${st15 && st15.allow.toFixed(2)} + ${lf && lf.allow.toFixed(1)} vs lobby ${lob && lob.area.toFixed(1)}`);
+  check('landings: the stair and the lift are left out with their walls', typ.exempt.filter((e) => e.use === 'stair' || e.use === 'lift').every((e) => e.walls > 0.3 && e.area > e.walls), typ.exempt.map((e) => `${e.use} ${e.area.toFixed(1)}`).join(', '));
+  const ghouse = st.floors[1];
+  check('landings: in a house the landing upstairs is allowed for; the stair open to the living room downstairs gets none', near(ghouse.landings.exempt, 4.5, 0.05) && st.floors[0].landings.exempt === 0, `${ghouse.landings.exempt.toFixed(2)} / ${st.floors[0].landings.exempt}`);
+  const withNote = pack(analyse(casaSheet(0.6, { loft: true })));
+  const bedL = withNote.an[1].rooms.find((r) => r.name === 'Bedroom');
+  const stL = areaStatement(withNote, { building: 'house', plot: 250 });
+  check('lofts: “LOFT ABOVE” in a room marks it (not its name); the statement asks for the loft\'s area', bedL && bedL.loft && !withNote.an[1].rooms.some((r) => /loft/i.test(r.name)) && stL.floors[1].lofts.length === 1 && stL.floors[1].lofts[0].area === null, bedL && `${bedL.name} ${bedL.loft}`);
+  // lofts (6.3.2(5)): up to 30% of the room below is free, the rest counts
+  const bed = typ.rooms.find((r) => r.type === 'bedroom');
+  const withLoft = (a) => areaStatement(pack(analyse(readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8'))), { building: 'apartments', plot: 600, lofts: { [bed.key]: { area: a } } }).floors[1];
+  const small = withLoft(0.2 * bed.area), big = withLoft(0.5 * bed.area);
+  check('lofts: 20% of the room is built-up but not in FSI; at 50%, the 20% over 30% counts', near(small.builtUp - typ.builtUp, 0.2 * bed.area, 1e-6) && near(small.fsiArea, typ.fsiArea, 1e-6) && near(big.fsiArea - typ.fsiArea, 0.2 * bed.area, 1e-6) && big.lofts[0].excess > 0, `${(small.fsiArea - typ.fsiArea).toFixed(3)} / ${(big.fsiArea - typ.fsiArea).toFixed(2)}`);
+  const { checkBuilding: cb, ruleSetup: rs } = await import(base + 'rules.js');
+  const flatsR = pack(analyse(readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8')));
+  const loftRule = (a) => cb(flatsR, rs({ areas: { building: 'apartments' } }), { areas: { building: 'apartments', plot: 600, lofts: { [bed.key]: a } }, heights: {} }).groups.flatMap((g) => g.rules).find((r) => r.id === 'loft').status;
+  check('bye-laws: a loft over 30% of its room fails 13.1.9; a loft marked without an area asks for it', loftRule({ area: 0.5 * bed.area }) === 'fail' && loftRule({ area: 0.25 * bed.area }) === 'pass' && loftRule({ area: null }) === 'need', [loftRule({ area: 0.5 * bed.area }), loftRule({ area: null })].join());
+
   // flat by flat: two 2 BHK flats a floor, each ≈100 m² of carpet; the planted top-floor differences show
   const fl = flats.floors.slice(1).map((f) => f.flats);
   check('flats: two a floor, grouped round their kitchens through their own doors (the lobby between them is common)', fl.every((x) => x.length === 2 && x.every((q) => q.kind === '2 BHK' && q.carpet > 90 && q.carpet < 110)), fl.map((x) => x.map((q) => `${q.name} ${q.kind} ${q.carpet.toFixed(1)}`).join(' / ')).join(' | '));

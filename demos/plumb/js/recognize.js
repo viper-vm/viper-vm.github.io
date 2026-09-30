@@ -475,7 +475,7 @@ export function roomType(name) {
 }
 
 // stair arrows, door and window notes and tags: on the plan, but not room names
-const NOT_NAME = /^\s*(n|north|(sliding|folding|pocket)?\s*doors?|windows?|opening|ramp( up| down| dn)?|[dwv]\s?-?\d{1,2}[a-z]?|level|nivel|n\.?p\.?t\.?.*|[+-]?\d+([.,]\d+)?\s*(\(.*\))?|.*\bheight\b.*|\p{L}{1,3}#)\s*$/iu;
+const NOT_NAME = /^\s*(loft( above| over| at .*)?|n|north|(sliding|folding|pocket)?\s*doors?|windows?|opening|ramp( up| down| dn)?|[dwv]\s?-?\d{1,2}[a-z]?|level|nivel|n\.?p\.?t\.?.*|[+-]?\d+([.,]\d+)?\s*(\(.*\))?|.*\bheight\b.*|\p{L}{1,3}#)\s*$/iu;
 // room numbers, column and door tags: "C14", "110E", "0110-E0", "D-2", "W1A"
 const CODE = /^\s*(?=[^\s]*\d)[A-Z0-9#]{1,4}([-./][A-Z0-9#]{1,6}){0,2}\s*$|^\s*(?=[^\s]*\d)[A-Z0-9]{5,12}\s*$/i;
 // "UP" / "DN" still mark out the stair's own zone in an open plan
@@ -692,6 +692,7 @@ export function analyseFloor(dx, roles, box, opts = {}) {
     const sizeText = d.texts.map((t) => t.text).find((x) => SIZE_TEXT.test(x)) || '';
     return {
       idx: v, region: d.region, name: tidyName(name) || (type === 'unknown' ? 'Unnamed space' : cap(type)), label: d.nameText || '', type, area, cellArea: cnt[v] * res * res, sizeText, pattern,
+      loft: d.texts.some((t) => /\bloft\b/i.test(t.text)) || undefined, // “LOFT ABOVE” written in the room
       bbox: rb[v], cx: g.x0 + (sx[v] / Math.max(1, cnt[v]) + 0.5) * res, cy: g.y0 + (sy[v] / Math.max(1, cnt[v]) + 0.5) * res,
     };
   });
