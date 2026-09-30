@@ -447,8 +447,9 @@ function splitPlans(isl, segs, ctx) {
 // Per-floor analysis
 
 const TYPE_RULES = [
-  ['toilet', /(toilet|\bw\.?\s?c\.?\b|bath|wash ?room|powder|lav(atory)?|shower|restroom|\bt\s*[/&]\s*b\b|\bttl\b|\bw\/c\b|ba[ñn]o|aseo|sanitario|卫生间|厕所|浴室|洗手间|卫)/i],
+  ['toilet', /(toilet|\bw\.?\s?c\.?\b|bath|wash ?room|powder|lav(atory)?|shower|restroom|\bt\s*[/&]\s*b\b|\bttl\b|\bw\/c\b|ba[ñn]o|aseo|sanitario|\bs\.\s?s\.|卫生间|厕所|浴室|洗手间|卫)/i],
   ['kitchen', /(kitchen|kitch|pantry|utility|wash ?area|dish|scullery|cocina|alacena|厨房|厨)/i],
+  ['living', /\bplay ?(area|room|ground)?\b/i], // before 'children' makes it a bedroom
   ['bedroom', /(bed|master|guest room|kids|children|nursery|\bm\.?\s?b\.?\s?r\b|\bbr\b|dormitorio|rec[aá]mara|habitaci[oó]n|alcoba|卧室|卧)/i],
   ['living', /(living|drawing|lounge|family|hall\b|dining|study|office|library|home ?theat|media|puja|pooja|prayer|reading|sala|comedor|estar|estudio|oficina|客厅|起居|饭厅|餐厅|书房)/i],
   ['stair', /(stair|staircase|steps|escalera|楼梯)/i],
@@ -499,7 +500,8 @@ export function analyseFloor(dx, roles, box, opts = {}) {
   }
   // openings: a wall line that stops and carries on along the same line within 3.2 m has a door,
   // window or opening between — close it, whatever layer (if any) the window is drawn on
-  for (const [x0, y0, x1, y1] of wallGaps(dx.segs.filter((s) => roleOf(s[4]) === 'wall' && (inBox(s[0], s[1]) || inBox(s[2], s[3]))))) g.seg(x0, y0, x1, y1, brush);
+  const gaps = wallGaps(dx.segs.filter((s) => roleOf(s[4]) === 'wall' && (inBox(s[0], s[1]) || inBox(s[2], s[3]))));
+  for (const [x0, y0, x1, y1] of gaps) g.seg(x0, y0, x1, y1, brush);
   const columns = [];
   for (const f of dx.fills) {
     const c = centroid(f.pts);
@@ -695,6 +697,11 @@ export function analyseFloor(dx, roles, box, opts = {}) {
   for (let k = 0; k < W * H; k++) if (roomAt[k] >= 0) roomAt[k] = remap[roomAt[k]];
   rooms = keep;
 
+  // clear width of each room: the widest circle that fits, wall face to wall face
+  const wmax = new Float64Array(rooms.length);
+  for (let k = 0; k < W * H; k++) { const v = roomAt[k]; if (v >= 0 && dist[k] > wmax[v]) wmax[v] = dist[k]; }
+  rooms.forEach((rm, v) => { rm.width = Math.round((2 * (wmax[v] + brush) + 1) * res * 100) / 100; });
+
   // 6. outline of each room (cell corners → metres)
   for (const rm of rooms) {
     const [i0, j0, i1, j1] = rm.bbox;
@@ -724,13 +731,90 @@ export function analyseFloor(dx, roles, box, opts = {}) {
   //    that runs from the outside to a room, is external; the rest are partitions.
   const walls = measureWalls({ W, H, res, inside, roomAt, labels: lab.labels, regions, rooms });
 
+  // 10. openings (what each room opens onto) and stair flights (how wide, how deep the treads)
+  const sideAt = (x, y) => {
+    const i = Math.floor((x - g.x0) / res), j = Math.floor((y - g.y0) / res);
+    if (i < 0 || j < 0 || i >= W || j >= H) return -1;
+    const k = j * W + i;
+    return roomAt[k] >= 0 ? roomAt[k] : inside[k] ? -2 : -1;
+  };
+  const near = (s) => inBox((s[0] + s[2]) / 2, (s[1] + s[3]) / 2);
+  const openings = openingsOf(gaps, doors, dx.segs.filter((s) => near(s) && roleOf(s[4]) !== 'wall' && roleOf(s[4]) !== 'dim' && roleOf(s[4]) !== 'text'), sideAt);
+  const stairs = flights.map((f) => measureFlight(f, dx.segs.filter((s) => roleOf(s[4]) === 'stair' && near(s)), sideAt)).filter(Boolean);
+
   return {
     box, res, margin,
     grid: { x0: g.x0, y0: g.y0, w: W, h: H, res },
-    labels: lab.labels, roomAt, regions, rooms, columns: cols, doors,
+    labels: lab.labels, roomAt, regions, rooms, columns: cols, doors, openings, stairs,
     inside, outlines, footprintArea: fpArea * res * res, walls, patternArea,
     stats: { boundaryCells: g.data.reduce((a, v) => a + v, 0), regions: lab.count },
   };
+}
+
+/**
+ * Openings in the walls: the gaps where a wall line stops and carries on (both faces of a wall
+ * give one opening), each a door (a swing at its jamb), a window (lines drawn across it) or a plain
+ * opening, with the spaces on its two sides: a room index, -1 for outside, -2 for neither (a wall,
+ * a cavity). Layer-independent, so a window drawn on layer 0 still counts.
+ */
+function openingsOf(gaps, doors, across, sideAt) {
+  const list = gaps.map(([x0, y0, x1, y1]) => {
+    const L = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / L, uy = (y1 - y0) / L;
+    return { x0, y0, x1, y1, L, ux, uy, mx: (x0 + x1) / 2, my: (y0 + y1) / 2 };
+  });
+  // the two faces of one wall: parallel, side by side, within 50 cm of each other
+  const used = new Uint8Array(list.length), out = [];
+  for (let i = 0; i < list.length; i++) {
+    if (used[i]) continue;
+    const a = list[i], grp = [a];
+    used[i] = 1;
+    for (let j = i + 1; j < list.length; j++) {
+      const b = list[j];
+      if (used[j] || Math.abs(a.ux * b.uy - a.uy * b.ux) > 0.05) continue;
+      const vx = b.mx - a.mx, vy = b.my - a.my, off = Math.abs(vx * a.uy - vy * a.ux), along = Math.abs(vx * a.ux + vy * a.uy);
+      if (off <= 0.5 && along <= 0.25 * Math.max(a.L, b.L) + 0.05 && Math.abs(a.L - b.L) < 0.3) { grp.push(b); used[j] = 1; }
+    }
+    const mx = grp.reduce((s, q) => s + q.mx, 0) / grp.length, my = grp.reduce((s, q) => s + q.my, 0) / grp.length;
+    const L = Math.max(...grp.map((q) => q.L)), nx = -a.uy, ny = a.ux;
+    const offs = grp.map((q) => (q.mx - mx) * nx + (q.my - my) * ny);
+    const t = Math.max(...offs) - Math.min(...offs);
+    const inRect = (x, y, pad) => { const vx = x - mx, vy = y - my; return Math.abs(vx * a.ux + vy * a.uy) <= L / 2 + pad && Math.abs(vx * nx + vy * ny) <= t / 2 + pad; };
+    const door = doors.some((d) => inRect(d.x, d.y, 0.3) && d.w <= L + 0.3);
+    const glazed = !door && across.some((s) => {
+      const sl = Math.hypot(s[2] - s[0], s[3] - s[1]);
+      if (sl < 0.2 || Math.abs(((s[2] - s[0]) * a.uy - (s[3] - s[1]) * a.ux) / sl) > 0.1) return false;
+      return inRect((s[0] + s[2]) / 2, (s[1] + s[3]) / 2, 0.06);
+    });
+    const side = (sg) => {
+      for (const d of [0.2, 0.35, 0.5, 0.75]) { const v = sideAt(mx + sg * nx * (t / 2 + d), my + sg * ny * (t / 2 + d)); if (v !== -2) return v; }
+      return -2;
+    };
+    const r3 = (v) => Math.round(v * 1000) / 1000;
+    out.push({ x0: r3(mx - a.ux * L / 2), y0: r3(my - a.uy * L / 2), x1: r3(mx + a.ux * L / 2), y1: r3(my + a.uy * L / 2), w: r3(L), t: r3(t), kind: door ? 'door' : glazed ? 'window' : 'open', a: side(1), b: side(-1) });
+  }
+  return out.filter((o) => o.a !== o.b || o.a >= 0);
+}
+
+/** One flight of stairs: its treads (the most common direction of its lines), how wide and deep. */
+function measureFlight(box, segs, sideAt) {
+  const inb = (s) => { const x = (s[0] + s[2]) / 2, y = (s[1] + s[3]) / 2; return x >= box[0] - 0.01 && x <= box[2] + 0.01 && y >= box[1] - 0.01 && y <= box[3] + 0.01; };
+  const lines = segs.filter(inb).map((s) => { const L = Math.hypot(s[2] - s[0], s[3] - s[1]); let th = Math.atan2(s[3] - s[1], s[2] - s[0]); if (th < 0) th += Math.PI; if (th >= Math.PI) th -= Math.PI; return { s, L, th }; }).filter((q) => q.L >= 0.5);
+  if (lines.length < 5) return null;
+  const bins = new Float64Array(36);
+  for (const q of lines) bins[Math.round(q.th / (Math.PI / 36)) % 36]++;
+  const th = bins.indexOf(Math.max(...bins)) * (Math.PI / 36);
+  const tread = lines.filter((q) => { const d = Math.abs(q.th - th); return Math.min(d, Math.PI - d) < 0.07 && q.L <= 3.5; });
+  if (tread.length < 5) return null;
+  const nx = -Math.sin(th), ny = Math.cos(th);
+  const pos = tread.map((q) => ((q.s[0] + q.s[2]) / 2) * nx + ((q.s[1] + q.s[3]) / 2) * ny).sort((p, q) => p - q);
+  const goings = [];
+  for (let i = 1; i < pos.length; i++) { const d = pos[i] - pos[i - 1]; if (d > 0.15 && d < 0.45) goings.push(d); }
+  if (goings.length < 4) return null;
+  const med = (v) => { const w = v.slice().sort((p, q) => p - q); return w[Math.floor(w.length / 2)]; };
+  const votes = new Map();
+  for (const q of tread) { const v = sideAt((q.s[0] + q.s[2]) / 2, (q.s[1] + q.s[3]) / 2); if (v >= 0) votes.set(v, (votes.get(v) || 0) + 1); }
+  const room = votes.size ? [...votes].sort((p, q) => q[1] - p[1])[0][0] : -1;
+  return { box, width: Math.round(med(tread.map((q) => q.L)) * 100) / 100, going: Math.round(med(goings) * 1000) / 1000, treads: goings.length + 1, room };
 }
 
 /**

@@ -224,6 +224,51 @@ function toBinaryDXF(text) {
   check('CSV: floors, total, FSI and every room', csv.some((l) => l.startsWith('"Total"')) && csv.some((l) => l.startsWith('"FSI consumed"')) && csv.filter((l) => /"(Parking|Lift|Toilet)"/.test(l)).length >= 3, csv.length);
 }
 
+// ------------------------------------------------------------------ bye-law checks (CGDCR 2017, Ahmedabad)
+{
+  const { heightForRoad, roadMargin, sideRear, stairRule, housePark, ruleSetup, checkBuilding, checksCSV } = await import(base + 'rules.js');
+  const { casaSheet } = await import(new URL('./fixtures.mjs', import.meta.url).href);
+  check('Table 6.23 (D1): height by road — 10 / 16.5 / 30 / 45 / 70 m', [7.5, 9, 12, 18, 36].map(heightForRoad).join() === '10,16.5,30,45,70' && heightForRoad(null) === null, [7.5, 9, 12, 18, 36].map(heightForRoad).join());
+  check('Table 6.24 (D1): road-side margin — 2.5 up to 9 m, 3.0 to 15, 4.5 below 18, 6.0, 7.5, 9.0', [7.5, 9, 12, 15, 16, 18, 30, 45].map(roadMargin).join() === '2.5,2.5,3,3,4.5,6,7.5,9', [7.5, 9, 12, 15, 16, 18, 30, 45].map(roadMargin).join());
+  const sr = (u, p, h) => { const q = sideRear(u, p, h); return q && `${q.rear}/${q.side}/${q.sides}`; };
+  check('Table 6.26: houses by plot size, others by height (3.0 m to 16.5 m, 4.0 to 25, 3.0 on small plots)', sr('DW1', 60) === '0/1/any' && sr('DW1', 250) === '2/1.5/one' && sr('DW2', 400) === '3/2/both' && sr('DW3', 1000, 15) === '3/3/both' && sr('DW3', 1000, 20) === '4/4/both' && sr('DW3', 600, 20) === '3/3/both' && sr('M', 1000, 30) === '6/6/both', [sr('DW1', 250), sr('DW3', 1000, 20)].join());
+  check('Table 13.2: stair widths 1.0 house, 1.2 / 1.5 / 2.0 flats by height, 1.5 others', stairRule('DW1', 9).width === 1 && stairRule('DW3', 10).width === 1.2 && stairRule('DW3', 20).width === 1.5 && stairRule('DW3', 30).width === 2 && stairRule('M', 10).tread === 0.3);
+  check('Table 6.44: house parking — none to 100 m², 1 to 300 m², then 1 more per 100 m² or part', [90, 150, 300, 301, 400, 401].map(housePark).join() === '0,1,1,2,2,3', [90, 150, 300, 301, 400, 401].map(housePark).join());
+
+  // the sample: flats on a stilt floor
+  const flats = pack(analyse(readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8')));
+  const f1 = flats.an[1];
+  const kit = f1.rooms.find((r) => r.type === 'kitchen');
+  check('rooms: clear width is wall face to wall face (the 2.4 m kitchen)', kit && near(kit.width, 2.45, 0.12), kit && kit.width);
+  const bedWin = f1.openings.filter((o) => o.kind === 'window' && (o.a === -1 || o.b === -1) && [o.a, o.b].some((v) => v >= 0 && f1.rooms[v].type === 'bedroom'));
+  check('openings: windows found in the wall gaps, with the bedroom on one side and outside on the other', bedWin.length >= 4 && f1.openings.some((o) => o.kind === 'door' && o.w > 0.7 && o.w < 1.1), `${bedWin.length} bedroom windows`);
+  check('stairs: the flight measured from its treads (1.5 m wide, 250 mm going)', flats.an.every((a) => a.stairs.length === 1 && near(a.stairs[0].width, 1.5, 0.05) && near(a.stairs[0].going, 0.25, 0.01)), flats.an.map((a) => a.stairs.map((s) => `${s.width}/${s.going}`).join()).join(' '));
+  const P = { areas: { building: 'apartments', plot: 600 }, rules: { road: 12, margins: { road: 3, side: 2.5, rear: 3 } } };
+  const res = checkBuilding(flats, ruleSetup(P), { areas: P.areas, heights: { floor: 3 } });
+  const rule = (id) => res.groups.flatMap((g) => g.rules).find((r) => r.id === id);
+  check('checks: flats are Dwelling-3; 4 storeys × 3 m = 12 m, within 30 m on a 12 m road', res.facts.use === 'DW3' && res.facts.height === 12 && rule('height-road').status === 'pass', `${res.facts.use} ${res.facts.height}`);
+  check('checks: side margin 2.5 m < 3.0 m fails; the road-side 3.0 m passes', rule('margin-side').status === 'fail' && rule('margin-road').status === 'pass', `${rule('margin-side').status} ${rule('margin-road').status}`);
+  check('checks: parking ≥ 20% of FSI area for flats (the stilt floor has it); a lift above 10 m (it has one)', rule('parking').status === 'pass' && rule('lift').status === 'pass' && /20%/.test(rule('parking').need), rule('parking').value);
+  check('checks: stair 1.5 m ≥ 1.2 m for flats up to 12 m; the stilt 3.0 m is within 3.0–3.5 m', rule('stair-width').status === 'pass' && rule('hollow-plinth').status === 'pass', rule('stair-width').value);
+  const small = rule('nbc-habitable').items.filter((i) => i.status === 'warn');
+  check('NBC room sizes: the bedroom the planted toilet squeezed (L3) is the one that\'s too small', small.length === 1 && flats.floors[small[0].k].level === 3 && rule('nbc-habitable').status === 'warn', small.map((i) => `${i.name} ${i.value}`).join());
+  check('checks: dining rooms with no window of their own are flagged (13.4.1(1)), as a warning — fans are allowed', rule('vent-open').status === 'warn' && rule('vent-open').items.filter((i) => i.status === 'warn').every((i) => /dining|bed/i.test(i.name)), rule('vent-open').value);
+  const hot = checkBuilding(flats, ruleSetup({ ...P, rules: { ...P.rules, height: 26 } }), { areas: P.areas, heights: { floor: 2.8 } });
+  const hr = (id) => hot.groups.flatMap((g) => g.rules).find((r) => r.id === id);
+  check('checks: at 26 m, two lifts and a 2.0 m stair are needed; 2.8 m storeys are below 2.9 m', hr('lift').status === 'fail' && /2 lifts/.test(hr('lift').need) && hr('stair-width').status === 'fail' && hr('storey-height').status === 'fail' && hr('height-road').status === 'pass', `${hr('lift').need} · ${hr('stair-width').need}`);
+  const need = checkBuilding(flats, ruleSetup({ areas: { building: 'apartments' } }), { areas: {}, heights: {} });
+  const nr = (id) => need.groups.flatMap((g) => g.rules).find((r) => r.id === id);
+  check('checks: without the road, plot and margins those rules ask for them instead of guessing', ['height-road', 'margin-road', 'margin-side', 'fsi'].every((id) => nr(id).status === 'need'), ['height-road', 'margin-road', 'margin-side', 'fsi'].map((id) => nr(id).status).join());
+  const lines = checksCSV(res, { project: 'Riverside', rev: 'Rev A' }).split('\r\n');
+  check('checks CSV: a row per rule with its clause, and the spaces that need a look', lines.some((l) => /"CGDCR III 13.1.13/.test(l)) && lines.some((l) => /"Habitable room size","Bed Room"/.test(l)), lines.length);
+
+  // a house: the casa sheet
+  const house = pack(analyse(casaSheet()));
+  const hres = checkBuilding(house, ruleSetup({ areas: { building: 'house', plot: 250 }, rules: { road: 9, cars: 1 } }), { areas: { plot: 250 }, heights: {} });
+  const h = (id) => hres.groups.flatMap((g) => g.rules).find((r) => r.id === id);
+  check('house: Dwelling-1 — 1.0 m stair passes, no lift or entrance rule, one car for its plinth', hres.facts.use === 'DW1' && h('stair-width').status === 'pass' && h('lift').status === 'na' && h('entrance').status === 'na' && h('parking').status === 'pass', `${h('stair-width').value} · ${h('parking').need}`);
+}
+
 // ------------------------------------------------------------------ projects: revisions and issue history
 {
   const { newProject, newRevision, nextLabel, storeys, reconcile, attachOrAdd, setStatus, summarize } = await import(base + 'shell/model.js');

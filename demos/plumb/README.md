@@ -20,8 +20,8 @@ office shorthand common in India: `GF`, `FF`, `SF`, `TF`, `B1`, `4F`, also after
 name, e.g. `Riverside GF.dwg`).
 
 Set up for **India, starting with Ahmedabad** (AMC/AUDA, Gujarat CGDCR 2017): mm or ft-in, m² and
-ft² side by side, Indian room abbreviations, and an area statement with RERA carpet area and FSI.
-Bye-law checks are the next phase.
+ft² side by side, Indian room abbreviations, an area statement with RERA carpet area and FSI, and
+bye-law checks against CGDCR 2017 Parts II and III.
 
 ## Pages
 
@@ -32,6 +32,7 @@ Bye-law checks are the next phase.
 | `app/import.html` | Import wizard: files → floors (the whole sheet with a box round each plan: drag to add, move, resize or delete; order, rename, leave out, typical ×N) → units (with evidence) → layer roles (with *Ask AI*) → review. Also takes a new revision (`?project=`) |
 | `app/project.html` | Project overview: open issues, the stack, most urgent, what changed since the last revision, hand-back files, floors, revisions, activity |
 | `app/areas.html` | Area statement: built-up, FSI area (CGDCR 2017 §6.3.2 exemptions with their clauses), RERA carpet area (§2(k)), balconies, open terraces, common, shafts, walls, floor by floor; plot area, zone (Table 6.5, D1 AUDA) and FSI consumed; every space re-assignable; CSV and print |
+| `app/rules.html` | Bye-law checks: CGDCR 2017 Part II (height by road, margins, FSI, parking, basement use) and Part III (storey, basement and stilt heights, stair width and tread, lifts, ventilation of rooms, baths and stairs, WC size, entrance door), NBC 2016 room sizes as good practice; road, plot and margins asked for; each rule with its clause and a plan of the rooms it's about; CSV and print |
 | `app/issues.html` | Every issue across revisions: filters, a snapshot, status (open, in review, resolved, accepted), who it's for, notes, history, CSV/DXF, RFIs |
 | `app/workspace.html` | Plan overlay, Stack and 3D model with collapsible panels; the model has a levels strip, view presets, one dock, section cut and issue pins |
 | `app/settings.html` | Region, units, office storey heights, learnt layer standards and room names, AI key, theme, data on this device |
@@ -96,6 +97,7 @@ app/*.html        the app's pages (css/base.css shared tokens + components, css/
 js/pages/         one script per page: library, import, project, issues, settings, help, landing
 js/workspace.js   plan / stack / 3D model workspace
 js/areas.js       area statements: RERA carpet area and FSI under CGDCR 2017 (pure)
+js/rules.js       bye-law checks: CGDCR 2017 Parts II and III, NBC 2016 room sizes (pure)
 js/shell/         store.js (IndexedDB), model.js (projects, revisions, issue history; pure), sheet.js (marking floors on the sheet),
                   engine.js (worker + caching), projects.js, thumbs.js, ui.js, icons.js
 js/dxf.js         DXF reader (R12–2018: LINE/(LW)POLYLINE+bulges/ARC/CIRCLE/ELLIPSE/SPLINE/TEXT/MTEXT/
@@ -136,7 +138,9 @@ mirrored sliding-door blocks, glazing and treads on code-named layers) must read
 the bathroom over the dining room, and, with its plans only 20 cm apart, read as one floor until two
 boxes are marked by hand; area statements (Table 6.5 FSI values, walls split into partitions and
 external walls, carpet area, exemptions with their clauses, apartments' stilt floors and common
-areas, re-assigned spaces, CSV); plus markup coordinates, level parsing
+areas, re-assigned spaces, CSV); bye-law checks (the CGDCR tables, room widths, openings and what
+they face, stair flights from their treads, margins, parking, lifts and heights failing when they
+should, rules asking for what the plans can't show); plus markup coordinates, level parsing
 (including `GF`/`FF`/`SF`/`TF` file names) and text anchoring.
 
 Plumb is a coordination aid, not a structural or services design check.

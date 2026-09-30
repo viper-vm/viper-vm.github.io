@@ -69,7 +69,7 @@ const SECTIONS = [
     <p>The markups DXF rings every open issue on both floors, in the drawing’s own units, on <code>PLUMB-*</code> layers. XREF or insert it at 0,0 over the drawing.</p>`],
   ['amd', 'Ahmedabad and CGDCR 2017', `
     <p>Plumb is set up for Ahmedabad first. Projects in the Ahmedabad Municipal Corporation and AUDA areas follow Gujarat’s Comprehensive General Development Control Regulations, CGDCR 2017.</p>
-    <p><b>Area statement</b> (a project’s <b>Areas</b> page): RERA carpet area and FSI worked out from the plans, floor by floor. Coming next: bye-law checks (room sizes, ventilation, stair and corridor widths, lifts, parking) with the clause shown beside every result. Every threshold will be visible and editable.</p>`],
+    <p><b>Area statement</b> (a project’s <b>Areas</b> page): RERA carpet area and FSI worked out from the plans, floor by floor. <b>Bye-law checks</b> (the <b>Bye-laws</b> page): the plans against CGDCR 2017 Parts II and III, with the clause beside every result.</p>`],
   ['areas', 'Area statements', `
     <p>A project’s <b>Areas</b> page works out, from the drawings: built-up area, the area counted towards FSI, RERA carpet area, balconies and verandahs, open terraces, common areas, shafts and walls, floor by floor and in total. Add the plot area and zone to see the FSI consumed against the base and maximum FSI.</p>
     <h3>RERA carpet area</h3>
@@ -79,6 +79,19 @@ const SECTIONS = [
     <h3>What you decide</h3>
     <p>Plumb guesses what each space is from its name. Unnamed spaces wait for you (a terrace? a gap?), and anything can be re-assigned in the room list: room, balcony or verandah, open terrace, common area, staircase, lift, shaft, parking, electric room, pergola, or not counted. Choose <b>Bungalow</b> for one unit (its stair is part of the carpet area) or <b>Apartments</b> (stairs, lifts and lobbies are common).</p>
     <p class="note">Not yet: landing allowances beyond the stair and lift as drawn, lofts, mezzanines, and carpet area flat by flat. Check the zone and FSI against the TP scheme and the latest amendments before submitting.</p>`],
+  ['rules', 'Bye-law checks', `
+    <p>A project’s <b>Bye-laws</b> page checks the drawings against CGDCR 2017 as it applies in Ahmedabad (category D1, AUDA). Each rule shows its clause, what it needs, what Plumb measured and, when you open it, a small plan of each floor with the rooms it’s about. A result is <b>Fails</b>, <b>Check</b> (short of it where the regulation allows a mechanical alternative, or good practice only), <b>Needs information</b>, <b>Passes</b> or <b>Doesn’t apply</b>.</p>
+    <h3>What’s checked</h3>
+    <ul>
+      <li><b>Part II, planning:</b> height against the road width (Table 6.23), road-side margin (6.24), side and rear margins (6.26), FSI within the maximum (6.5), parking (6.44: cars for a house by plinth area; a share of the FSI area for flats and other uses), no habitable rooms in a basement (6.8.4).</li>
+      <li><b>Part III, performance:</b> storey heights (2.9 m for habitable floors), basement and hollow-plinth heights, staircase flight width and tread (Table 13.2), lifts above 10 m and 25 m (13.12), openings of habitable rooms (⅐ of the floor, and onto open space), bath and WC ventilation (0.25 m² to open-to-sky space), stair windows for houses, WC size (0.9 m²), the 900 mm entrance door.</li>
+      <li><b>NBC 2016 room sizes</b>, shown as warnings: CGDCR sets no minimum room sizes, so these are good practice (habitable rooms 9.5 / 7.5 m², kitchens 5 m², baths 1.8 m², WCs 1.1 m²). Hide them if you don’t want them.</li>
+    </ul>
+    <h3>What it needs from you</h3>
+    <p>Plans don’t show the site: add the road width, the plot area (shared with the area statement), the margins on your site plan, and parking that’s outside the building. Building height is worked out from the storeys and the model’s storey heights; enter the real height to the terrace to be exact.</p>
+    <h3>How it measures</h3>
+    <p>Room widths are the widest circle that fits, wall face to wall face. Openings are the gaps in walls: a door where there’s a swing, a window where lines cross the gap, otherwise an opening; the spaces on both sides tell what it opens onto. Windows are taken from sill to head height, as set in the model. Stair flights are measured from their tread lines, so the stair must be on a stair layer. Open-plan rooms (a kitchen, dining and living with no walls between) are checked as one room.</p>
+    <p class="note">A checking aid, not an approval. Not yet: fire safety (Fire Prevention and Life Safety Measures Regulations 2016), risers (they need a section), lofts and mezzanines, OTS and courtyard sizes, common plot, margins between buildings. Check against the current amendments before you submit.</p>`],
   ['privacy', 'Privacy', `<p>Your drawings are read on your computer and stored only in this browser. Nothing is uploaded. The optional AI assist sends layer names, room labels and findings (never the drawing) to the AI provider with your own key.</p>`],
   ['keys', 'Keyboard shortcuts', `
     <ul>

@@ -82,6 +82,7 @@ function render() {
       <div class="acts">
         <a class="btn" href="import.html?project=${pid}">${icon('i-upload')}Upload revision</a>
         <a class="btn" href="areas.html?id=${pid}">${icon('i-area')}Area statement</a>
+        <a class="btn" href="rules.html?id=${pid}">${icon('i-rule')}Bye-law checks</a>
         <a class="btn" href="workspace.html?id=${pid}#plan">${icon('i-2d')}Plan</a>
         <a class="btn primary" href="workspace.html?id=${pid}#model">${icon('i-home')}3D model</a>
       </div>

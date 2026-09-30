@@ -159,6 +159,21 @@ export function areaStatement(result, setup = {}) {
   return { building, floors, totals, fsi };
 }
 
+/** Flats have a kitchen each: two or more on a floor is a building of flats. */
+export function guessBuilding(result) {
+  const most = Math.max(0, ...result.an.map((a) => a.rooms.filter((r) => r.type === 'kitchen').length));
+  return most >= 2 ? 'apartments' : 'house';
+}
+/** The project's area setup (plot, zone, FSI, room uses), created with the zone's defaults on first use. */
+export function areaSetup(P, result) {
+  if (!P.areas) {
+    const z = zoneOf('R1');
+    P.areas = { building: guessBuilding(result), plot: null, zone: z.code, base: z.base, chargeable: z.chargeable, max: z.max, uses: {} };
+  }
+  P.areas.uses ||= {};
+  return P.areas;
+}
+
 function num(v, d) { const n = typeof v === 'string' ? parseFloat(v) : v; return Number.isFinite(n) ? n : d; }
 
 /** The statement as CSV (m², two decimals), floor by floor, then the rooms. */

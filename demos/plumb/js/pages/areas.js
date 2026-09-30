@@ -7,7 +7,7 @@ import { openProject } from '../shell/projects.js';
 import { summarize } from '../shell/model.js';
 import { levelTag } from '../style.js';
 import { download } from '../export.js';
-import { ZONES, zoneOf, BUILDINGS, USES, USE_ORDER, areaStatement, statementCSV } from '../areas.js';
+import { ZONES, zoneOf, BUILDINGS, USES, USE_ORDER, areaStatement, statementCSV, areaSetup } from '../areas.js';
 
 injectIcons();
 const railEl = $('#rail');
@@ -20,19 +20,7 @@ const m2 = (v) => (Number.isFinite(v) ? v.toLocaleString('en-IN', { minimumFract
 const ft2 = (v) => (Number.isFinite(v) ? Math.round(v * FT2).toLocaleString('en-IN') : '—');
 const both = (v) => `${m2(v)} m²<span class="ft"> · ${ft2(v)} ft²</span>`;
 
-/** Flats have a kitchen each: two or more on a floor is a building of flats. */
-function guessBuilding(result) {
-  const most = Math.max(0, ...result.an.map((a) => a.rooms.filter((r) => r.type === 'kitchen').length));
-  return most >= 2 ? 'apartments' : 'house';
-}
-function setup() {
-  if (!P.areas) {
-    const z = zoneOf('R1');
-    P.areas = { building: guessBuilding(R), plot: null, zone: z.code, base: z.base, chargeable: z.chargeable, max: z.max, uses: {} };
-  }
-  P.areas.uses ||= {};
-  return P.areas;
-}
+const setup = () => areaSetup(P, R);
 let saveTimer = 0;
 function save(now = false) {
   clearTimeout(saveTimer);
@@ -146,7 +134,12 @@ const fsiText = (v, rule) => (v === 'count' ? 'Counted' : v === 'exempt' ? `Not 
 page.addEventListener('click', (e) => {
   const t = e.target;
   const sb = t.closest('[data-set]');
-  if (sb) { setup()[sb.dataset.set] = sb.dataset.v; save(true); render(); return; }
+  if (sb) {
+    setup()[sb.dataset.set] = sb.dataset.v;
+    // the bye-law checks' building use follows (a bungalow and a row house are both a house)
+    if (sb.dataset.set === 'building' && P.rules && P.rules.use && ({ DW1: 'house', DW2: 'house', DW3: 'apartments', M: 'commercial' })[P.rules.use] !== sb.dataset.v) delete P.rules.use;
+    save(true); render(); return;
+  }
   if (t.closest('[data-zonefsi]')) { const S = setup(), z = zoneOf(S.zone); Object.assign(S, { base: z.base, chargeable: z.chargeable, max: z.max }); save(true); render(); return; }
   if (t.closest('[data-ignoreall]')) {
     const S = setup(), st = areaStatement(R, S);
