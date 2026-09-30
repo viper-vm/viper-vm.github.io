@@ -5,7 +5,8 @@
 // walls, service shafts, exclusive balcony or verandah area and exclusive open terrace area, but
 // including the internal partition walls. Balconies and open terraces are stated separately.
 // CGDCR 2017 Part II §6.3.2 lists the areas not counted towards FSI (staircases and lifts with their
-// walls and landings, lofts up to 30%, parking…); balconies are not on that list, so they count.
+// walls and landings, lofts up to 30%, parking…); balconies are not on that list, so they count, and
+// Part I 2.70 counts every mezzanine in FSI.
 
 /** CGDCR 2017 Part II, Table 6.5: use control and F.S.I., category D1 AUDA. Chargeable FSI is at 40% of the jantri rate. */
 export const ZONES = [
@@ -238,6 +239,22 @@ export function landingsOf(an, rooms, building) {
   return { allowance, space, exempt: Math.min(space, allowance), cores: out, spaces: [...spaces] };
 }
 
+/** A floor that's a mezzanine: titled so, or at a level between two floors (not a lower ground). */
+export const isMezzFloor = (f) => /\bmezz/i.test(f.title || '') || (f.level > 0 && f.level % 1 !== 0);
+
+/**
+ * Mezzanines over rooms: marked in the drawing (“MEZZANINE ABOVE”) or added by you, with the area you
+ * give. CGDCR Part I 2.70: a mezzanine's area is counted in FSI, all of it; Part III 13.1.8: no more
+ * than 30% of the room it's in. Usable floor, so inside a unit it's carpet area too.
+ */
+function mezzOf(an, rooms, set = {}) {
+  return rooms.filter((r) => (set[r.key] === false ? false : set[r.key] != null || !!an.rooms[r.i].mezz)).map((r) => {
+    const v = set[r.key];
+    const area = v && Number.isFinite(+v.area) && +v.area > 0 ? +v.area : null;
+    return { i: r.i, key: r.key, name: r.name, roomArea: r.area, area, limit: 0.3 * r.area, over: area ? Math.max(0, area - 0.3 * r.area) : 0, detected: !!an.rooms[r.i].mezz, carpet: r.rera === 'carpet' };
+  });
+}
+
 /** Lofts: marked in the drawing (“LOFT ABOVE”) or added by you, with the area you give; up to 30% of the room below is free (§6.3.2(5)). */
 function loftsOf(an, rooms, set = {}) {
   return rooms.filter((r) => (set[r.key] === false ? false : set[r.key] != null || !!an.rooms[r.i].loft)).map((r) => {
@@ -289,32 +306,46 @@ export function areaStatement(result, setup = {}) {
     const landings = landingsOf(an, rooms, building);
     const lofts = loftsOf(an, rooms, setup.lofts || {});
     const loftArea = lofts.reduce((a, l) => a + (l.area || 0), 0);
+    // a mezzanine plan is a floor of its own (already measured); one marked over a room is added here
+    const mezzFloor = isMezzFloor(f);
+    const mezz = mezzFloor ? [] : mezzOf(an, rooms, setup.mezz || {});
+    const mezzArea = mezz.reduce((a, m) => a + (m.area || 0), 0);
+    const mezzCarpet = mezz.reduce((a, m) => a + (m.carpet && m.area ? m.area : 0), 0);
+    for (const m of mezz) if (m.carpet && m.area) { const fl = flats.find((q) => q.rooms.includes(m.i)); if (fl) { fl.mezz = (fl.mezz || 0) + m.area; fl.carpet += m.area; } }
     const exempt = [
       ...['stair', 'lift'].map((u) => ({ use: u, label: `${USES[u].label}, with its walls`, short: u === 'stair' ? 'stairs' : 'lifts', rule: USES[u].rule, area: sum((r) => r.use === u) + wallsOf(u), walls: wallsOf(u) })),
       { use: 'landing', label: 'Stair and lift landings', short: 'landings', rule: 'CGDCR 6.3.2(6), (7)', area: landings.exempt },
       { use: 'loft', label: 'Lofts, up to 30% of their room', short: 'lofts', rule: 'CGDCR 6.3.2(5)', area: lofts.reduce((a, l) => a + l.free, 0) },
       ...['parking', 'electric'].map((u) => ({ use: u, label: USES[u].label, short: u === 'parking' ? 'parking' : 'electric rooms', rule: USES[u].rule, area: sum((r) => r.use === u) })),
     ].filter((e) => e.area > 0.005);
-    const builtUp = sum((r) => r.fsi === 'count' || r.fsi === 'exempt') + walls.total + loftArea;
+    const builtUp = sum((r) => r.fsi === 'count' || r.fsi === 'exempt') + walls.total + loftArea + mezzArea;
     const exemptArea = exempt.reduce((a, e) => a + e.area, 0);
     return {
       k, title: f.title, level: f.level, repeat, rooms, flats,
-      carpet: sum((r) => r.rera === 'carpet') + partitions,
+      carpet: sum((r) => r.rera === 'carpet') + partitions + mezzCarpet,
       carpetRooms: sum((r) => r.rera === 'carpet'), partitions,
       balcony: sum((r) => r.rera === 'balcony'),
       terrace: sum((r) => r.rera === 'terrace'),
       common: sum((r) => r.use === 'common' || (building !== 'house' && (r.use === 'stair' || r.use === 'lift'))),
       shafts: sum((r) => r.use === 'shaft'),
       walls: walls.total, outerWalls: walls.total - partitions,
-      builtUp, exempt, exemptArea, fsiArea: builtUp - exemptArea, pergola, landings, lofts, loft: loftArea,
+      builtUp, exempt, exemptArea, fsiArea: builtUp - exemptArea, pergola, landings, lofts, loft: loftArea, mezz, mezzArea, mezzFloor,
       review: rooms.filter((r) => r.use === 'review'),
     };
+  });
+  // a mezzanine plan against the floor it overlooks (the nearest full floor below): 30% at most
+  floors.forEach((f, k) => {
+    if (!f.mezzFloor) return;
+    const below = floors.slice(0, k).reverse().find((g) => !g.mezzFloor);
+    const inside = (g) => g.rooms.reduce((a, r) => a + (r.fsi !== 'none' ? r.area : 0), 0);
+    f.overlooks = below ? { k: below.k, title: below.title, area: inside(below), share: inside(f) / Math.max(1e-9, inside(below)) } : null;
   });
   const total = (key) => floors.reduce((a, f) => a + f[key] * f.repeat, 0);
   const totals = {
     builtUp: total('builtUp'), exemptArea: total('exemptArea'), fsiArea: total('fsiArea'),
     carpet: total('carpet'), balcony: total('balcony'), terrace: total('terrace'), common: total('common'),
     shafts: total('shafts'), walls: total('walls'), pergola: total('pergola'), loft: total('loft'),
+    mezz: total('mezzArea') + floors.reduce((a, f) => a + (f.mezzFloor ? f.builtUp * f.repeat : 0), 0),
     review: floors.reduce((a, f) => a + f.review.reduce((b, r) => b + r.area, 0) * f.repeat, 0),
     flats: floors.reduce((a, f) => a + f.flats.length * f.repeat, 0),
   };
@@ -370,6 +401,13 @@ export function statementCSV(st, { project = '', rev = '' } = {}) {
   if (st.floors.some((f) => f.lofts.length)) {
     rows.push([], ['Floor', 'Loft over', 'Room (m²)', 'Loft (m²)', 'Free up to 30% (m²)', 'Counted in FSI (m²)'].map(q));
     for (const f of st.floors) for (const l of f.lofts) rows.push([q(f.title), q(l.name), f2(l.roomArea), f2(l.area), f2(l.allowed), f2(l.excess)]);
+  }
+  if (st.floors.some((f) => f.mezz.length || f.mezzFloor)) {
+    rows.push([], ['Floor', 'Mezzanine', 'Area (m²)', 'Of (m²)', 'Limit 30% (m²)', 'In FSI (m²)'].map(q));
+    for (const f of st.floors) {
+      if (f.mezzFloor) rows.push([q(f.title), q('The whole plan'), f2(f.builtUp), f2(f.overlooks ? f.overlooks.area : null), f2(f.overlooks ? 0.3 * f.overlooks.area : null), f2(f.builtUp)]);
+      for (const m of f.mezz) rows.push([q(f.title), q(`Over ${m.name}`), f2(m.area), f2(m.roomArea), f2(m.limit), f2(m.area)]);
+    }
   }
   if (st.floors.some((f) => f.flats.length)) {
     rows.push([], ['Floor', 'Times', 'Flat', 'Type', 'RERA carpet (m²)', 'Rooms (m²)', 'Internal walls (m²)', 'Balcony / verandah (m²)', 'Open terrace (m²)'].map(q));

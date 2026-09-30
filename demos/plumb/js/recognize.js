@@ -462,7 +462,7 @@ const TYPE_RULES = [
   ['balcony', /(balcony|terrace|deck|sit ?out|veranda|verandah|patio|porch|chajja|projection|terraza|balc[oó]n|p[oó]rtico|阳台|露台)/i],
   ['circulation', /(passage|corridor|lobby|foyer|entrance|entry|hallway|vestibule|landing|gallery|pasillo|vest[ií]bulo|recibidor|acceso|走廊|过道|门厅|玄关)/i],
   ['parking', /(parking|stilt|driveway|garage|car ?port|drive ?way|cochera|estacionamiento|garaje|车库)/i],
-  ['service', /(store|storage|electric|elec|meter|pump|guard|security|driver|servant|dress|wardrobe|closet|linen|walk-?in|laundry|room\b|bodega|lavander[ií]a|vestidor|cuarto|储藏|衣帽|工人房|洗衣)/i],
+  ['service', /(mezz|store|storage|electric|elec|meter|pump|guard|security|driver|servant|dress|wardrobe|closet|linen|walk-?in|laundry|room\b|bodega|lavander[ií]a|vestidor|cuarto|储藏|衣帽|工人房|洗衣)/i],
 ];
 export const ROOM_TYPES = ['toilet', 'kitchen', 'bedroom', 'living', 'circulation', 'balcony', 'stair', 'lift', 'duct', 'service', 'parking', 'unknown'];
 export const WET = new Set(['toilet', 'kitchen']);
@@ -475,7 +475,7 @@ export function roomType(name) {
 }
 
 // stair arrows, door and window notes and tags: on the plan, but not room names
-const NOT_NAME = /^\s*(loft( above| over| at .*)?|n|north|(sliding|folding|pocket)?\s*doors?|windows?|opening|ramp( up| down| dn)?|[dwv]\s?-?\d{1,2}[a-z]?|level|nivel|n\.?p\.?t\.?.*|[+-]?\d+([.,]\d+)?\s*(\(.*\))?|.*\bheight\b.*|\p{L}{1,3}#)\s*$/iu;
+const NOT_NAME = /^\s*(loft( above| over| at .*)?|mezz(anine|\.)?( floor)? (above|over)|n|north|(sliding|folding|pocket)?\s*doors?|windows?|opening|ramp( up| down| dn)?|[dwv]\s?-?\d{1,2}[a-z]?|level|nivel|n\.?p\.?t\.?.*|[+-]?\d+([.,]\d+)?\s*(\(.*\))?|.*\bheight\b.*|\p{L}{1,3}#)\s*$/iu;
 // room numbers, column and door tags: "C14", "110E", "0110-E0", "D-2", "W1A"
 const CODE = /^\s*(?=[^\s]*\d)[A-Z0-9#]{1,4}([-./][A-Z0-9#]{1,6}){0,2}\s*$|^\s*(?=[^\s]*\d)[A-Z0-9]{5,12}\s*$/i;
 // "UP" / "DN" still mark out the stair's own zone in an open plan
@@ -693,6 +693,7 @@ export function analyseFloor(dx, roles, box, opts = {}) {
     return {
       idx: v, region: d.region, name: tidyName(name) || (type === 'unknown' ? 'Unnamed space' : cap(type)), label: d.nameText || '', type, area, cellArea: cnt[v] * res * res, sizeText, pattern,
       loft: d.texts.some((t) => /\bloft\b/i.test(t.text)) || undefined, // “LOFT ABOVE” written in the room
+      mezz: d.texts.some((t) => /\bmezz(anine|\.)?\b/i.test(t.text)) || undefined, // “MEZZANINE ABOVE”
       bbox: rb[v], cx: g.x0 + (sx[v] / Math.max(1, cnt[v]) + 0.5) * res, cy: g.y0 + (sy[v] / Math.max(1, cnt[v]) + 0.5) * res,
     };
   });

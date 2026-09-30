@@ -105,6 +105,8 @@ function render() {
 
     ${loftsSection(st)}
 
+    ${mezzSection(st)}
+
     ${F.plot > 0 ? `<h2 class="sec">FSI</h2>
     <div class="tile ar-fsisum">
       <div><span>Plot area</span><b class="num">${m2(F.plot)} m²</b></div>
@@ -127,10 +129,11 @@ function render() {
     <h2 class="sec">How it’s worked out</h2>
     <div class="tile ar-notes">
       <p><b>RERA carpet area</b> (Real Estate Act 2016, §2(k)): the net usable floor area, without the external walls, service shafts and the exclusive balcony, verandah and open terrace areas (stated separately), but with the internal partition walls.</p>
-      <p><b>FSI</b> (CGDCR 2017 Part II): built-up area on every floor, lofts included, divided by the plot area. Not counted, under §6.3.2: staircases with their intermediate landings and walls, and the landing at floor level up to 2x by x (6); lifts and lift wells with their walls, and the landing up to 2x by 2x (7, 8); lofts up to 30% of their room (5); parking basements and hollow plinths (3, 4); electric rooms (10); pergolas (13). Balconies aren’t on that list, so they count.</p>
+      <p><b>FSI</b> (CGDCR 2017 Part II): built-up area on every floor, lofts and mezzanines included, divided by the plot area. Not counted, under §6.3.2: staircases with their intermediate landings and walls, and the landing at floor level up to 2x by x (6); lifts and lift wells with their walls, and the landing up to 2x by 2x (7, 8); lofts up to 30% of their room (5); parking basements and hollow plinths (3, 4); electric rooms (10); pergolas (13). Balconies aren’t on that list, so they count.</p>
       <p><b>From the drawing:</b> room areas are net, inside the walls. Every wall is split between the spaces on its two sides; a wall with carpet on both sides is a partition, and the rest are external. Stairs named only by their UP/DOWN arrow are measured to their flight.</p>
       ${st.building === 'apartments' ? `<p><b>Flats:</b> every flat has a kitchen, so each space goes with the kitchen it reaches through the fewest doors and openings, never through a lobby, stair or lift. A flat’s carpet area is its rooms plus the walls between two of its own rooms; a wall to the next flat or to the lobby isn’t an internal partition. A flat is named from a label like “FLAT 101” or “A-302” in it, else numbered by floor, left to right (101, 102…). Move a room to another flat in the room list if a door wasn’t found.</p>` : ''}
-      <p><b>Not yet:</b> mezzanines, and loft areas measured from the drawing (enter them for now). Check the zone and FSI against your TP scheme and the current amendments before you submit.</p>
+      <p><b>Mezzanines</b> count towards FSI in full (Part I 2.70) and, inside a unit, towards its carpet area; a mezzanine drawn as a plan of its own is measured like any floor.</p>
+      <p><b>Not yet:</b> loft and mezzanine areas measured from the drawing (enter them for now). Check the zone and FSI against your TP scheme and the current amendments before you submit.</p>
     </div>`;
 }
 
@@ -166,6 +169,27 @@ function loftsSection(st) {
     ${S.lofts && Object.values(S.lofts).some((v) => v === false) ? `<p class="hint" style="margin:6px 2px 0"><button class="btn link small" data-loftsback>Bring back the lofts you removed</button></p>` : ''}`;
 }
 
+/** Mezzanines: every square metre counts towards FSI (Part I 2.70); 30% of the space they're in at most (Part III 13.1.8). */
+function mezzSection(st) {
+  const plans = st.floors.filter((f) => f.mezzFloor);
+  const mz = st.floors.flatMap((f) => f.mezz.map((m) => ({ f, m })));
+  const S = setup();
+  const candidates = st.floors.filter((f) => !f.mezzFloor).flatMap((f) => f.rooms.filter((r) => (r.fsi === 'count' || r.fsi === 'exempt') && r.use !== 'stair' && r.use !== 'lift' && !f.mezz.some((m) => m.i === r.i)).map((r) => ({ f, r })));
+  const pct = (v) => `${Math.round(v * 100)}%`;
+  return `<h2 class="sec">Mezzanines</h2>
+    <p class="hint" style="margin:-4px 2px 10px">A mezzanine’s area counts towards FSI, all of it (CGDCR Part I 2.70), and inside a flat or unit it’s carpet area too. It may cover up to 30% of the space it’s in, with 2.1 m clear above and below (Part III 13.1.8). A plan titled “MEZZANINE” is read as a floor of its own; one written in a room (“MEZZANINE ABOVE”) is listed here for its area, or add one.</p>
+    ${plans.length || mz.length ? `<div class="tblw"><table class="t ar-t ar-lofts"><thead><tr><th>Floor</th><th>Mezzanine</th><th class="n">Area m²</th><th class="n">Of the space</th><th class="n">Share</th><th class="n">In FSI</th><th></th></tr></thead><tbody>
+      ${plans.map((f) => `<tr><td><span class="ft-tag">${esc(levelTag(R.floors[f.k]))}</span></td><td>${esc(cap(f.title))} <span class="muted">· a plan of its own${f.overlooks ? `, over the ${esc(f.overlooks.title.toLowerCase())}` : ''}</span></td>
+        <td class="n">${m2(f.builtUp)}</td><td class="n">${f.overlooks ? m2(f.overlooks.area) : '—'}</td><td class="n ${f.overlooks && f.overlooks.share > 0.3 + 1e-6 ? 'bad' : ''}">${f.overlooks ? pct(f.overlooks.share) : '—'}</td><td class="n">${m2(f.builtUp)}</td><td></td></tr>`).join('')}
+      ${mz.map(({ f, m }) => `<tr class="${m.area == null ? 'rv' : ''}"><td><span class="ft-tag">${esc(levelTag(R.floors[f.k]))}</span></td><td>Over ${esc(m.name)}${m.detected ? ' <span class="muted">· in the drawing</span>' : ''}${m.carpet ? ' <span class="muted">· carpet</span>' : ''}</td>
+        <td class="n"><input class="inp ar-loft" type="number" min="0" step="0.01" inputmode="decimal" data-mezz="${esc(m.key)}" value="${m.area ?? ''}" placeholder="area" aria-label="Mezzanine area over ${esc(m.name)}" /></td>
+        <td class="n">${m2(m.roomArea)}</td><td class="n ${m.over > 0.005 ? 'bad' : ''}">${m.area == null ? '—' : pct(m.area / m.roomArea)}</td><td class="n">${m.area == null ? '<span class="muted">—</span>' : m2(m.area)}</td>
+        <td><button class="btn link small" data-nomezz="${esc(m.key)}">Remove</button></td></tr>`).join('')}
+    </tbody></table></div>` : ''}
+    ${candidates.length ? `<div class="ar-addloft"><select class="inp" id="a-addmezz" aria-label="Room to add a mezzanine in"><option value="">Add a mezzanine in…</option>${candidates.map(({ f, r }) => `<option value="${esc(r.key)}">${esc(levelTag(R.floors[f.k]))} · ${esc(r.name)} (${m2(r.area)} m²)</option>`).join('')}</select></div>` : ''}
+    ${S.mezz && Object.values(S.mezz).some((v) => v === false) ? `<p class="hint" style="margin:6px 2px 0"><button class="btn link small" data-mezzback>Bring back the mezzanines you removed</button></p>` : ''}`;
+}
+
 /** Carpet area flat by flat (buildings of flats only). */
 function flatsSection(st) {
   if (st.building !== 'apartments') return '';
@@ -185,7 +209,7 @@ function flatsSection(st) {
           <div class="ar-sp">${esc(fl.rooms.map((i) => f.rooms[i]).filter((r) => r.use !== 'review').map((r) => r.name).join(', '))}${fl.pending ? ` <span class="rv-n">+ ${fl.pending} to decide</span>` : ''}</div></td>
         <td class="nowrap">${esc(fl.kind || '—')}</td>
         <td class="n"><b>${m2(fl.carpet)}</b><span class="ft"> · ${ft2(fl.carpet)} ft²</span></td>
-        <td class="n muted">${m2(fl.carpetRooms)} + ${m2(fl.partitions)}</td>
+        <td class="n muted">${m2(fl.carpetRooms)} + ${m2(fl.partitions)}${fl.mezz ? ` + ${m2(fl.mezz)} mezz.` : ''}</td>
         <td class="n">${m2(fl.balcony)}</td><td class="n">${m2(fl.terrace)}</td></tr>`).join('')).join('')}
     </tbody></table></div>`;
 }
@@ -213,6 +237,9 @@ page.addEventListener('click', (e) => {
   }
   const nl = t.closest('[data-noloft]');
   if (nl) { const S = setup(); S.lofts ||= {}; S.lofts[nl.dataset.noloft] = false; save(true); render(); return; }
+  const nm = t.closest('[data-nomezz]');
+  if (nm) { const S = setup(); S.mezz ||= {}; S.mezz[nm.dataset.nomezz] = false; save(true); render(); return; }
+  if (t.closest('[data-mezzback]')) { const S = setup(); for (const [k, v] of Object.entries(S.mezz || {})) if (v === false) delete S.mezz[k]; save(true); render(); return; }
   if (t.closest('[data-loftsback]')) { const S = setup(); for (const [k, v] of Object.entries(S.lofts || {})) if (v === false) delete S.lofts[k]; save(true); render(); return; }
   if (t.closest('[data-csv]')) {
     const st = areaStatement(R, setup());
@@ -242,6 +269,21 @@ page.addEventListener('change', (e) => {
     const v = parseFloat(t.value);
     S.lofts[t.dataset.loft] = { area: Number.isFinite(v) && v > 0 ? v : null };
     save(true); render();
+    return;
+  }
+  if (t.dataset.mezz) {
+    S.mezz ||= {};
+    const v = parseFloat(t.value);
+    S.mezz[t.dataset.mezz] = { area: Number.isFinite(v) && v > 0 ? v : null };
+    save(true); render();
+    return;
+  }
+  if (t.id === 'a-addmezz' && t.value) {
+    S.mezz ||= {};
+    S.mezz[t.value] = { area: null };
+    save(true); render();
+    const inp = page.querySelector(`[data-mezz="${CSS.escape(t.value)}"]`);
+    if (inp) inp.focus();
     return;
   }
   if (t.id === 'a-addloft' && t.value) {

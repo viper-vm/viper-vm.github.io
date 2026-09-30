@@ -114,7 +114,7 @@ function draw() {
     <div class="tile ar-notes">
       <p><b>From the plans:</b> rooms and their areas, room widths (the widest circle that fits, wall face to wall face), openings (every gap in a wall: a door where there’s a swing, a window where lines cross it, otherwise an opening) and what each opens onto, stair flights (their tread lines: width and going), lifts, parking and the area statement’s FSI.</p>
       <p><b>From the model:</b> storey heights, window sill and head, door height. <b>From you:</b> the road, the plot, the margins, and parking outside the building.</p>
-      <p><b>Not checked yet:</b> fire safety (the Fire Prevention and Life Safety Measures Regulations 2016), risers and loft heights (they need a section), mezzanines, the open space of 13.4.1(1) itself, common plot, OTS sizes, accessibility beyond the entrance door, and margins between buildings.</p>
+      <p><b>Not checked yet:</b> fire safety (the Fire Prevention and Life Safety Measures Regulations 2016), risers, loft and mezzanine heights (they need a section), the open space of 13.4.1(1) itself, common plot, OTS sizes, accessibility beyond the entrance door, and margins between buildings.</p>
       <p>Thresholds are from CGDCR 2017 Part II (Tables 6.23, 6.24, 6.26, 6.44, 6.5) and Part III (13.1.5–13.1.13, 13.4, 13.9, 13.12) as notified by UD&amp;UHD Gujarat. Check them against the current amendments and your TP scheme before you submit.</p>
     </div>`;
 

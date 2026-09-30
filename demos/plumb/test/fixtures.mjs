@@ -192,7 +192,7 @@ export function lakeviewFiles() {
 // saved as "inches", the sliding doors a mirrored block (extrusion 0,0,−1, X scale −1), glazing and
 // a pergola on a generic layer, door swings on "TEXTURA", treads on a code name, "UP"/"DOWN" arrows,
 // "SLIDING DOOR" notes and a room called "COVERED TERRACE". The bathroom upstairs sits over the dining.
-export function casaSheet(gap = 0.6, { elevation = false, mirrorUpper = false, loft = false } = {}) {
+export function casaSheet(gap = 0.6, { elevation = false, mirrorUpper = false, loft = false, mezz = false } = {}) {
   const dx = new ModernDxf(1);
   for (const [n, c] of [['A-WALL', 7], ['muro', 7], ['casa', 1], ['inne_gulv', 3], ['TEXTURA', 4], ['A-SECTMBM', 8], ['A-FLORSTM', 6], ['CASCO', 2]]) dx.layer(n, c);
   const T = (x, y, text, l = 'CASCO') => dx.add(TEXT(x, y, 0.11, text, l));
@@ -234,6 +234,7 @@ export function casaSheet(gap = 0.6, { elevation = false, mirrorUpper = false, l
   boxm(ox + 0.15, 4.4, ox + 6.2, 4.5, 'A-WALL');                                     // bedroom | bathroom, hall
   T(X(ox + 4.9), 6, 'BATHROOM'); T(X(ox + 3), 2.3, 'BEDROOM'); T(X(ox + 7.6), 6, 'MASTER BEDROOM');
   if (loft) T(X(ox + 3), 1.2, 'LOFT ABOVE'); // written in the bedroom, over the wardrobe
+  if (mezz) T(X(ox + 7.6), 3, 'MEZZANINE ABOVE'); // in the master bedroom
   for (const [cx, cy, a0] of [[ox + 3.6, 4.5, 0], [ox + 6.3, 9, 90], [ox + 1, 4.5, 0], [ox + 6.2, 2, 90]]) dx.add(mirrorUpper ? ARC(X(cx), cy, 0.8, 90 - a0, 180 - a0, 'TEXTURA') : ARC(cx, cy, 0.8, a0, a0 + 90, 'TEXTURA'));
   // an elevation beside the plans (walls in outline, windows, a roof line, its title): not a floor
   if (elevation) {

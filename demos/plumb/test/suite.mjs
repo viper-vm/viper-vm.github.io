@@ -241,6 +241,23 @@ function toBinaryDXF(text) {
   const loftRule = (a) => cb(flatsR, rs({ areas: { building: 'apartments' } }), { areas: { building: 'apartments', plot: 600, lofts: { [bed.key]: a } }, heights: {} }).groups.flatMap((g) => g.rules).find((r) => r.id === 'loft').status;
   check('bye-laws: a loft over 30% of its room fails 13.1.9; a loft marked without an area asks for it', loftRule({ area: 0.5 * bed.area }) === 'fail' && loftRule({ area: 0.25 * bed.area }) === 'pass' && loftRule({ area: null }) === 'need', [loftRule({ area: 0.5 * bed.area }), loftRule({ area: null })].join());
 
+  // mezzanines (Part I 2.70, Part III 13.1.8): counted in FSI in full, carpet inside a flat, 30% at most
+  const liv = typ.rooms.find((r) => r.type === 'living' && r.flat);
+  const sampleR = pack(analyse(readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8')));
+  const withMezz = areaStatement(sampleR, { building: 'apartments', plot: 600, mezz: { [liv.key]: { area: 5 } } }).floors[1];
+  const flatM = withMezz.flats.find((q) => q.rooms.includes(liv.i)), flat0 = typ.flats.find((q) => q.rooms.includes(liv.i));
+  check('mezzanines: 5 m² over a living room adds 5 m² to built-up, FSI area, the floor\'s carpet and its flat\'s', near(withMezz.builtUp - typ.builtUp, 5, 1e-6) && near(withMezz.fsiArea - typ.fsiArea, 5, 1e-6) && near(withMezz.carpet - typ.carpet, 5, 1e-6) && near(flatM.carpet - flat0.carpet, 5, 1e-6) && flatM.mezz === 5, `${(withMezz.fsiArea - typ.fsiArea).toFixed(2)} ${(flatM.carpet - flat0.carpet).toFixed(2)}`);
+  const mezzRule = (a, floor) => cb(sampleR, rs({ areas: { building: 'apartments' } }), { areas: { building: 'apartments', plot: 600, mezz: { [liv.key]: a } }, heights: { floor } }).groups.flatMap((g) => g.rules).find((r) => r.id === 'mezzanine').status;
+  check('bye-laws: a mezzanine needs 2.1 m above and below (a 3 m storey is flagged, 4.5 m passes) and ≤ 30% of its room', mezzRule({ area: 5 }, 3) === 'warn' && mezzRule({ area: 5 }, 4.5) === 'pass' && mezzRule({ area: 0.5 * liv.area }, 4.5) === 'fail' && mezzRule({ area: null }, 4.5) === 'need', [mezzRule({ area: 5 }, 3), mezzRule({ area: 5 }, 4.5), mezzRule({ area: 0.5 * liv.area }, 4.5)].join());
+  const s0 = analyse(readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8'));
+  const asMezz = pack(analyse(readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8'), { floors: s0.floors.map((f, k) => (k === 1 ? { ...f, title: 'MEZZANINE FLOOR PLAN', level: 0.5 } : f)) }));
+  const stM = areaStatement(asMezz, { building: 'apartments', plot: 600 }), mf = stM.floors[1];
+  const factsM = cb(asMezz, rs({ areas: { building: 'apartments' } }), { areas: { building: 'apartments', plot: 600 }, heights: {} });
+  check('a mezzanine drawn as a plan: measured like a floor, set against the floor it overlooks, not a storey of the building\'s height', mf.mezzFloor && mf.overlooks && mf.overlooks.k === 0 && mf.overlooks.share > 0.3 && factsM.facts.storeys === 3 && factsM.groups.flatMap((g) => g.rules).find((r) => r.id === 'mezzanine').status === 'fail', `${mf.overlooks && mf.overlooks.share.toFixed(2)} · ${factsM.facts.storeys} storeys`);
+  const mezzNote = pack(analyse(casaSheet(0.6, { mezz: true })));
+  const master = mezzNote.an[1].rooms.find((r) => /master/i.test(r.name));
+  check('mezzanines: “MEZZANINE ABOVE” in a room marks it and doesn\'t rename it', master && master.mezz && areaStatement(mezzNote, { building: 'house' }).floors[1].mezz.length === 1, master && `${master.name} ${master.mezz}`);
+
   // flat by flat: two 2 BHK flats a floor, each ≈100 m² of carpet; the planted top-floor differences show
   const fl = flats.floors.slice(1).map((f) => f.flats);
   check('flats: two a floor, grouped round their kitchens through their own doors (the lobby between them is common)', fl.every((x) => x.length === 2 && x.every((q) => q.kind === '2 BHK' && q.carpet > 90 && q.carpet < 110)), fl.map((x) => x.map((q) => `${q.name} ${q.kind} ${q.carpet.toFixed(1)}`).join(' / ')).join(' | '));

@@ -4,7 +4,7 @@
 import { getFileBytes, getCache, putCache } from './store.js';
 
 /** Bump when the analysis output changes shape or meaning: old caches are then ignored. */
-export const ENGINE = 'e9';
+export const ENGINE = 'e10';
 
 let worker = null, broken = false, seq = 0;
 function makeWorker() {

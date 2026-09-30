@@ -106,7 +106,7 @@ export function checkBuilding(result, setup, { areas = {}, heights = {} } = {}) 
   // ---- facts: storeys, height, units
   const roomsArea = (F) => F.an.rooms.reduce((a, r) => a + r.area, 0);
   const roofOnly = (F) => F.st.terrace > 0.5 * roomsArea(F);
-  const above = floors.filter((F) => F.level >= 0 && !roofOnly(F));
+  const above = floors.filter((F) => F.level >= 0 && !roofOnly(F) && !F.st.mezzFloor); // a mezzanine isn't a storey
   const storeys = above.reduce((a, F) => a + F.rep, 0);
   const autoHeight = storeys * H.floor;
   const height = setup.height ?? autoHeight;
@@ -327,6 +327,25 @@ export function checkBuilding(result, setup, { areas = {}, heights = {} } = {}) 
       id: 'loft', clause: 'CGDCR III 13.1.9 · II 6.3.2(5)', title: 'Lofts', need: '≤ 30% of the room; ≤ 1.2 m high, 2.1 m clear below',
       status: !items.length ? 'na' : items.some((i) => i.status === 'fail') ? 'fail' : items.some((i) => i.status === 'need') ? 'need' : 'pass',
       value: items.length ? `${items.length} loft${items.length > 1 ? 's' : ''}` : 'No lofts', note: items.length ? 'Heights need the section: check them there. Give loft areas on the Areas page.' : '', link: items.length ? 'areas' : undefined, items,
+    }));
+  }
+  // 13.1.8: mezzanines — no more than 30% of the space they're in, 2.1 m clear above and below
+  {
+    const need = 2 * 2.1 + H.slab;
+    const items = [
+      ...floors.filter((F) => F.st.mezzFloor && F.st.overlooks).map((F) => ({ k: F.k, room: -1, name: `${F.f.title} (the whole plan)`, value: `${Math.round(F.st.overlooks.share * 100)}% of ${F.st.overlooks.title.toLowerCase()}`, status: F.st.overlooks.share <= 0.3 + 1e-6 ? 'pass' : 'fail' })),
+      ...floors.flatMap((F) => F.st.mezz.map((z) => {
+        const tooLow = H.floor + 1e-6 < need;
+        return { k: F.k, room: z.i, name: z.name, value: z.area == null ? 'area not given' : `${sq(z.area)} of ${sq(z.limit)} allowed${tooLow ? ` · storey ${m(H.floor)}` : ''}`, status: z.area == null ? 'need' : z.over > 0.005 ? 'fail' : tooLow ? 'warn' : 'pass' };
+      })),
+    ];
+    const low = floors.some((F) => F.st.mezz.length) && H.floor + 1e-6 < need;
+    perf.push(R({
+      id: 'mezzanine', clause: 'CGDCR III 13.1.8 · I 2.70', title: 'Mezzanines', need: `≤ 30% of the space; 2.1 m clear above and below (≥ ${m(need)} floor to floor)`,
+      status: !items.length ? 'na' : items.some((i) => i.status === 'fail') ? 'fail' : items.some((i) => i.status === 'need') ? 'need' : items.some((i) => i.status === 'warn') ? 'warn' : 'pass',
+      value: items.length ? `${items.length} mezzanine${items.length > 1 ? 's' : ''}` : 'No mezzanines',
+      note: !items.length ? '' : low ? `At ${m(H.floor)} floor to floor (the model’s storey height, one for the whole building) there isn’t room for 2.1 m above and below a ${m(H.slab)} slab. A mezzanine needs a double-height space: check its section.` : 'Its area counts towards FSI in full (Part I 2.70). Give mezzanine areas on the Areas page.',
+      link: items.length ? 'areas' : undefined, items,
     }));
   }
   // 13.1.6: entrance door (not for Dwelling-1 and 2)
