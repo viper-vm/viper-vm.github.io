@@ -220,7 +220,16 @@ function toBinaryDXF(text) {
   const stilt = flats.floors[0], typ = flats.floors[1];
   check('apartments: stilt parking, stair, lift and electric room exempt; the guard room is common, not a flat', ['parking', 'stair', 'lift', 'electric'].every((u) => stilt.exempt.some((e) => e.use === u)) && stilt.carpet < 1 && stilt.rooms.some((r) => /guard/i.test(r.name) && r.use === 'common'), stilt.exempt.map((e) => e.use).join());
   check('apartments: stair and lift are common areas outside the flats\' carpet; balconies stated apart', typ.common > typ.exemptArea && typ.carpet > 150 && typ.balcony > 5 && typ.rooms.filter((r) => r.use === 'stair').every((r) => r.rera === 'none'), `carpet ${typ.carpet.toFixed(1)}, common ${typ.common.toFixed(1)}`);
+  // flat by flat: two 2 BHK flats a floor, each ≈100 m² of carpet; the planted top-floor differences show
+  const fl = flats.floors.slice(1).map((f) => f.flats);
+  check('flats: two a floor, grouped round their kitchens through their own doors (the lobby between them is common)', fl.every((x) => x.length === 2 && x.every((q) => q.kind === '2 BHK' && q.carpet > 90 && q.carpet < 110)), fl.map((x) => x.map((q) => `${q.name} ${q.kind} ${q.carpet.toFixed(1)}`).join(' / ')).join(' | '));
+  check('flats: numbered by floor (101, 102, 201…); carpet = rooms + only the walls inside the flat; floor carpet = its flats', fl[0][0].name === 'Flat 101' && fl[2][1].name === 'Flat 302' && fl.every((x, k) => near(x[0].carpet + x[1].carpet, flats.floors[k + 1].carpet, 1e-6) && x.every((q) => near(q.carpet, q.carpetRooms + q.partitions, 1e-9) && q.partitions > 3 && q.partitions < 9)), fl[0].map((q) => `${q.carpetRooms.toFixed(1)}+${q.partitions.toFixed(1)}`).join(' '));
+  check('flats: each keeps its own balcony; the deeper balcony on the top floor goes to its flat', fl.every((x) => x.every((q) => q.balcony > 5)) && fl[2].some((q) => q.balcony > 8) && fl[0].every((q) => q.balcony < 6), fl[2].map((q) => q.balcony.toFixed(1)).join());
+  const typ1 = flats.floors[1], store = typ1.rooms.find((r) => /store/i.test(r.name) && r.flat === typ1.flats[0].key);
+  const moved = areaStatement(pack(analyse(readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8'))), { building: 'apartments', plot: 600, flatOf: { [store.key]: typ1.flats[1].key }, flatNames: { [typ1.flats[0].key]: 'A-101' } }).floors[1].flats;
+  check('flats: a room you move goes with its area; a name you give is kept', moved[0].name === 'A-101' && moved[0].carpet < typ1.flats[0].carpet - store.area + 0.01 && moved[1].carpet > typ1.flats[1].carpet + store.area - 0.01, `${moved[0].carpet.toFixed(2)} / ${moved[1].carpet.toFixed(2)}`);
   const csv = statementCSV(flats, { project: 'Riverside', rev: 'Rev A' }).split('\r\n');
+  check('CSV: a row per flat with its carpet area', csv.filter((l) => /^"[^"]+",1,"Flat \d{3}","2 BHK",/.test(l)).length === 6, csv.find((l) => /Flat 101/.test(l)));
   check('CSV: floors, total, FSI and every room', csv.some((l) => l.startsWith('"Total"')) && csv.some((l) => l.startsWith('"FSI consumed"')) && csv.filter((l) => /"(Parking|Lift|Toilet)"/.test(l)).length >= 3, csv.length);
 }
 

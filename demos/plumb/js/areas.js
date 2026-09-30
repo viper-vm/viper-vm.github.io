@@ -92,6 +92,113 @@ function coveredAbove(result, k, room) {
   return pts.filter(([x, y]) => underNext(result, k, x, y)).length > pts.length / 2;
 }
 
+/** A room label that names a flat: “FLAT 101”, “Unit B”, “A-302”, “2 BHK”. */
+const FLAT_NAME = /^\s*((flat|unit|apartment|apt|shop|office|suite)\b.*|[A-Z]{0,2}\s?-?\s?\d{3,4}|\d\s?bhk.*)\s*$/i;
+/** Flats numbered the usual way: floor then flat — 101, 102 on the first floor, G01 on the ground, B101 below. */
+const flatNumber = (level, n) => `Flat ${level > 0 ? level : level === 0 ? 'G' : `B${-level}`}${String(n + 1).padStart(2, '0')}`;
+
+/**
+ * The flats of one floor. Every flat has a kitchen, so each space joins the kitchen it reaches through
+ * the fewest doors and openings (open-plan zones count as joined), walking through unnamed halls but
+ * never through a common space (lobby, stair, lift, shafts): those separate one flat from the next.
+ * Where no kitchen is reached, spaces joined directly make a flat. Balconies and terraces go with their flat. Each flat's carpet area is its rooms plus the
+ * partitions between two of its own rooms (RERA §2(k)); walls to the next flat or the lobby are not
+ * internal partitions. flatOf: your reassignments { roomKey: flatKey | 'none' }; names: { flatKey: name }.
+ */
+export function flatsOf(an, rooms, { flatOf = {}, names = {}, level = 1 } = {}) {
+  const inFlat = (r) => r.rera === 'carpet' || r.rera === 'balcony' || r.rera === 'terrace';
+  const walkable = (r) => inFlat(r) || r.use === 'review'; // an unnamed hall inside a flat still joins its rooms
+  const byId = new Map(rooms.map((r) => [r.i, r]));
+  const cOf = (r) => [an.rooms[r.i].cx, an.rooms[r.i].cy];
+  // who opens onto whom: zones of one open-plan space, and doors and openings (not windows)
+  const nb = new Map(rooms.map((r) => [r.i, new Set()]));
+  const link = (a, b) => { if (a !== b) { nb.get(a).add(b); nb.get(b).add(a); } };
+  const regionOf = new Map();
+  for (const r of rooms) { const rg = an.rooms[r.i].region; if (regionOf.has(rg)) link(regionOf.get(rg), r.i); else regionOf.set(rg, r.i); }
+  for (const o of an.openings || []) if (o.kind !== 'window' && byId.has(o.a) && byId.has(o.b)) link(o.a, o.b);
+  const owner = new Map();
+  // every flat has a kitchen: each space joins the kitchen it reaches through the fewest doorways,
+  // never through a lobby, stair or lift (a tie goes to the nearer kitchen)
+  const kitchens = rooms.filter((r) => r.type === 'kitchen' && r.rera === 'carpet');
+  if (kitchens.length) {
+    const dist = new Map(), q = [];
+    for (const k of kitchens) { dist.set(k.i, 0); owner.set(k.i, k.i); q.push(k.i); }
+    for (let h = 0; h < q.length; h++) {
+      const c = q[h], d = dist.get(c), src = owner.get(c);
+      for (const n of nb.get(c)) {
+        const r = byId.get(n);
+        if (!walkable(r)) continue;
+        if (!dist.has(n)) { dist.set(n, d + 1); owner.set(n, src); q.push(n); }
+        else if (dist.get(n) === d + 1 && owner.get(n) !== src) {
+          const [x, y] = cOf(r), a = cOf(byId.get(src)), b = cOf(byId.get(owner.get(n)));
+          if (Math.hypot(x - a[0], y - a[1]) < Math.hypot(x - b[0], y - b[1])) owner.set(n, src);
+        }
+      }
+    }
+  }
+  // no kitchen reached: spaces joined directly (not through unnamed ones) make a flat of their own
+  const parent = new Map(rooms.map((r) => [r.i, r.i]));
+  const find = (i) => (parent.get(i) === i ? i : (parent.set(i, find(parent.get(i))), parent.get(i)));
+  for (const r of rooms) if (inFlat(r) && !owner.has(r.i)) for (const n of nb.get(r.i)) { const o = byId.get(n); if (inFlat(o) && !owner.has(n)) parent.set(find(n), find(r.i)); }
+  const groups = new Map();
+  for (const r of rooms) {
+    if (!inFlat(r) && !(r.use === 'review' && owner.has(r.i))) continue;
+    const g = owner.has(r.i) ? 'k' + owner.get(r.i) : 'c' + find(r.i);
+    if (!groups.has(g)) groups.set(g, []);
+    groups.get(g).push(r);
+  }
+  // a flat has carpet in it (a balcony cut off from every flat joins the one it's next to)
+  // (on a floor with kitchens, a space no kitchen reaches — its door wasn't found — goes to the nearest flat)
+  const isFlat = ([id, g]) => (kitchens.length ? id[0] === 'k' : g.some((r) => r.rera === 'carpet'));
+  let flats = [...groups.entries()].filter(isFlat).map(([id, g]) => {
+    const anchor = id[0] === 'k' ? byId.get(+id.slice(1)) : g.slice().sort((p, q) => q.area - p.area)[0];
+    return { key: anchor.key, rooms: g };
+  });
+  const loose = [...groups.entries()].filter((e) => !isFlat(e)).flatMap(([, g]) => g).filter(inFlat);
+  for (const r of loose) {
+    let best = null, bd = Infinity;
+    for (const f of flats) for (const q of f.rooms) { const [x, y] = cOf(r), [u, v] = cOf(q), d = Math.hypot(x - u, y - v); if (d < bd) { bd = d; best = f; } }
+    if (best && bd < 12) best.rooms.push(r);
+  }
+  // your reassignments
+  const byKey = new Map(flats.map((f) => [f.key, f]));
+  for (const r of rooms) {
+    const want = flatOf[r.key];
+    if (!want) continue;
+    const from = flats.find((f) => f.rooms.includes(r));
+    const to = want === 'none' ? null : byKey.get(want);
+    if (want !== 'none' && !to) continue; // that flat isn't there any more
+    if (from) from.rooms = from.rooms.filter((q) => q !== r);
+    if (to) to.rooms.push(r);
+  }
+  flats = flats.filter((f) => f.rooms.length);
+  // left to right, then top to bottom, as the plan reads
+  const mid = (f) => { const c = f.rooms.map(cOf); return [c.reduce((a, p) => a + p[0], 0) / c.length, c.reduce((a, p) => a + p[1], 0) / c.length]; };
+  flats.forEach((f) => { f.at = mid(f); });
+  flats.sort((a, b) => (Math.abs(a.at[0] - b.at[0]) > 3 ? a.at[0] - b.at[0] : b.at[1] - a.at[1]));
+  const walls = an.walls || { owned: [] };
+  return flats.map((f, n) => {
+    const ids = new Set(f.rooms.map((r) => r.i));
+    const carpetIds = new Set(f.rooms.filter((r) => r.rera === 'carpet').map((r) => r.i));
+    let partitions = 0;
+    for (const r of f.rooms) {
+      const o = walls.owned[r.i];
+      if (!o || !carpetIds.has(r.i)) continue;
+      for (const [b, frac] of Object.entries(o.faces)) if (b !== 'out' && carpetIds.has(+b)) partitions += o.area * frac;
+    }
+    const sum = (k) => f.rooms.reduce((a, r) => a + (r.rera === k ? r.area : 0), 0);
+    const labelled = f.rooms.map((r) => String(r.label || '').trim()).find((t) => FLAT_NAME.test(t));
+    const bedrooms = f.rooms.filter((r) => r.type === 'bedroom').length, kitchen = f.rooms.some((r) => r.type === 'kitchen');
+    const carpetRooms = sum('carpet');
+    return {
+      key: f.key, n, name: names[f.key] || labelled || flatNumber(level, n), named: !!(names[f.key] || labelled),
+      rooms: f.rooms.map((r) => r.i).filter((i) => ids.has(i)), kind: kitchen && bedrooms ? `${bedrooms} BHK` : kitchen ? '1 RK' : '',
+      carpetRooms, partitions, carpet: carpetRooms + partitions, balcony: sum('balcony'), terrace: sum('terrace'),
+      pending: f.rooms.filter((r) => r.use === 'review').length,
+    };
+  });
+}
+
 /**
  * The area statement of an analysed building.
  * setup: { building: 'house'|'apartments'|'commercial', plot (m²) | null, zone, base, chargeable, max, uses: { [roomKey]: use } }
@@ -113,10 +220,16 @@ export function areaStatement(result, setup = {}) {
       return { i, key, name: r.name, label: r.label, type: r.type, area: r.area, use, auto, set: use !== auto, rera: reraOf(use, building), fsi: USES[use].fsi, rule: USES[use].rule || '' };
     });
     const sum = (pred) => rooms.reduce((a, r) => a + (pred(r) ? r.area : 0), 0);
-    // walls: a partition has carpet on both sides; everything else of the floor's walls is outer
+    // walls: a partition has carpet on both sides; everything else of the floor's walls is outer. In
+    // a building of flats only the partitions inside a flat count: a wall between two flats isn't one.
     const walls = an.walls || { total: 0, outside: 0, owned: [] };
+    const flats = building === 'apartments' ? flatsOf(an, rooms, { flatOf: setup.flatOf || {}, names: setup.flatNames || {}, level: f.level ?? k }) : [];
+    const flatOfRoom = new Map();
+    flats.forEach((fl, n) => { for (const i of fl.rooms) flatOfRoom.set(i, n); });
+    rooms.forEach((r) => { r.flat = flatOfRoom.has(r.i) ? flats[flatOfRoom.get(r.i)].key : null; });
     let partitions = 0;
-    rooms.forEach((r) => {
+    if (building === 'apartments') partitions = flats.reduce((a, fl) => a + fl.partitions, 0);
+    else rooms.forEach((r) => {
       const o = walls.owned[r.i];
       if (!o || r.rera !== 'carpet') return;
       for (const [b, frac] of Object.entries(o.faces)) if (b !== 'out' && rooms[+b] && rooms[+b].rera === 'carpet') partitions += o.area * frac;
@@ -126,7 +239,7 @@ export function areaStatement(result, setup = {}) {
     const builtUp = sum((r) => r.fsi === 'count' || r.fsi === 'exempt') + walls.total;
     const exemptArea = exempt.reduce((a, e) => a + e.area, 0);
     return {
-      k, title: f.title, level: f.level, repeat, rooms,
+      k, title: f.title, level: f.level, repeat, rooms, flats,
       carpet: sum((r) => r.rera === 'carpet') + partitions,
       carpetRooms: sum((r) => r.rera === 'carpet'), partitions,
       balcony: sum((r) => r.rera === 'balcony'),
@@ -144,6 +257,7 @@ export function areaStatement(result, setup = {}) {
     carpet: total('carpet'), balcony: total('balcony'), terrace: total('terrace'), common: total('common'),
     shafts: total('shafts'), walls: total('walls'), pergola: total('pergola'),
     review: floors.reduce((a, f) => a + f.review.reduce((b, r) => b + r.area, 0) * f.repeat, 0),
+    flats: floors.reduce((a, f) => a + f.flats.length * f.repeat, 0),
   };
   const plot = num(setup.plot, null);
   const fsi = { zone: z, base, chargeable, max, plot };
@@ -190,6 +304,10 @@ export function statementCSV(st, { project = '', rev = '' } = {}) {
   const F = st.fsi;
   rows.push([q('Zone'), q(`${F.zone.code} — ${F.zone.name}`)], [q('Plot area (m²)'), f2(F.plot)], [q('FSI base / chargeable / maximum'), F.base, F.chargeable, F.max]);
   if (F.plot > 0) rows.push([q('FSI consumed'), F.consumed.toFixed(3)], [q('Balance to maximum (m²)'), f2(F.balance)]);
+  if (st.floors.some((f) => f.flats.length)) {
+    rows.push([], ['Floor', 'Times', 'Flat', 'Type', 'RERA carpet (m²)', 'Rooms (m²)', 'Internal walls (m²)', 'Balcony / verandah (m²)', 'Open terrace (m²)'].map(q));
+    for (const f of st.floors) for (const fl of f.flats) rows.push([q(f.title), f.repeat, q(fl.name), q(fl.kind), f2(fl.carpet), f2(fl.carpetRooms), f2(fl.partitions), f2(fl.balcony), f2(fl.terrace)]);
+  }
   rows.push([], ['Floor', 'Room', 'Type', 'Area (m²)', 'Counts as', 'RERA', 'FSI', 'Rule'].map(q));
   for (const f of st.floors) for (const r of f.rooms) rows.push([q(f.title), q(r.name), q(r.type), f2(r.area), q(USES[r.use].label), q(r.rera), q(r.fsi), q(r.rule)]);
   return rows.map((r) => r.join(',')).join('\r\n') + '\r\n';

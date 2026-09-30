@@ -78,14 +78,14 @@ function render() {
       </div>
       <div class="tile"><h3>Building</h3>
         ${seg('building', st.building, Object.entries(BUILDINGS))}
-        <p class="hint" style="margin:10px 0 0">${st.building === 'house' ? 'One unit: its staircase is part of the carpet area (and still exempt from FSI).' : 'Flats: stairs, lifts and lobbies are common areas, outside every flat’s carpet area. Carpet area is shown floor by floor, all flats together.'}</p>
+        <p class="hint" style="margin:10px 0 0">${st.building === 'house' ? 'One unit: its staircase is part of the carpet area (and still exempt from FSI).' : st.building === 'apartments' ? 'Flats: stairs, lifts and lobbies are common areas, outside every flat’s carpet area. Carpet area is worked out flat by flat.' : 'Stairs, lifts and lobbies are common areas.'}</p>
       </div>
     </div>
 
     <div class="grid g4" style="margin-top:14px">
       <div class="tile"><h3>FSI consumed</h3>${fsiLine}</div>
       <div class="tile"><h3>FSI area</h3><div class="kpi-v" style="font-size:24px">${m2(T.fsiArea)} m²</div><div class="kpi-s">built-up ${m2(T.builtUp)} m²</div></div>
-      <div class="tile"><h3>RERA carpet area</h3><div class="kpi-v" style="font-size:24px">${m2(T.carpet)} m²</div><div class="kpi-s">${ft2(T.carpet)} ft² · balconies ${m2(T.balcony)} m²${T.terrace > 0.005 ? ` · open terraces ${m2(T.terrace)} m²` : ''}</div></div>
+      <div class="tile"><h3>RERA carpet area</h3><div class="kpi-v" style="font-size:24px">${m2(T.carpet)} m²</div><div class="kpi-s">${ft2(T.carpet)} ft²${T.flats ? ` · ${T.flats} flat${T.flats === 1 ? '' : 's'}` : ''} · balconies ${m2(T.balcony)} m²${T.terrace > 0.005 ? ` · open terraces ${m2(T.terrace)} m²` : ''}</div></div>
       <div class="tile"><h3>Not in FSI</h3><div class="kpi-v" style="font-size:24px">${m2(T.exemptArea)} m²</div><div class="kpi-s">${Object.keys(exemptAll).map(esc).join(', ') || 'nothing exempt'}</div></div>
     </div>
 
@@ -99,6 +99,8 @@ function render() {
     </tbody></table></div>
     <p class="hint" style="margin:6px 2px 0">All areas in m². Built-up is measured to the outer face of the walls, balconies included. ${T.pergola > 0.005 ? `Pergolas (${m2(T.pergola)} m²) are left out of built-up area: CGDCR 6.3.2(13).` : ''}</p>
 
+    ${flatsSection(st)}
+
     ${F.plot > 0 ? `<h2 class="sec">FSI</h2>
     <div class="tile ar-fsisum">
       <div><span>Plot area</span><b class="num">${m2(F.plot)} m²</b></div>
@@ -111,9 +113,10 @@ function render() {
     <h2 class="sec" id="rooms">Rooms</h2>
     <p class="hint" style="margin:-4px 2px 10px">What each space counts as decides where its area goes. Plumb guesses from the room’s name; change anything that’s wrong and it’s kept for this project.</p>
     ${st.floors.map((f) => `<details class="ar-floor" open><summary><span class="ft-tag">${esc(levelTag(R.floors[f.k]))}</span> ${esc(cap(f.title))} <span class="muted">· ${f.rooms.length} spaces · carpet ${m2(f.carpet)} m² (rooms ${m2(f.carpetRooms)} + partitions ${m2(f.partitions)})</span></summary>
-      <div class="tblw"><table class="t"><thead><tr><th>Space</th><th class="n">Area m²</th><th>Counts as</th><th>RERA</th><th>FSI</th></tr></thead><tbody>
+      <div class="tblw"><table class="t"><thead><tr><th>Space</th><th class="n">Area m²</th><th>Counts as</th>${f.flats.length ? '<th>Flat</th>' : ''}<th>RERA</th><th>FSI</th></tr></thead><tbody>
         ${f.rooms.slice().sort((a, b) => (b.use === 'review') - (a.use === 'review') || USE_ORDER.indexOf(a.use) - USE_ORDER.indexOf(b.use) || b.area - a.area).map((r) => `<tr class="${r.use === 'review' ? 'rv' : ''}"><td>${esc(r.name)}${r.label && r.label.trim().toLowerCase() !== r.name.toLowerCase() ? ` <span class="muted">(“${esc(r.label)}”)</span>` : ''}</td><td class="n">${m2(r.area)}</td>
           <td><select class="inp ${r.set ? 'you' : ''}" data-use="${esc(r.key)}" aria-label="What ${esc(r.name)} counts as">${USE_ORDER.map((u) => `<option value="${u}" ${u === r.use ? 'selected' : ''}>${esc(USES[u].label)}</option>`).join('')}</select></td>
+          ${f.flats.length ? `<td>${r.rera === 'none' && !r.flat ? '<span class="muted">—</span>' : `<select class="inp ${(S.flatOf || {})[r.key] ? 'you' : ''}" data-flat="${esc(r.key)}" aria-label="Which flat ${esc(r.name)} is in">${f.flats.map((fl) => `<option value="${esc(fl.key)}" ${fl.key === r.flat ? 'selected' : ''}>${esc(fl.name)}</option>`).join('')}<option value="none" ${!r.flat ? 'selected' : ''}>Not in a flat</option></select>`}</td>` : ''}
           <td class="muted">${esc(reraText(r.rera))}</td><td class="muted">${esc(fsiText(r.fsi, r.rule))}</td></tr>`).join('')}
       </tbody></table></div></details>`).join('')}
 
@@ -122,8 +125,33 @@ function render() {
       <p><b>RERA carpet area</b> (Real Estate Act 2016, §2(k)): the net usable floor area, without the external walls, service shafts and the exclusive balcony, verandah and open terrace areas (stated separately), but with the internal partition walls.</p>
       <p><b>FSI</b> (CGDCR 2017 Part II): built-up area on every floor divided by the plot area. Not counted, under §6.3.2: staircases with their intermediate landings (6), lifts, lift wells and landings with their walls (7), parking basements and hollow plinths (3, 4), electric rooms (10), pergolas (13). Balconies aren’t on that list, so they count.</p>
       <p><b>From the drawing:</b> room areas are net, inside the walls. Every wall is split between the spaces on its two sides; a wall with carpet on both sides is a partition, and the rest are external. Stairs named only by their UP/DOWN arrow are measured to their flight.</p>
-      <p><b>Not yet:</b> the landing allowances of 6.3.2(6) and (7) beyond the stair and lift as drawn, lofts, mezzanines, and carpet area flat by flat (shown floor by floor for now). Check the zone and FSI against your TP scheme and the current amendments before you submit.</p>
+      ${st.building === 'apartments' ? `<p><b>Flats:</b> every flat has a kitchen, so each space goes with the kitchen it reaches through the fewest doors and openings, never through a lobby, stair or lift. A flat’s carpet area is its rooms plus the walls between two of its own rooms; a wall to the next flat or to the lobby isn’t an internal partition. A flat is named from a label like “FLAT 101” or “A-302” in it, else numbered by floor, left to right (101, 102…). Move a room to another flat in the room list if a door wasn’t found.</p>` : ''}
+      <p><b>Not yet:</b> the landing allowances of 6.3.2(6) and (7) beyond the stair and lift as drawn, lofts and mezzanines. Check the zone and FSI against your TP scheme and the current amendments before you submit.</p>
     </div>`;
+}
+
+/** Carpet area flat by flat (buildings of flats only). */
+function flatsSection(st) {
+  if (st.building !== 'apartments') return '';
+  const withFlats = st.floors.filter((f) => f.flats.length);
+  if (!withFlats.length) {
+    return `<h2 class="sec">Flats</h2><div class="tile ar-notes"><p>No flats found yet. Plumb groups each floor’s rooms round their kitchens; ${st.floors.some((f) => f.review.length) ? 'name the unnamed spaces in the room list (a kitchen, a bedroom…) and the flats will appear.' : 'check the kitchens are named in the drawing.'}</p></div>`;
+  }
+  const all = withFlats.flatMap((f) => f.flats.map((fl) => ({ f, fl })));
+  const cs = all.map((x) => x.fl.carpet);
+  const kinds = {};
+  for (const { f, fl } of all) if (fl.kind) kinds[fl.kind] = (kinds[fl.kind] || 0) + f.repeat;
+  return `<h2 class="sec">Flats <span class="muted" style="font-weight:400;font-size:14px">· ${st.totals.flats} flat${st.totals.flats === 1 ? '' : 's'}${Object.keys(kinds).length ? ` · ${Object.entries(kinds).map(([k, n]) => `${n} × ${esc(k)}`).join(', ')}` : ''} · carpet ${m2(Math.min(...cs))}${cs.length > 1 ? `–${m2(Math.max(...cs))}` : ''} m²</span></h2>
+    <p class="hint" style="margin:-4px 2px 10px">RERA carpet area of each flat: its rooms plus its internal walls. Balconies, verandahs and open terraces are stated beside it. Rename a flat by typing over its name.</p>
+    <div class="tblw"><table class="t ar-t ar-flats"><thead><tr><th>Floor</th><th>Flat</th><th>Type</th><th class="n">RERA carpet</th><th class="n">Rooms + walls</th><th class="n">Balcony / verandah</th><th class="n">Open terrace</th></tr></thead><tbody>
+      ${withFlats.map((f) => f.flats.map((fl, n) => `<tr>${n === 0 ? `<td rowspan="${f.flats.length}"><span class="ft-tag">${esc(levelTag(R.floors[f.k]))}</span> ${esc(cap(f.title))}${f.repeat > 1 ? `<div class="muted" style="font-size:12px">× ${f.repeat} floors</div>` : ''}</td>` : ''}
+        <td><input class="inp ar-fname ${fl.named ? 'you' : ''}" data-fname="${esc(fl.key)}" value="${esc(fl.name)}" aria-label="Name of this flat" />
+          <div class="ar-sp">${esc(fl.rooms.map((i) => f.rooms[i]).filter((r) => r.use !== 'review').map((r) => r.name).join(', '))}${fl.pending ? ` <span class="rv-n">+ ${fl.pending} to decide</span>` : ''}</div></td>
+        <td class="nowrap">${esc(fl.kind || '—')}</td>
+        <td class="n"><b>${m2(fl.carpet)}</b><span class="ft"> · ${ft2(fl.carpet)} ft²</span></td>
+        <td class="n muted">${m2(fl.carpetRooms)} + ${m2(fl.partitions)}</td>
+        <td class="n">${m2(fl.balcony)}</td><td class="n">${m2(fl.terrace)}</td></tr>`).join('')).join('')}
+    </tbody></table></div>`;
 }
 
 const cap = (s) => { const t = String(s || '').toLowerCase().replace(/\bplan\b/, '').trim(); return t.charAt(0).toUpperCase() + t.slice(1); };
@@ -160,6 +188,20 @@ page.addEventListener('change', (e) => {
     const st = areaStatement(R, { ...S, uses: {} });
     const auto = st.floors.flatMap((f) => f.rooms).find((r) => r.key === t.dataset.use);
     if (auto && auto.use === t.value) delete S.uses[t.dataset.use]; else S.uses[t.dataset.use] = t.value;
+    save(true); render();
+    return;
+  }
+  if (t.dataset.flat) {
+    S.flatOf ||= {};
+    const auto = areaStatement(R, { ...S, flatOf: {} }).floors.flatMap((f) => f.rooms).find((r) => r.key === t.dataset.flat);
+    if (auto && (auto.flat || 'none') === t.value) delete S.flatOf[t.dataset.flat]; else S.flatOf[t.dataset.flat] = t.value;
+    save(true); render();
+    return;
+  }
+  if (t.dataset.fname) {
+    S.flatNames ||= {};
+    const v = t.value.trim();
+    if (v) S.flatNames[t.dataset.fname] = v; else delete S.flatNames[t.dataset.fname];
     save(true); render();
     return;
   }
