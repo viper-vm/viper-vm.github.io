@@ -3,6 +3,7 @@
 import { parseDXF } from './dxf.js';
 import { inferUnitMM, toMetres, layerRoles, findFloors, analyseFloor, parseLevel, storeyTitle } from './recognize.js';
 import { alignPair, runChecks } from './checks.js';
+import { orientFloors, fitOrientation, mirroredHalves } from './orient.js';
 
 /**
  * One DXF holding every floor plan (the usual way plan sets are drawn).
@@ -69,8 +70,10 @@ export function analyseFiles(files, opts = {}) {
   return finish(merged, unit, roles, (opts.floors || floors).filter((f) => !f.excluded), opts, t0);
 }
 
-function finish(dx, unit, roles, floors, opts, t0) {
+function finish(dx, unit, roles, given, opts, t0) {
   const stage = opts.onStage || (() => {});
+  // floors handed back from an earlier result start again from where they are on the sheet
+  const floors = given.map((f) => { const { place, sheetBox, fit, ...g } = f; return sheetBox ? { ...g, box: sheetBox } : g; });
   // each floor reads its own lines plus a margin — never so far that it takes in the plan next door
   const margins = floors.map((f, k) => {
     let gap = Infinity;
@@ -79,7 +82,9 @@ function finish(dx, unit, roles, floors, opts, t0) {
     });
     return Math.max(0.1, Math.min(1.0, gap / 2 - 0.02));
   });
-  const an = floors.map((f, k) => { stage(`Reading ${f.title.toLowerCase()} (${k + 1}/${floors.length})…`); return analyseFloor(dx, roles, f.box, { types: opts.types, margin: margins[k] }); });
+  // floors drawn turned or mirrored are read from a turned copy (the sheet stays as drawn)
+  const read = orientFloors(dx, floors, margins);
+  const an = read.map((f, k) => { stage(`Reading ${f.title.toLowerCase()} (${k + 1}/${read.length})…`); return analyseFloor(dx, roles, f.box, { types: opts.types, margin: margins[k] }); });
   stage('Stacking the floors…');
   const transforms = [{ tx: 0, ty: 0 }], aligns = [null];
   for (let k = 1; k < an.length; k++) {
@@ -91,8 +96,12 @@ function finish(dx, unit, roles, floors, opts, t0) {
     transforms.push({ tx: transforms[k - 1].tx + a.tx, ty: transforms[k - 1].ty + a.ty });
   }
   stage('Checking what lines up…');
-  const issues = runChecks(floors, an, transforms);
-  return { dx, unit, roles, floors, an, transforms, aligns, issues, ms: { total: now() - t0 } };
+  const issues = runChecks(read, an, transforms);
+  // a floor that would sit on the one below far better turned or mirrored: suggest it
+  for (let k = 1; k < an.length; k++) { const fit = fitOrientation(an[k - 1], an[k]); if (fit) read[k].fit = fit; }
+  // one plan of two mirrored halves: usually two flats round a stair, sometimes two floors
+  const twin = read.length === 1 ? mirroredHalves(an[0]) : null;
+  return { dx, unit, roles, floors: read, an, transforms, aligns, issues, twin, ms: { total: now() - t0 } };
 }
 
 const storey = (n) => ({ level: n, typical: false, text: storeyTitle(n) });

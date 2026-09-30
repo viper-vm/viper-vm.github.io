@@ -1,5 +1,6 @@
 // Plumb — the whole sheet, for marking floor plans by hand. Drag across empty space to draw a box
-// round a plan, drag a box to move it, pull its corners or edges to resize, Delete removes it.
+// round a plan, drag a box to move it, pull its corners or edges to resize, arrows nudge it, Delete
+// removes it; other keys go to the page (turning, mirroring, splitting a floor).
 // Scroll or two-finger drag pans, ⌘/Ctrl + scroll or pinch zooms, F fits.
 
 const HANDLE = 7;     // px, half the grab size of a resize handle
@@ -13,7 +14,7 @@ export class SheetEditor {
   /**
    * @param {HTMLCanvasElement} canvas
    * @param {{onAdd?:Function, onChange?:Function, onRemove?:Function, onSelect?:Function, onCamera?:Function}} cb
-   *   onAdd(box) · onChange(i, box) · onRemove(i) · onSelect(i or -1) · onCamera(cam) — boxes in drawing metres
+   *   onAdd(box) · onChange(i, box, { nudge }) · onRemove(i) · onSelect(i or -1) · onCamera(cam) · onKey(e, sel) → handled — boxes in drawing metres
    */
   constructor(canvas, cb = {}, cam = null) {
     this.cv = canvas;
@@ -21,7 +22,7 @@ export class SheetEditor {
     this.cam = cam ? { ...cam } : null; // { cx, cy, s }: the world point at the centre, px per metre
     this.auto = !cam;   // fitted automatically: refit when the canvas changes size (until you pan or zoom)
     this.sheet = null;
-    this.floors = [];   // [{ box:[x0,y0,x1,y1], tag, title, excluded }]
+    this.floors = [];   // [{ box:[x0,y0,x1,y1], tag, title, excluded, mark, mirrored }]
     this.sel = -1;
     this.drag = null;
     this.base = null;   // the linework drawn once per camera
@@ -149,7 +150,9 @@ export class SheetEditor {
       ctx.fillStyle = C.brass; ctx.globalAlpha = on ? 0.12 : 0.06; ctx.fillRect(l, t, r - l, b - t);
       ctx.globalAlpha = 1; ctx.strokeStyle = C.brass; ctx.lineWidth = on ? 2.2 : 1.4; ctx.strokeRect(l, t, r - l, b - t);
       // label chip: level tag and name
-      const label = `${f.tag}  ${f.title || ''}`.trim();
+      const label = `${f.tag}  ${f.title || ''}${f.mark ? `  · ${f.mark}` : ''}`.trim();
+      // a floor read turned or mirrored: its axis of symmetry dashed across the box
+      if (f.mirrored) { ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = C.brass; ctx.globalAlpha = 0.7; ctx.lineWidth = 1; ctx.beginPath(); if (f.mirrored === 'x') { ctx.moveTo((l + r) / 2, t); ctx.lineTo((l + r) / 2, b); } else { ctx.moveTo(l, (t + b) / 2); ctx.lineTo(r, (t + b) / 2); } ctx.stroke(); ctx.restore(); }
       ctx.font = "600 11.5px 'IBM Plex Mono', ui-monospace, monospace";
       const tw = Math.min(ctx.measureText(label).width + 12, Math.max(40, r - l));
       const ly = t - 20 > 0 ? t - 20 : t + 2;
@@ -255,6 +258,18 @@ export class SheetEditor {
     this.setCam({ ...this.cam, cx: this.cam.cx + (e.deltaX * k) / this.cam.s, cy: this.cam.cy - (e.deltaY * k) / this.cam.s });
   }
   key(e) {
+    // arrows nudge the selected box (Shift: a metre at a time)
+    const arrow = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }[e.key];
+    if (arrow && this.sel >= 0 && this.floors[this.sel] && !this.floors[this.sel].excluded) {
+      e.preventDefault();
+      const d = e.shiftKey ? 1 : 0.1, b = this.floors[this.sel].box;
+      const box = [b[0] + arrow[0] * d, b[1] + arrow[1] * d, b[2] + arrow[0] * d, b[3] + arrow[1] * d];
+      this.floors[this.sel] = { ...this.floors[this.sel], box };
+      this.request();
+      if (this.cb.onChange) this.cb.onChange(this.sel, box, { nudge: true });
+      return;
+    }
+    if (this.cb.onKey && !e.metaKey && !e.ctrlKey && !e.altKey && this.cb.onKey(e, this.sel)) { e.preventDefault(); return; }
     if ((e.key === 'Delete' || e.key === 'Backspace') && this.sel >= 0) { e.preventDefault(); if (this.cb.onRemove) this.cb.onRemove(this.sel); return; }
     if (e.key === 'Escape') { if (this.drag) this.cancel(); else if (this.sel >= 0) { this.sel = -1; if (this.cb.onSelect) this.cb.onSelect(-1); this.request(); } return; }
     if (e.key === 'f' || e.key === 'F') { e.preventDefault(); this.fit(); return; }

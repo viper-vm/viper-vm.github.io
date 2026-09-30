@@ -29,7 +29,7 @@ bye-law checks against CGDCR 2017 Parts II and III.
 |---|---|
 | `index.html` | Landing page: what it checks, the 3D model, revisions, files, privacy, FAQ; drop drawings or open the sample |
 | `app/` | All projects: grid or list, search, starred/archived, status, the sample building |
-| `app/import.html` | Import wizard: files → floors (the whole sheet with a box round each plan: drag to add, move, resize or delete; order, rename, leave out, typical ×N) → units (with evidence) → layer roles (with *Ask AI*) → review. Also takes a new revision (`?project=`) |
+| `app/import.html` | Import wizard: files → floors (the whole sheet with a box round each plan: drag to add, move, resize, nudge, split or delete; turn or mirror a floor drawn that way, with a suggestion when a floor fits the one below better turned; a note when one plan is two mirrored flats; order, rename, leave out, typical ×N) → units (with evidence) → layer roles (with *Ask AI*) → review. Also takes a new revision (`?project=`) |
 | `app/project.html` | Project overview: open issues, the stack, most urgent, what changed since the last revision, hand-back files, floors, revisions, activity |
 | `app/areas.html` | Area statement: built-up, FSI area (CGDCR 2017 §6.3.2 exemptions with their clauses), RERA carpet area (§2(k)), balconies, open terraces, common, shafts, walls, floor by floor; plot area, zone (Table 6.5, D1 AUDA) and FSI consumed; every space re-assignable; CSV and print |
 | `app/rules.html` | Bye-law checks: CGDCR 2017 Part II (height by road, margins, FSI, parking, basement use) and Part III (storey, basement and stilt heights, stair width and tread, lifts, ventilation of rooms, baths and stairs, WC size, entrance door), NBC 2016 room sizes as good practice; road, plot and margins asked for; each rule with its clause and a plan of the rooms it's about; CSV and print |
@@ -98,6 +98,7 @@ js/pages/         one script per page: library, import, project, issues, setting
 js/workspace.js   plan / stack / 3D model workspace
 js/areas.js       area statements: RERA carpet area and FSI under CGDCR 2017 (pure)
 js/rules.js       bye-law checks: CGDCR 2017 Parts II and III, NBC 2016 room sizes (pure)
+js/orient.js      floors drawn turned or mirrored: read from a turned copy, mapped back to the sheet; fit and twin tests
 js/shell/         store.js (IndexedDB), model.js (projects, revisions, issue history; pure), sheet.js (marking floors on the sheet),
                   engine.js (worker + caching), projects.js, thumbs.js, ui.js, icons.js
 js/dxf.js         DXF reader (R12–2018: LINE/(LW)POLYLINE+bulges/ARC/CIRCLE/ELLIPSE/SPLINE/TEXT/MTEXT/

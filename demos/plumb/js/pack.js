@@ -18,6 +18,7 @@ export function pack(r, { sheet = false } = {}) {
     transforms: r.transforms,
     aligns: r.aligns,
     issues: r.issues,
+    twin: r.twin || null,
     geometry: r.floors.map((f, k) => ({ ...floorGeometry(r.dx, r.roles, f.box, r.an[k] && r.an[k].margin), dims: dims[k] })),
     an: r.an.map((a) => ({
       box: a.box, res: a.res, margin: a.margin, grid: a.grid, rooms: a.rooms, columns: a.columns, doors: a.doors, openings: a.openings, stairs: a.stairs, outlines: a.outlines,
@@ -36,11 +37,14 @@ const SHEET_CAP = 150000;
  * (walls most, furniture least), and the bigger texts (titles, room names).
  */
 export function sheetOf(dx, roles) {
-  const b = dx.bounds, W = b.x1 - b.x0, H = b.y1 - b.y0, span = Math.max(W, H) || 1;
+  // only what's on the sheet: not the turned copies of oriented floors
+  const b = dx.sheetN ? dx.sheetN.bounds : dx.bounds, W = b.x1 - b.x0, H = b.y1 - b.y0, span = Math.max(W, H) || 1;
+  const nSegs = dx.sheetN ? dx.sheetN.segs : dx.segs.length, nTexts = dx.sheetN ? dx.sheetN.texts : dx.texts.length;
   const roleOf = (l) => (roles.get(l) || { role: 'other' }).role;
   const tiny = span / 5000;
   const keep = [];
-  for (const s of dx.segs) {
+  for (let i = 0; i < nSegs; i++) {
+    const s = dx.segs[i];
     const w = SHEET_WEIGHT[roleOf(s[4])];
     if (w === undefined || Math.abs(s[2] - s[0]) + Math.abs(s[3] - s[1]) < tiny) continue; // text, dimensions, grid, specks
     keep.push([s, w]);
@@ -50,7 +54,7 @@ export function sheetOf(dx, roles) {
   if (list.length > SHEET_CAP) { const n = Math.ceil(list.length / SHEET_CAP); list = list.filter((_, i) => i % n === 0); }
   const segs = new Float32Array(list.length * 4), weight = new Uint8Array(list.length);
   list.forEach(([s, w], i) => { segs.set([s[0] - b.x0, s[1] - b.y0, s[2] - b.x0, s[3] - b.y0], i * 4); weight[i] = w; });
-  const texts = dx.texts
+  const texts = dx.texts.slice(0, nTexts)
     .filter((t) => roleOf(t.layer) !== 'dim' && t.h >= span / 600 && String(t.text).trim())
     .sort((p, q) => q.h - p.h).slice(0, 800)
     .map((t) => ({ x: t.x - b.x0, y: t.y - b.y0, h: t.h, rot: t.rot || 0, text: String(t.text).split('\n')[0].slice(0, 60) }));

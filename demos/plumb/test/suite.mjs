@@ -224,6 +224,39 @@ function toBinaryDXF(text) {
   check('CSV: floors, total, FSI and every room', csv.some((l) => l.startsWith('"Total"')) && csv.some((l) => l.startsWith('"FSI consumed"')) && csv.filter((l) => /"(Parking|Lift|Toilet)"/.test(l)).length >= 3, csv.length);
 }
 
+// ------------------------------------------------------------------ floors drawn turned or mirrored
+{
+  const { OPS, ALL, compose, isIdentity, orientText, sheetPoint } = await import(base + 'orient.js');
+  const { casaSheet } = await import(new URL('./fixtures.mjs', import.meta.url).href);
+  const { whereOf } = await import(base + 'shell/model.js');
+  const { toDrawing } = await import(base + 'export.js');
+  const k4 = compose(OPS.rotr, compose(OPS.rotr, compose(OPS.rotr, OPS.rotr)));
+  check('orientation: four quarter turns and two mirrors are nothing; eight orientations in all', isIdentity(k4) && isIdentity(compose(OPS.flipx, OPS.flipx)) && new Set(ALL.map(String)).size === 8 && orientText(OPS.flipx) === 'Mirrored left ↔ right' && orientText(OPS.flipy) === 'Mirrored top ↔ bottom' && orientText(OPS.rotr) === 'Turned 90° clockwise', orientText(compose(OPS.rotr, OPS.flipx)));
+  const straight = sig(analyse(casaSheet()));
+  const drawn = analyse(casaSheet(0.6, { mirrorUpper: true }));
+  const fit = drawn.floors[1].fit;
+  check('a floor drawn mirrored: read as drawn it gives a false overhang; Plumb suggests mirroring it back', sig(drawn) !== straight && fit && String(fit.orient) === String(OPS.flipx) && fit.fit > 0.7 && fit.now < 0.5, `${sig(drawn)} · ${fit && `${fit.orient} ${fit.fit.toFixed(2)}/${fit.now.toFixed(2)}`}`);
+  const floors = drawn.floors.map((f, k) => (k === 1 ? { ...f, orient: fit.orient } : f));
+  const fixed = analyse(casaSheet(0.6, { mirrorUpper: true }), { floors });
+  check('…mirrored back, it reads like the sheet drawn the right way round (the bathroom over the dining)', sig(fixed) === straight && !fixed.floors[1].fit && fixed.floors[1].place, sig(fixed));
+  const again = analyse(casaSheet(0.6, { mirrorUpper: true }), { floors: fixed.floors });
+  check('…and a result\'s floors handed back read the same again (the sheet box is kept, the turn not applied twice)', sig(again) === straight && String(again.floors[1].sheetBox) === String(fixed.floors[1].sheetBox), String(again.floors[1].box));
+  const p = pack(fixed, { sheet: true }), plain = pack(drawn, { sheet: true });
+  check('the sheet view shows the drawing as drawn, not the turned copy', p.sheet.segs.length === plain.sheet.segs.length && p.sheet.w === plain.sheet.w, `${p.sheet.segs.length} vs ${plain.sheet.segs.length}`);
+  const iss = fixed.issues[0], sb = fixed.floors[1].sheetBox;
+  const back = sheetPoint(fixed.floors[1], iss.at[0], iss.at[1]), dwg = toDrawing(fixed, 1, iss.at[0], iss.at[1]);
+  check('markups and issue history go back to where the floor is drawn on the sheet', back[0] > sb[0] && back[0] < sb[2] && back[1] > sb[1] && back[1] < sb[3] && near(dwg[0] * fixed.unit.mm / 1000, back[0], 1e-6) && near(whereOf(iss, fixed).at[0], back[0], 1e-9), `${back.map((v) => v.toFixed(2))} in ${sb.map((v) => v.toFixed(1))}`);
+  const mirroredAt = sheetPoint({ place: { m: OPS.flipx, c: [5, 5], o: [100, 5] } }, 101, 6);
+  check('sheetPoint: the way back undoes the mirror', near(mirroredAt[0], 4, 1e-9) && near(mirroredAt[1], 6, 1e-9), mirroredAt);
+  // one plan that's two mirrored halves (the sample's typical floor: two flats round the core)
+  const sampleText = readFileSync(new URL('../samples/riverside-residency.dxf', import.meta.url), 'utf8');
+  const s0 = analyse(sampleText);
+  const one = analyse(sampleText, { floors: [s0.floors[1]] });
+  const box = s0.floors[1].box;
+  check('two flats mirrored round a core: seen as two matching halves, with the axis through the middle', one.twin && one.twin.axis === 'x' && one.twin.at > box[0] + 0.4 * (box[2] - box[0]) && one.twin.at < box[0] + 0.6 * (box[2] - box[0]), JSON.stringify(one.twin));
+  check('no false suggestions: the sample\'s floors (drawn the right way round) and a house that isn\'t symmetric', s0.floors.every((f) => !f.fit) && !s0.twin && !analyse(casaSheet(), { floors: [analyse(casaSheet()).floors[0]] }).twin);
+}
+
 // ------------------------------------------------------------------ bye-law checks (CGDCR 2017, Ahmedabad)
 {
   const { heightForRoad, roadMargin, sideRear, stairRule, housePark, ruleSetup, checkBuilding, checksCSV } = await import(base + 'rules.js');

@@ -11,6 +11,7 @@ import { saveProject, getSettings, saveSettings, pendDrawings } from './shell/st
 import { analyseRevision, massRevision } from './shell/engine.js';
 import { openProject, number } from './shell/projects.js';
 import { attachOrAdd, setStatus, summarize } from './shell/model.js';
+import { OPS, IDENTITY, compose, isIdentity, orientText } from './orient.js';
 
 injectIcons();
 const $ = (s) => document.querySelector(s);
@@ -189,9 +190,12 @@ function renderFloors() {
       <span class="fl-tools">
         <button data-act="up" title="Move up the stack" ${p === all.length - 1 ? 'disabled' : ''}><svg><use href="#i-up"/></svg></button>
         <button data-act="down" title="Move down the stack" ${p === 0 ? 'disabled' : ''}><svg><use href="#i-down"/></svg></button>
+        ${fa.excluded ? '' : `<button data-act="rotr" title="Turn this floor a quarter clockwise (as read; the drawing stays as it is)"><svg><use href="#i-rotr"/></svg></button><button data-act="flipx" title="Mirror this floor left ↔ right (as read)"><svg><use href="#i-flipx"/></svg></button>`}
         <button data-act="toggle" title="${fa.excluded ? 'Put back in the stack' : 'Leave out (not a floor plan)'}"><svg><use href="#${fa.excluded ? 'i-plus' : 'i-x'}"/></svg></button>
       </span>
       <span class="fl-meta">${esc(meta)}</span>
+      ${!isIdentity(fa.orient) ? `<span class="fl-or">${esc(orientText(fa.orient))} · <button data-act="unorient">undo</button></span>` : ''}
+      ${k >= 0 && r.floors[k].fit ? `<span class="fl-fit">Sits far better on the floor below ${esc(orientText(r.floors[k].fit.orient).toLowerCase())} (${Math.round(r.floors[k].fit.fit * 100)}% vs ${Math.round(r.floors[k].fit.now * 100)}%) · <button data-act="fit">apply</button></span>` : ''}
       ${slab}
     </li>`);
     if (k > 0) {
@@ -860,7 +864,11 @@ function wire() {
       if (a === 'up' && p < all.length - 1) [all[p], all[p + 1]] = [all[p + 1], all[p]];
       else if (a === 'down' && p > 0) [all[p], all[p - 1]] = [all[p - 1], all[p]];
       else if (a === 'toggle') all[p].excluded = !all[p].excluded;
+      else if (a === 'rotr' || a === 'flipx') all[p].orient = compose(OPS[a], all[p].orient || IDENTITY);
+      else if (a === 'unorient') delete all[p].orient;
+      else if (a === 'fit') { const k = includedIndex(all[p]), fit = k >= 0 && state.result.floors[k].fit; if (!fit) return; all[p].orient = compose(fit.orient, all[p].orient || IDENTITY); }
       else return;
+      if (isIdentity(all[p].orient)) delete all[p].orient;
       opts().floors = all;
       opts().nudges = {};
       state.selected = null;

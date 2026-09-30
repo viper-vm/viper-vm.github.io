@@ -192,7 +192,7 @@ export function lakeviewFiles() {
 // saved as "inches", the sliding doors a mirrored block (extrusion 0,0,−1, X scale −1), glazing and
 // a pergola on a generic layer, door swings on "TEXTURA", treads on a code name, "UP"/"DOWN" arrows,
 // "SLIDING DOOR" notes and a room called "COVERED TERRACE". The bathroom upstairs sits over the dining.
-export function casaSheet(gap = 0.6, { elevation = false } = {}) {
+export function casaSheet(gap = 0.6, { elevation = false, mirrorUpper = false } = {}) {
   const dx = new ModernDxf(1);
   for (const [n, c] of [['A-WALL', 7], ['muro', 7], ['casa', 1], ['inne_gulv', 3], ['TEXTURA', 4], ['A-SECTMBM', 8], ['A-FLORSTM', 6], ['CASCO', 2]]) dx.layer(n, c);
   const T = (x, y, text, l = 'CASCO') => dx.add(TEXT(x, y, 0.11, text, l));
@@ -223,15 +223,17 @@ export function casaSheet(gap = 0.6, { elevation = false } = {}) {
   for (let x = 9.25; x < 12; x += 0.5) { L(x, 0, x, 6, 'inne_gulv'); L(x + 0.05, 0, x + 0.05, 6, 'inne_gulv'); }
   T(10.5, 3, 'PERGOLATED');
   // first floor, `gap` to the right of the pergola: stair coming down, bathroom (over the dining), two bedrooms
-  const ox = 12 + gap;
+  // (mirrorUpper: drawn mirrored left ↔ right, as some sheets draw the floor above)
+  const ox = 12 + gap, X = (x) => (mirrorUpper ? 2 * ox + 9 - x : x);
+  const Lm = (x1, y1, x2, y2, l) => L(X(x1), y1, X(x2), y2, l), boxm = (x0, y0, x1, y1, l) => box(Math.min(X(x0), X(x1)), y0, Math.max(X(x0), X(x1)), y1, l);
   shell(ox);
-  treads(ox);
-  T(ox + 1.15, 8.6, 'DOWN', 'A-FLORSTM');
-  box(ox + 6.2, 0.15, ox + 6.3, 11.85, 'A-WALL');                                   // master | the rest
-  box(ox + 3.5, 4.5, ox + 3.6, 7.5, 'A-WALL'); box(ox + 3.5, 7.5, ox + 6.2, 7.6, 'A-WALL'); // bathroom
-  box(ox + 0.15, 4.4, ox + 6.2, 4.5, 'A-WALL');                                     // bedroom | bathroom, hall
-  T(ox + 4.9, 6, 'BATHROOM'); T(ox + 3, 2.3, 'BEDROOM'); T(ox + 7.6, 6, 'MASTER BEDROOM');
-  for (const [cx, cy, a0] of [[ox + 3.6, 4.5, 0], [ox + 6.3, 9, 90], [ox + 1, 4.5, 0], [ox + 6.2, 2, 90]]) dx.add(ARC(cx, cy, 0.8, a0, a0 + 90, 'TEXTURA'));
+  for (let k = 0; k < 17; k++) Lm(ox + 0.4, 6.3 + k * 0.28, ox + 1.9, 6.3 + k * 0.28, 'A-SECTMBM');
+  T(X(ox + 1.15), 8.6, 'DOWN', 'A-FLORSTM');
+  boxm(ox + 6.2, 0.15, ox + 6.3, 11.85, 'A-WALL');                                   // master | the rest
+  boxm(ox + 3.5, 4.5, ox + 3.6, 7.5, 'A-WALL'); boxm(ox + 3.5, 7.5, ox + 6.2, 7.6, 'A-WALL'); // bathroom
+  boxm(ox + 0.15, 4.4, ox + 6.2, 4.5, 'A-WALL');                                     // bedroom | bathroom, hall
+  T(X(ox + 4.9), 6, 'BATHROOM'); T(X(ox + 3), 2.3, 'BEDROOM'); T(X(ox + 7.6), 6, 'MASTER BEDROOM');
+  for (const [cx, cy, a0] of [[ox + 3.6, 4.5, 0], [ox + 6.3, 9, 90], [ox + 1, 4.5, 0], [ox + 6.2, 2, 90]]) dx.add(mirrorUpper ? ARC(X(cx), cy, 0.8, 90 - a0, 180 - a0, 'TEXTURA') : ARC(cx, cy, 0.8, a0, a0 + 90, 'TEXTURA'));
   // an elevation beside the plans (walls in outline, windows, a roof line, its title): not a floor
   if (elevation) {
     const ex = ox + 13;

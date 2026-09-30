@@ -237,7 +237,15 @@ table.t tr.click:hover td { background: var(--panel-2); }
 .sheetbox { position: relative; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); overflow: hidden; }
 .sheetbox canvas { display: block; width: 100%; height: 400px; touch-action: none; cursor: crosshair; outline: none; }
 .sheetbox canvas:focus-visible { box-shadow: inset 0 0 0 2px var(--below); }
-.sheet-tools { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; align-items: center; padding: 3px; border-radius: 10px; background: var(--glass); border: 1px solid var(--line); }
+.sheet-tools { position: absolute; bottom: 8px; right: 8px; display: flex; gap: 4px; align-items: center; padding: 3px; border-radius: 10px; background: var(--glass); border: 1px solid var(--line); }
+.sheet-sep { width: 1px; height: 20px; background: var(--line-2); margin: 0 2px; }
+.sheet-tools .icon-btn:disabled { opacity: .4; cursor: default; }
+.ft-or, .ft-fit { font-size: 12px; gap: 6px; align-items: center; }
+.ft-or { color: var(--brass); }
+.ft-or svg, .ft-fit svg { width: 14px; height: 14px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.ft-fit { color: var(--ink-2); background: var(--medium-soft); border-radius: 8px; padding: 6px 8px; flex-wrap: wrap; }
+.ft-fit > svg { color: var(--medium); }
+.ft-fit span { flex: 1 1 140px; }
 .sheet-hint { margin: -6px 2px 0; font-size: 12.5px; color: var(--muted); }
 .sheet-hint kbd { font: 600 10.5px/1 var(--mono); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--line-2); background: var(--panel-2); color: var(--ink-2); }
 .fthumb.sel { outline: 2px solid var(--brass); outline-offset: 1px; }
@@ -254,7 +262,7 @@ table.t tr.click:hover td { background: var(--panel-2); }
 .file .fi { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; background: var(--card); font: 600 10px/1 var(--mono); color: var(--brass); }
 .file .fn { font-weight: 600; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file .fm { font: 12px/1.2 var(--mono); color: var(--muted); }
-.fthumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
+.fthumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; align-items: start; }
 .fthumb { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; display: grid; }
 .fthumb.off { opacity: .45; }
 .fthumb img, .fthumb .ph { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: #0b0d10; display: block; }

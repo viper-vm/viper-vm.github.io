@@ -9,6 +9,7 @@ import { newProject, newRevision, nextLabel, currentRev, PROJECT_STATUS, storeys
 import { thumb } from '../shell/thumbs.js';
 import { SheetEditor } from '../shell/sheet.js';
 import { ROLES, storeyTitle } from '../recognize.js';
+import { OPS, IDENTITY, compose, isIdentity, orientText } from '../orient.js';
 import { ROLE_LABEL, ROLE_COLOR, levelTag, floorName, SEVERITIES } from '../style.js';
 
 injectIcons();
@@ -42,9 +43,9 @@ async function run() {
     const r = await analyseLoose(files, opts, (st) => { if (id === runId) { S.stage = st; paintStatus(); } }, { sheet: true });
     if (id !== runId) return;
     S.result = r;
-    if (!S.floorsEdited) { S.floorsAll = r.floors.map((f) => ({ ...f, repeat: f.repeat || 1 })); S.detected = r.floors.map((f) => ({ ...f })); S.sel = -1; }
+    if (!S.floorsEdited) { S.floorsAll = r.floors.map((f) => ({ ...f, box: f.sheetBox || f.box, repeat: f.repeat || 1 })); S.detected = r.floors.map((f) => ({ ...f })); S.sel = -1; }
     // pictures of each floor, remembered by position so left-out floors keep theirs
-    r.floors.forEach((f, k) => { const key = boxKey(f); if (!S.thumbs.has(key)) S.thumbs.set(key, thumb(r, { only: k, w: 300, h: 188 })); });
+    r.floors.forEach((f, k) => { const key = boxKey({ box: f.sheetBox || f.box, orient: f.orient }); if (!S.thumbs.has(key)) S.thumbs.set(key, thumb(r, { only: k, w: 300, h: 188 })); });
   } catch (err) {
     if (id !== runId) return;
     const m = String(err.message || err);
@@ -54,7 +55,7 @@ async function run() {
     if (id === runId) { S.running = false; render(); }
   }
 }
-const boxKey = (f) => f.box.map((v) => v.toFixed(1)).join(',');
+const boxKey = (f) => f.box.map((v) => v.toFixed(1)).join(',') + (isIdentity(f.orient) ? '' : ':' + f.orient.join(''));
 
 async function addFiles(list) {
   for (const f of list) {
@@ -110,15 +111,21 @@ function mountSheet(focused = false) {
   if (!cv || !S.result || !S.result.sheet) return;
   if (focused) cv.focus({ preventScroll: true });
   editor = new SheetEditor(cv, {
-    onAdd: addFloor, onChange: changeFloor, onRemove: removeFloor,
-    onSelect: (i) => { S.sel = i; $$('.fthumb').forEach((el) => el.classList.toggle('sel', +el.dataset.card === i)); },
+    onAdd: addFloor, onChange: changeFloor, onRemove: removeFloor, onKey: sheetKey,
+    onSelect: (i) => {
+      S.sel = i;
+      $$('.fthumb').forEach((el) => el.classList.toggle('sel', +el.dataset.card === i));
+      const ok = i >= 0 && S.floorsAll[i] && !S.floorsAll[i].excluded;
+      $$('[data-orient="sel"]').forEach((b) => { b.disabled = !ok; });
+    },
     onCamera: (cam) => { S.cam = cam.auto ? null : cam; }, // an automatic fit is redone for the new canvas
   }, S.cam);
   editor.setSheet(S.result.sheet);
   editor.setFloors(sheetFloors(), S.sel);
 }
-const sheetFloors = () => (S.floorsAll || []).map((f) => ({ box: f.box, tag: levelTag(f), title: floorName(f), excluded: !!f.excluded }));
-function edited() { S.floorsEdited = true; schedule(0); }
+const mirrorAxis = (m) => (isIdentity(m) || m[0] * m[3] - m[1] * m[2] > 0 ? null : m[0] !== 0 ? (m[0] < 0 ? 'x' : 'y') : 'x');
+const sheetFloors = () => (S.floorsAll || []).map((f) => ({ box: f.box, tag: levelTag(f), title: floorName(f), excluded: !!f.excluded, mark: isIdentity(f.orient) ? '' : orientText(f.orient).toLowerCase(), mirrored: mirrorAxis(f.orient) }));
+function edited(delay = 0) { S.floorsEdited = true; schedule(delay); }
 /** A box drawn over files laid side by side belongs to the file under it (markups go back in its coordinates). */
 function sourceOf(box) {
   let best = null, bestA = 0;
@@ -136,9 +143,45 @@ function addFloor(box) {
   S.sel = S.floorsAll.length - 1;
   edited();
 }
-function changeFloor(i, box) {
+function changeFloor(i, box, { nudge = false } = {}) {
   Object.assign(S.floorsAll[i], { box }, sourceOf(box));
+  edited(nudge ? 400 : 0); // arrow keys: read again once the nudging stops
+}
+/** Turn or mirror a floor as it's read (the sheet stays as drawn). */
+function orientFloor(i, op) {
+  const f = S.floorsAll[i];
+  if (!f || f.excluded) return;
+  f.orient = op ? compose(op, f.orient || IDENTITY) : undefined;
+  if (isIdentity(f.orient)) delete f.orient;
   edited();
+}
+/** Split a box in two: at `at` along `axis`, else across the middle of its longer side. The second half is the next floor up. */
+function splitFloor(i, { axis, at, flipSecond = false } = {}) {
+  const f = S.floorsAll[i];
+  if (!f || f.excluded) return;
+  const [x0, y0, x1, y1] = f.box;
+  const ax = axis || (x1 - x0 >= y1 - y0 ? 'x' : 'y');
+  const cut = at != null && at > (ax === 'x' ? x0 : y0) && at < (ax === 'x' ? x1 : y1) ? at : ax === 'x' ? (x0 + x1) / 2 : (y0 + y1) / 2;
+  const a = ax === 'x' ? [x0, y0, cut, y1] : [x0, cut, x1, y1];  // left, or top on the sheet
+  const b = ax === 'x' ? [cut, y0, x1, y1] : [x0, y0, x1, cut];
+  Object.assign(f, { box: a }, sourceOf(a));
+  const inc = S.floorsAll.filter((g) => !g.excluded && g.level < 90);
+  const level = Math.max(...inc.map((g) => g.level)) + 1;
+  const second = { id: S.floorsAll.length, title: storeyTitle(level), level, typical: false, box: b, repeat: 1, marked: true, ...sourceOf(b) };
+  if (flipSecond) second.orient = ax === 'x' ? OPS.flipx : OPS.flipy;
+  S.floorsAll.splice(i + 1, 0, second);
+  S.sel = i + 1;
+  edited();
+}
+/** Keys on the sheet: R turns the selected floor clockwise (Shift+R anticlockwise), H and V mirror it, S splits it. */
+function sheetKey(e, sel) {
+  if (sel < 0) return false;
+  const k = e.key.toLowerCase();
+  if (k === 'r') { orientFloor(sel, e.shiftKey ? OPS.rotl : OPS.rotr); return true; }
+  if (k === 'h') { orientFloor(sel, OPS.flipx); return true; }
+  if (k === 'v') { orientFloor(sel, OPS.flipy); return true; }
+  if (k === 's') { splitFloor(sel); return true; }
+  return false;
 }
 function removeFloor(i) {
   const f = S.floorsAll[i];
@@ -178,12 +221,15 @@ function stepFloors() {
   const cards = all.map((f, p) => {
     const inc = !f.excluded, idx = inc ? k++ : -1;
     const r = inc && S.result ? S.result.an[idx] : null;
+    const fit = inc && S.result && S.result.floors[idx] ? S.result.floors[idx].fit : null;
     const img = S.thumbs.get(boxKey(f));
     return `<div class="fthumb ${inc ? '' : 'off'} ${p === S.sel ? 'sel' : ''}" data-card="${p}">
       ${img ? `<img src="${img}" alt="${esc(f.title)}" />` : '<div class="ph"></div>'}
       <div class="ft-b">
         <div class="ft-row"><span class="ft-tag">${esc(levelTag(f))}</span><input data-title="${p}" value="${esc(f.title)}" aria-label="Title of this floor" /></div>
         <div class="ft-row"><span class="muted" style="font-size:12px">${r ? `${r.rooms.length} rooms · ${r.columns.length} cols · ${fmtArea(r.footprintArea, { areaUnit: 'm2' })}` : 'left out'}</span></div>
+        ${!isIdentity(f.orient) ? `<div class="ft-row ft-or">${icon('i-rotr')}<span>${esc(orientText(f.orient))}</span><button class="btn link small" data-orient="${p}" data-op="reset">Undo</button></div>` : ''}
+        ${fit ? `<div class="ft-row ft-fit">${icon('i-alert')}<span>Sits far better on the floor below <b>${esc(orientText(fit.orient).toLowerCase())}</b> (${Math.round(fit.fit * 100)}% against ${Math.round(fit.now * 100)}% as drawn)</span><button class="btn small" data-fitapply="${p}">Apply</button></div>` : ''}
         <div class="ft-act">
           <button class="icon-btn" data-move="${p}" data-d="-1" title="Lower in the stack" ${p === 0 ? 'disabled' : ''}>${icon('i-down')}</button>
           <button class="icon-btn" data-move="${p}" data-d="1" title="Higher in the stack" ${p === all.length - 1 ? 'disabled' : ''}>${icon('i-up')}</button>
@@ -194,18 +240,25 @@ function stepFloors() {
   }).join('');
   const guessed = (S.detected || []).find((f) => f.guessed); // stays put while you edit, so the sheet doesn't jump
   const one = (S.detected || []).length === 1 && S.files.length === 1 && !S.floorsEdited;
-  const why = one ? `<p class="tile" style="margin:0;font-size:13px">${icon('i-alert')} Plumb found one floor plan on this sheet. If it holds more (drawn close together or touching), <b>mark each one</b>: pull this box in round one plan, then drag across the next.</p>`
+  const twin = one && S.result && S.result.twin;
+  const why = twin ? `<div class="tile" style="margin:0;font-size:13px">${icon('i-alert')} This plan is <b>two matching halves, mirrored</b> ${twin.axis === 'x' ? 'left and right' : 'top and bottom'} of a line through the middle. That is usually <b>one floor with two flats</b> round a shared stair, so Plumb reads it as one floor. If the halves really are two floors, split it: the second half becomes the floor above, mirrored back to line up with the first.
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn small" data-twinsplit>${icon('i-split')}Split into two floors</button></div></div>`
+    : one ? `<p class="tile" style="margin:0;font-size:13px">${icon('i-alert')} Plumb found one floor plan on this sheet. If it holds more (drawn close together or touching), <b>mark each one</b>: pull this box in round one plan, then drag across the next.</p>`
     : guessed ? `<p class="tile" style="margin:0;font-size:13px">${icon('i-alert')} This drawing has no floor titles, so the floors are ${guessed.guessed === 'stairs' ? 'in the order their stairs give: the plan whose stair only goes <b>UP</b> is the lowest, the one that only goes <b>DOWN</b> is the top' : 'in order from left to right'}. Check the order, and rename each floor if you like.</p>` : '';
+  const selOK = S.sel >= 0 && all[S.sel] && !all[S.sel].excluded;
   const sheet = S.result && S.result.sheet ? `<div class="sheetbox">
       <canvas id="sheet"></canvas>
       <div class="sheet-tools">
         <button class="icon-btn" data-zoom="1.25" title="Zoom in (+)">${icon('i-plus')}</button>
         <button class="icon-btn" data-zoom="0.8" title="Zoom out (−)">${icon('i-minus')}</button>
         <button class="icon-btn" data-fit title="Fit the sheet (F)">${icon('i-fit')}</button>
+        <span class="sheet-sep" aria-hidden="true"></span>
+        ${[['rotl', 'i-rotl', 'Turn the selected floor anticlockwise (Shift+R)'], ['rotr', 'i-rotr', 'Turn the selected floor clockwise (R)'], ['flipx', 'i-flipx', 'Mirror the selected floor left ↔ right (H)'], ['flipy', 'i-flipy', 'Mirror the selected floor top ↔ bottom (V)'], ['split', 'i-split', 'Split the selected box in two (S)']]
+          .map(([op, ic, tip]) => `<button class="icon-btn" data-orient="sel" data-op="${op}" title="${tip}" ${selOK ? '' : 'disabled'}>${icon(ic)}</button>`).join('')}
         ${S.floorsEdited ? `<button class="btn small" data-redetect title="Forget your changes and find the floors again">Detect again</button>` : ''}
       </div>
     </div>
-    <p class="sheet-hint">The whole sheet, with a box round each floor plan. <b>Drag across a plan</b> to add a floor · drag a box to move it · pull its corners to resize · <kbd>Delete</kbd> removes it · scroll to pan, <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + scroll to zoom.</p>` : '';
+    <p class="sheet-hint">The whole sheet, with a box round each floor plan. <b>Drag across a plan</b> to add a floor · drag a box to move it · pull its corners to resize · arrows nudge it · <kbd>Delete</kbd> removes it · scroll to pan, <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + scroll to zoom.<br>A plan drawn turned or mirrored (the floor above drawn as a mirror image of the one below, say)? Select it and turn it (<kbd>R</kbd>) or mirror it (<kbd>H</kbd>, <kbd>V</kbd>): Plumb reads it the right way round, and the drawing stays as it is. <kbd>S</kbd> splits a box in two.</p>` : '';
   return `${why}${sheet}<p class="muted" style="margin:0">Bottom to top, as the building stacks. Rename a floor, move it, leave out anything that isn’t a floor plan (a site plan, a title block), and mark typical floors with how many times they repeat.</p>
     <div class="fthumbs">${cards}</div>`;
 }
@@ -349,9 +402,28 @@ page.addEventListener('click', (e) => {
   const zm = t.closest('[data-zoom]');
   if (zm) { if (editor) editor.zoom(+zm.dataset.zoom); return; }
   if (t.closest('[data-fit]')) { if (editor) editor.fit(); return; }
+  const or = t.closest('[data-orient]');
+  if (or) {
+    const i = or.dataset.orient === 'sel' ? S.sel : +or.dataset.orient, op = or.dataset.op;
+    if (op === 'split') splitFloor(i); else orientFloor(i, op === 'reset' ? null : OPS[op]);
+    return;
+  }
+  const fa = t.closest('[data-fitapply]');
+  if (fa) {
+    const p = +fa.dataset.fitapply, f = S.floorsAll[p];
+    const idx = S.floorsAll.slice(0, p).filter((g) => !g.excluded).length;
+    const fit = S.result && S.result.floors[idx] && S.result.floors[idx].fit;
+    if (f && fit) { orientFloor(p, fit.orient); toast(`${floorName(f)}: ${orientText(compose(fit.orient, IDENTITY)).toLowerCase()}. Undo it on its card.`); }
+    return;
+  }
+  if (t.closest('[data-twinsplit]')) {
+    const tw = S.result && S.result.twin;
+    if (tw && S.floorsAll[0]) { splitFloor(0, { axis: tw.axis, at: tw.at, flipSecond: true }); toast('Split in two: the second half is the floor above, mirrored back. Check the order and names below.'); }
+    return;
+  }
   if (t.closest('[data-redetect]')) { S.floorsEdited = false; S.floorsAll = null; S.sel = -1; schedule(0); return; }
   const card = t.closest('[data-card]');
-  if (card && !t.closest('button, input, label')) { S.sel = +card.dataset.card; $$('.fthumb').forEach((el) => el.classList.toggle('sel', el === card)); if (editor) editor.setFloors(sheetFloors(), S.sel); return; }
+  if (card && !t.closest('button, input, label')) { S.sel = +card.dataset.card; $$('.fthumb').forEach((el) => el.classList.toggle('sel', el === card)); $$('[data-orient="sel"]').forEach((b) => { b.disabled = !!S.floorsAll[S.sel].excluded; }); if (editor) editor.setFloors(sheetFloors(), S.sel); return; }
   if (t.closest('[data-aiapply]')) { applyAI(); return; }
 });
 page.addEventListener('change', (e) => {

@@ -191,16 +191,19 @@ function looksLikeGlazing(list) {
 
 /**
  * Gaps in walls: pairs of wall-line ends that face each other along the same line, 0.3–3.2 m apart
- * (each line's end points at the other, the lines parallel and within 5 cm of one line). Returns the
+ * (each line's end points at the other, the lines parallel and within 5 cm of one line, one of them at
+ * least half a metre long unless a door is hung there: the faces of two columns across a room are not
+ * a wall). hinges: door-swing centres [x, y]. Returns the
  * bridging segments [x0, y0, x1, y1].
  */
-export function wallGaps(segs) {
+export function wallGaps(segs, hinges = []) {
+  const hinged = (e) => hinges.some((h) => Math.abs(h[0] - e.x) < 0.3 && Math.abs(h[1] - e.y) < 0.3);
   const ends = [];
   for (const s of segs) {
     const L = Math.hypot(s[2] - s[0], s[3] - s[1]);
     if (L < 0.05) continue;
     const ux = (s[2] - s[0]) / L, uy = (s[3] - s[1]) / L;
-    ends.push({ x: s[0], y: s[1], ux: -ux, uy: -uy }, { x: s[2], y: s[3], ux, uy }); // u points out of the line at that end
+    ends.push({ x: s[0], y: s[1], ux: -ux, uy: -uy, L }, { x: s[2], y: s[3], ux, uy, L }); // u points out of the line at that end
   }
   const cell = new Map(), key = (x, y) => Math.floor(x) + ',' + Math.floor(y);
   ends.forEach((e, i) => { const k = key(e.x, e.y); if (!cell.has(k)) cell.set(k, []); cell.get(k).push(i); });
@@ -214,6 +217,7 @@ export function wallGaps(segs) {
       const along = vx * a.ux + vy * a.uy, off = Math.abs(vx * a.uy - vy * a.ux);
       if (along < 0.3 || along >= bd || off > 0.05) continue;
       if (Math.abs(a.ux * b.uy - a.uy * b.ux) > 0.04 || a.ux * b.ux + a.uy * b.uy > -0.99) continue; // parallel, facing back
+      if (Math.max(a.L, b.L) < 0.5 && !hinged(a) && !hinged(b)) continue; // two column faces across a room aren't a wall with a gap (a door hung on a nib is)
       best = j; bd = along;
     }
     if (best < 0) return;
@@ -500,7 +504,8 @@ export function analyseFloor(dx, roles, box, opts = {}) {
   }
   // openings: a wall line that stops and carries on along the same line within 3.2 m has a door,
   // window or opening between — close it, whatever layer (if any) the window is drawn on
-  const gaps = wallGaps(dx.segs.filter((s) => roleOf(s[4]) === 'wall' && (inBox(s[0], s[1]) || inBox(s[2], s[3]))));
+  const hinges = dx.arcs.filter((a) => inBox(a.cx, a.cy) && a.r > 0.45 && a.r < 1.4 && a.a1 - a.a0 > 1.1 && a.a1 - a.a0 < 2.05).map((a) => [a.cx, a.cy]);
+  const gaps = wallGaps(dx.segs.filter((s) => roleOf(s[4]) === 'wall' && (inBox(s[0], s[1]) || inBox(s[2], s[3]))), hinges);
   for (const [x0, y0, x1, y1] of gaps) g.seg(x0, y0, x1, y1, brush);
   const columns = [];
   for (const f of dx.fills) {

@@ -2,6 +2,7 @@
 // can be tested in Node: the pages call these, then save the project.
 
 import { KIND, levelTag, floorName } from '../style.js';
+import { sheetPoint } from '../orient.js';
 
 export const STATUSES = ['open', 'review', 'resolved', 'accepted'];
 export const STATUS_LABEL = { open: 'Open', review: 'In review', resolved: 'Resolved', accepted: 'Accepted' };
@@ -81,10 +82,11 @@ const norm = (s) => String(s || '').toLowerCase().replace(/\bplan\b/g, '').repla
  */
 export function whereOf(iss, result) {
   const U = result.floors[iss.upper], L = result.floors[iss.lower];
-  const o = U.origin || [0, 0];
+  const o = U.origin || [0, 0], box = U.sheetBox || U.box;
+  const at = sheetPoint(U, iss.at[0], iss.at[1]); // where it is on the sheet, even on a floor read turned
   return {
     kind: iss.kind, upper: norm(U.title), lower: norm(L.title), lvU: U.level, lvL: L.level,
-    at: [iss.at[0] - o[0], iss.at[1] - o[1]], rel: [iss.at[0] - U.box[0], iss.at[1] - U.box[1]],
+    at: [at[0] - o[0], at[1] - o[1]], rel: [at[0] - box[0], at[1] - box[1]],
   };
 }
 

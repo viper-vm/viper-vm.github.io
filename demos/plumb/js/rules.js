@@ -323,7 +323,13 @@ export function checkBuilding(result, setup, { areas = {}, heights = {} } = {}) 
   // 13.1.6: entrance door (not for Dwelling-1 and 2)
   {
     let best = null;
-    if (!isHouse(use) && ground) for (const o of ground.an.openings || []) if (o.kind === 'door' && (o.a === -1 || o.b === -1) && (!best || o.w > best.w)) best = o;
+    // a door out, or any opening out of an entrance, lobby or foyer (glass doors are drawn like windows)
+    const lobby = (v) => v >= 0 && ground.an.rooms[v] && ground.an.rooms[v].type === 'circulation';
+    if (!isHouse(use) && ground) for (const o of ground.an.openings || []) {
+      const out = o.a === -1 || o.b === -1, inner = o.a < 0 ? o.b : o.a;
+      const ok = (out && (o.kind === 'door' || lobby(inner))) || (o.kind === 'door' && (o.a === -2 || o.b === -2) && lobby(inner));
+      if (ok && (!best || o.w > best.w)) best = o;
+    }
     perf.push(R({
       id: 'entrance', clause: 'CGDCR III 13.1.6(1)', title: 'Entrance door', need: '≥ 900 mm clear, no step', status: isHouse(use) ? 'na' : !best ? 'need' : best.w + 0.02 >= 0.9 ? 'pass' : 'fail',
       value: isHouse(use) ? 'Not required for Dwelling-1 and 2' : best ? `widest door out ${Math.round(best.w * 1000)} mm` : 'No door to outside found on the ground floor',

@@ -1,14 +1,16 @@
 // Plumb — getting the findings back to where the work happens: a markups DXF to XREF over
 // the drawing, a CSV for the issue log, and a printable coordination report.
 
+import { sheetPoint } from './orient.js';
 import { DxfWriter } from './dxfwrite.js';
 import { KIND, SEV_LABEL, floorName, levelTag, esc, PALETTES } from './style.js';
 
 const ACI = { high: 1, medium: 30, low: 8, below: 4, accepted: 9, note: 7 };
 
 /** Analysis metres → the drawing's own units and origin (per file when floors came as separate files). */
-export function toDrawing(result, fi, x, y) {
+export function toDrawing(result, fi, x0, y0) {
   const f = result.floors[fi];
+  const [x, y] = sheetPoint(f, x0, y0); // a floor read turned goes back where it's drawn
   if (f && f.origin) return [(x - f.origin[0]) / f.k, (y - f.origin[1]) / f.k, 1 / f.k];
   const k = result.unit.mm / 1000;
   return [x / k, y / k, 1 / k];
